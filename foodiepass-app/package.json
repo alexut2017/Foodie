@@ -1,0 +1,24 @@
+{
+  "name": "foodiepass-app",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "setup": "npx expo install expo-router expo-linking expo-constants expo-status-bar expo-location expo-secure-store expo-web-browser expo-apple-authentication expo-haptics expo-clipboard expo-crypto react-native-safe-area-context react-native-screens react-native-maps @react-native-async-storage/async-storage react-native-url-polyfill @supabase/supabase-js",
+    "start": "expo start",
+    "ios": "expo start --ios",
+    "android": "expo start --android",
+    "typecheck": "tsc --noEmit",
+    "build:ios": "eas build --platform ios",
+    "build:android": "eas build --platform android"
+  },
+  "dependencies": {
+    "expo": "~56.0.0",
+    "react": "19.2.0",
+    "react-native": "0.85.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.0",
+    "typescript": "~5.9.0"
+  }
+}
