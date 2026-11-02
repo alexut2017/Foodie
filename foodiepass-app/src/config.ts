@@ -1,0 +1,17 @@
+import Constants from 'expo-constants';
+
+// Public values only. The publishable key is designed to be in client apps (row-level security protects data).
+// Never put the service-role key, Stripe secret keys or Twilio credentials in the app.
+const extra = (Constants.expoConfig?.extra ?? {}) as Record<string, unknown>;
+
+export const CONFIG = {
+  supabaseUrl: String(extra.supabaseUrl ?? ''),
+  supabaseKey: String(extra.supabasePublishableKey ?? ''),
+  siteUrl: String(extra.siteUrl ?? ''),
+  termsVersion: String(extra.termsVersion ?? '2026-10-25'),
+  appleSignIn: extra.appleSignIn === true,
+  passMinutes: 15,
+  resendSeconds: 60,
+};
+
+export const FN_URL = CONFIG.supabaseUrl.replace(/\/+$/, '') + '/functions/v1';
