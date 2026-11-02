@@ -17,8 +17,8 @@ Returning members skip steps 4 and 5.
 **In the app**
 
 - **Explore**: list or map, search, neighborhood chips, sorted by distance when location is allowed.
-- **Restaurant**: offer and details; "I'm here: open my pass" for paid members, "Join to use this offer" otherwise.
-- **My pass**: no pass until the membership is paid. Paid members pick where they're eating; the pass opens for 15 minutes with a live clock and countdown. Staff swipe to confirm; the pass turns green with a visit code and is saved to `redemptions`.
+- **Restaurant**: offer and details; "Show my pass" for paid members, "Join to use this offer" otherwise.
+- **My pass**: no pass until the membership is paid. Paid members show one screen with their name, paid-through date and a live clock that proves it isn't a screenshot. Staff only look at it; visits aren't tracked.
 - **Account**: details, membership status, Manage billing (Stripe portal), sign out (this device or all), delete account.
 
 ## Run it

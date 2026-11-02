@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { DISTRICTS, RESTAURANTS, districtName } from '../../src/data';
+import { districtName, useDirectory } from '../../src/data';
 import { useSession } from '../../src/session';
 import { RestaurantRow } from '../../src/RestaurantRow';
 import { Eyebrow, H1 } from '../../src/ui';
@@ -12,6 +12,7 @@ import { C } from '../../src/theme';
 
 export default function Explore() {
   const { name } = useSession();
+  const { districts, restaurants, loading, error } = useDirectory();
   const [q, setQ] = useState('');
   const [district, setDistrict] = useState<string | null>(null);
   const [mode, setMode] = useState<'list' | 'map'>('list');
@@ -29,13 +30,13 @@ export default function Explore() {
 
   const items = useMemo(() => {
     const t = q.trim().toLowerCase();
-    let list = RESTAURANTS.filter((r) => (!district || r.district === district) && (!t || `${r.name} ${r.cuisine} ${districtName(r.district)}`.toLowerCase().includes(t)));
+    let list = restaurants.filter((r) => (!district || r.district === district) && (!t || `${r.name} ${r.cuisine} ${districtName(r.district)}`.toLowerCase().includes(t)));
     if (here) {
       const d = (r: { lat: number; lng: number }) => (r.lat - here.lat) ** 2 + ((r.lng - here.lng) * Math.cos((r.lat * Math.PI) / 180)) ** 2;
       list = [...list].sort((a, b) => d(a) - d(b));
     } else list = [...list].sort((a, b) => Number(b.isNew) - Number(a.isNew) || Number(b.founding) - Number(a.founding));
     return list;
-  }, [q, district, here]);
+  }, [restaurants, q, district, here]);
 
   const first = name.split(' ')[0];
   return (
@@ -46,7 +47,7 @@ export default function Explore() {
         <TextInput style={s.search} value={q} onChangeText={setQ} placeholder="Search restaurants or cuisines" placeholderTextColor="#9AA3A2" accessibilityLabel="Search restaurants" clearButtonMode="while-editing" />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           <Chip label="All" on={!district} onPress={() => setDistrict(null)} />
-          {DISTRICTS.map((d) => <Chip key={d.id} label={d.name} on={district === d.id} onPress={() => setDistrict(district === d.id ? null : d.id)} />)}
+          {districts.filter((d) => d.live).map((d) => <Chip key={d.id} label={d.name} on={district === d.id} onPress={() => setDistrict(district === d.id ? null : d.id)} />)}
         </ScrollView>
         <View style={s.seg}>
           {(['list', 'map'] as const).map((m) => (
@@ -62,8 +63,7 @@ export default function Explore() {
           keyExtractor={(r) => r.id}
           contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}
           renderItem={({ item }) => <RestaurantRow r={item} onPress={() => router.push(`/restaurant/${item.id}`)} />}
-          ListEmptyComponent={<Text style={{ textAlign: 'center', color: C.muted, marginTop: 30 }}>No matches. Try another neighborhood or cuisine.</Text>}
-          ListFooterComponent={<Text style={{ textAlign: 'center', color: C.muted, fontSize: 12 }}>Sample listings. Real partners will be announced before launch.</Text>}
+          ListEmptyComponent={<Text style={{ textAlign: 'center', color: C.muted, marginTop: 30 }}>{loading ? 'Loading restaurants…' : error ? 'We couldn’t load the restaurants. Check your connection and try again.' : restaurants.length ? 'No matches. Try another neighborhood or cuisine.' : 'Partners are being added now. Check back soon.'}</Text>}
         />
       ) : (
         <MapView

@@ -10,7 +10,6 @@ export const CONFIG = {
   siteUrl: String(extra.siteUrl ?? ''),
   termsVersion: String(extra.termsVersion ?? '2026-10-25'),
   appleSignIn: extra.appleSignIn === true,
-  passMinutes: 15,
   resendSeconds: 60,
 };
 

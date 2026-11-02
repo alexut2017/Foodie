@@ -66,7 +66,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       markOnboarded: async () => { await AsyncStorage.setItem(ONBOARD_KEY, '1'); setOnboarded(true); },
       signOut: async (everywhere) => {
         await supabase.auth.signOut(everywhere ? { scope: 'global' } : undefined).catch(() => undefined);
-        await AsyncStorage.multiRemove(['fp-visit']);
         setStatus(null);
       },
     };

@@ -12,7 +12,6 @@ export default function RootLayout() {
         <StatusBar style="dark" />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.linen } }}>
           <Stack.Screen name="restaurant/[id]" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="visit" options={{ gestureEnabled: false }} />
         </Stack>
       </SessionProvider>
     </SafeAreaProvider>

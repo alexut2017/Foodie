@@ -4,7 +4,7 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "setup": "npx expo install expo-router expo-linking expo-constants expo-status-bar expo-location expo-secure-store expo-web-browser expo-apple-authentication expo-haptics expo-clipboard expo-crypto react-native-safe-area-context react-native-screens react-native-maps @react-native-async-storage/async-storage react-native-url-polyfill @supabase/supabase-js",
+    "setup": "npx expo install expo-router expo-linking expo-constants expo-status-bar expo-location expo-secure-store expo-web-browser expo-apple-authentication expo-clipboard expo-crypto react-native-safe-area-context react-native-screens react-native-maps @react-native-async-storage/async-storage react-native-url-polyfill @supabase/supabase-js",
     "start": "expo start",
     "ios": "expo start --ios",
     "android": "expo start --android",

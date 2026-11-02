@@ -1,33 +1,22 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RESTAURANTS, districtName, findRestaurant } from '../../src/data';
 import { useSession } from '../../src/session';
-import { loadVisit, isExpired, openVisit, type Visit } from '../../src/visit';
 import { payForMembership } from '../../src/checkout';
 import { errText } from '../../src/billing';
-import { RestaurantRow } from '../../src/RestaurantRow';
 import { Body, Button, Card, Eyebrow, H1, Note, Small } from '../../src/ui';
 import { fmtDate } from '../../src/format';
 import { C } from '../../src/theme';
 
 export default function Pass() {
-  const { paid, paymentsOpen, status, refresh } = useSession();
-  const [q, setQ] = useState('');
-  const [open, setOpen] = useState<Visit | null>(null);
+  const { name, paid, paymentsOpen, status, refresh } = useSession();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ err?: boolean; text: string } | null>(null);
+  const [now, setNow] = useState(Date.now());
 
-  useFocusEffect(useCallback(() => {
-    refresh();
-    loadVisit().then((v) => setOpen(v && !v.confirmedAt && !isExpired(v) ? v : null));
-  }, []));
-
-  const list = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    return RESTAURANTS.filter((r) => !t || `${r.name} ${r.cuisine} ${districtName(r.district)}`.toLowerCase().includes(t)).sort((a, b) => a.name.localeCompare(b.name));
-  }, [q]);
+  useFocusEffect(useCallback(() => { refresh(); }, []));
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
   async function join() {
     setBusy(true); setMsg(null);
@@ -49,9 +38,9 @@ export default function Pass() {
         <Body>Your member pass appears here once your $30 yearly membership is active.</Body>
         <Card>
           <Text style={s.cardH}>How the pass works</Text>
-          <Body>1. At the restaurant, open My pass and tap where you{'’'}re eating.</Body>
-          <Body>2. Show the screen before you pay.</Body>
-          <Body>3. Staff swipe to confirm and apply the offer. The pass closes for that visit.</Body>
+          <Body>1. At the restaurant, open My pass.</Body>
+          <Body>2. Show the screen to your server before you pay.</Body>
+          <Body>3. The moving clock shows it isn{'’'}t a screenshot, and your server applies the offer.</Body>
         </Card>
         {paymentsOpen ? (
           <Button title="Join for $30 a year" onPress={join} busy={busy} />
@@ -63,32 +52,37 @@ export default function Pass() {
     );
   }
 
-  const openR = open ? findRestaurant(open.rid) : undefined;
+  // Paid: the pass itself. Staff only need to look at it.
+  const date = new Date(now);
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <FlatList
-        data={list}
-        keyExtractor={(r) => r.id}
-        contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}
-        ListHeaderComponent={
-          <View style={{ gap: 12, marginBottom: 4 }}>
-            <Eyebrow>My pass</Eyebrow>
-            <H1>Where are you eating?</H1>
-            <Body>Tap the restaurant when you{'’'}re ready to pay. Your pass opens for 15 minutes and closes once staff confirm it.</Body>
-            {status?.membership.in_grace ? <Note tone="err">Your renewal payment didn{'’'}t go through. Update your card in Account to keep your pass.</Note> : null}
-            {status?.membership.access_until ? <Small>Member through {fmtDate(status.membership.access_until)}</Small> : null}
-            {openR ? <Button title={`Back to my open pass: ${openR.name}`} kind="dark" onPress={() => router.push('/visit')} /> : null}
-            <TextInput style={s.search} value={q} onChangeText={setQ} placeholder="Search by name, cuisine or neighborhood" placeholderTextColor="#9AA3A2" accessibilityLabel="Search restaurants" />
+      <ScrollView contentContainerStyle={s.wrap}>
+        <Eyebrow>My pass</Eyebrow>
+        <H1>Show this before you pay</H1>
+        {status?.membership.in_grace ? <Note tone="err">Your renewal payment didn{'’'}t go through. Update your card in Account to keep your pass.</Note> : null}
+        <View style={s.pass}>
+          <View style={s.top}><Text style={s.eyebrowSm}>MEMBER PASS</Text><Text style={{ color: C.ok, fontWeight: '700' }}>{'●'} Active</Text></View>
+          <Text style={s.name}>{name}</Text>
+          <Text style={s.clock} accessibilityLabel="Live clock">{date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })}</Text>
+          <Small>{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} {'·'} This clock keeps moving, so a screenshot won{'’'}t pass.</Small>
+          <View style={s.row}>
+            <View><Small>Annual dues</Small><Text style={s.v}>Paid</Text></View>
+            <View style={{ alignItems: 'flex-end' }}><Small>Member through</Small><Text style={s.v}>{fmtDate(status?.membership.access_until) || '—'}</Text></View>
           </View>
-        }
-        renderItem={({ item }) => <RestaurantRow r={item} cta={'I’m here'} onPress={() => openVisit(item.id)} />}
-      />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  wrap: { flex: 1, padding: 20, gap: 14 },
+  wrap: { flexGrow: 1, padding: 20, gap: 14 },
   cardH: { fontSize: 20, fontWeight: '800', color: C.bayou },
-  search: { minHeight: 50, borderWidth: 2, borderColor: C.bayou, borderRadius: 999, paddingHorizontal: 18, fontSize: 17, backgroundColor: C.card, color: C.bayou },
+  pass: { backgroundColor: C.linen, borderRadius: 28, padding: 22, gap: 14, borderWidth: 1, borderColor: C.line, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 20, shadowOffset: { width: 0, height: 12 }, elevation: 8 },
+  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  eyebrowSm: { fontSize: 13, fontWeight: '700', letterSpacing: 1.6, color: C.brick },
+  name: { fontSize: 32, fontWeight: '800', color: C.bayou, letterSpacing: -0.5 },
+  clock: { fontSize: 42, fontWeight: '800', textAlign: 'center', color: C.bayou, backgroundColor: C.sand, borderRadius: 16, paddingVertical: 10, overflow: 'hidden', fontVariant: ['tabular-nums'] },
+  row: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 2, borderStyle: 'dashed', borderTopColor: '#D9D2C4', paddingTop: 14 },
+  v: { fontSize: 19, fontWeight: '700', color: C.bayou, fontVariant: ['tabular-nums'] },
 });

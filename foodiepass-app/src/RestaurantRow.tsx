@@ -4,9 +4,9 @@ import type { Restaurant } from './data';
 import { districtName } from './data';
 import { C } from './theme';
 
-export function RestaurantRow({ r, onPress, cta }: { r: Restaurant; onPress: () => void; cta?: string }) {
+export function RestaurantRow({ r, onPress }: { r: Restaurant; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${r.name}, ${r.offer}${cta ? ', ' + cta : ''}`} style={({ pressed }) => [s.row, pressed && { opacity: 0.85 }]}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${r.name}, ${r.offer}`} style={({ pressed }) => [s.row, pressed && { opacity: 0.85 }]}>
       <View style={{ flex: 1, gap: 4 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <Text style={s.name}>{r.name}</Text>
@@ -16,7 +16,7 @@ export function RestaurantRow({ r, onPress, cta }: { r: Restaurant; onPress: () 
         <Text style={s.meta}>{r.cuisine} {'·'} {districtName(r.district)} {'·'} {'$'.repeat(r.price)}</Text>
         <Text style={s.offer}>{r.offer}</Text>
       </View>
-      {cta ? <Text style={s.cta}>{cta}</Text> : <Text style={s.chev}>{'›'}</Text>}
+      <Text style={s.chev}>{'›'}</Text>
     </Pressable>
   );
 }
@@ -27,6 +27,5 @@ const s = StyleSheet.create({
   badge: { fontSize: 12, fontWeight: '700', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, overflow: 'hidden' },
   meta: { fontSize: 14, color: C.muted },
   offer: { fontSize: 15, fontWeight: '700', color: C.bayou },
-  cta: { backgroundColor: C.chili, color: C.bayou, fontWeight: '800', paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, overflow: 'hidden' },
   chev: { fontSize: 28, color: C.muted },
 });

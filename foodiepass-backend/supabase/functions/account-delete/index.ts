@@ -1,6 +1,6 @@
 // POST /api/account/delete — authenticated, requires a sign-in within the last 10 minutes.
-// Stops Stripe renewals first, then deletes the auth user (tables cascade). Stripe keeps its own payment
-// records for tax/accounting; we keep only the anonymous audit rows.
+// Stops Stripe renewals first, then deletes the auth user. Stripe keeps its own payment records for
+// tax/accounting; we keep anonymous audit rows, and purchases and gift codes with the user removed.
 import { admin, stripe, requireUser, secondsSinceAuthentication, audit } from '../_shared/clients.ts';
 import { json, fail, preflight, logError } from '../_shared/http.ts';
 
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     const { data: cust } = await admin.from('billing_customers').select('stripe_customer_id').eq('user_id', user.id).maybeSingle();
     if (cust) await stripe.customers.update(cust.stripe_customer_id, { name: '', description: 'deleted FoodiePass account', metadata: { user_id: '', deleted: 'true' } });
 
-    // 4. Delete the account. Foreign keys cascade through our tables.
+    // 4. Delete the account. Foreign keys cascade through our tables or clear the user id.
     await audit(user.id, 'account_deleted', { subscriptions_canceled: (subs ?? []).length });
     const { error } = await admin.auth.admin.deleteUser(user.id);
     if (error) throw error;

@@ -101,6 +101,18 @@ In `foodiepass-website.html`, fill in `AUTH_CONFIG.supabaseUrl` and `AUTH_CONFIG
 | Replay a webhook (`stripe events resend evt_...`) | No change; logged as a duplicate |
 | Delete account (within 10 minutes of signing in) | Subscription cancelled in Stripe, then the user is removed |
 
+## Restaurants and admin
+
+Restaurants have no logins. They fill out the form on the website, then the admin reviews it at `/#admin` and puts the restaurant on the map. Grant admin access by running this once in the SQL editor, after that person has signed in to the site:
+
+```sql
+insert into public.platform_admins (user_id) select id from auth.users where email = 'you@example.com';
+```
+
+## Planned: fundraisers (not built)
+
+Groups get their own QR code or link, and sales are tracked per group. The admin chooses how long a group earns on recurring renewals, set per campaign and adjustable per code (for example, 48 months for a high school freshman, 12 for a senior).
+
 ## Go-live checklist
 
 - Switch to live Stripe keys, prices and a live webhook secret, and re-run the `update offerings` statements with the live price ids.

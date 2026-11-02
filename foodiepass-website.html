@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:wght@400..700&display=swap">
 <style>
-/* Layout: sticky brand header; hash-routed pages (home, how, restaurants, join, pass, partners, faq, conduct); finder = filters | list | map, stacking on phones. */
+/* Layout: sticky brand header; hash-routed pages (home, how, restaurants, join, pass, partners, faq, conduct); finder = filter row above list | map, stacking on phones. */
 :root {
   --linen: #F6F4EF;   /* main ground */
   --sand: #EDE8DE;    /* second ground */
@@ -91,10 +91,6 @@ section { padding-block: 72px; }
 .pass-row .v { font-size: 19px; font-weight: 700; }
 .pass-clock { font-family: var(--f-display); font-size: 44px; font-weight: 800; text-align: center; letter-spacing: -0.02em; padding: 10px; border-radius: 16px; background: var(--sand); }
 .pulse { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--ok); margin-right: 6px; }
-.swipe { position: relative; height: 64px; border-radius: 999px; background: var(--bayou); color: var(--linen); display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
-.swipe-label { font-weight: 700; pointer-events: none; padding-left: 40px; }
-.swipe-knob { position: absolute; left: 6px; top: 6px; width: 52px; height: 52px; border-radius: 50%; border: 0; background: var(--mustard); color: var(--bayou); font-size: 24px; font-weight: 800; cursor: grab; touch-action: none; }
-.swipe-knob:active { cursor: grabbing; }
 @media (prefers-reduced-motion: no-preference) { .pulse { animation: pulse 1.6s ease-in-out infinite; } @keyframes pulse { 50% { opacity: 0.25; } } }
 
 /* Grids, cards */
@@ -120,20 +116,17 @@ section { padding-block: 72px; }
 .finder-hero h1 { font-size: clamp(38px, 5vw, 60px); }
 .searchbar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
 .searchbar input { flex: 1 1 280px; min-height: 52px; padding: 12px 18px; border: 2px solid var(--bayou); border-radius: 999px; background: var(--card); font-size: 18px; }
-.finder { display: grid; grid-template-columns: 260px minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; padding-bottom: 72px; }
-.panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; display: flex; flex-direction: column; gap: 18px; position: sticky; top: 86px; }
-.panel h3 { font-size: 15px; font-family: var(--f-body); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brick); }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { min-height: 36px; padding: 6px 13px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); font-size: 14px; font-weight: 600; cursor: pointer; color: var(--bayou); }
-.chip:hover { border-color: var(--bayou); }
-.chip.on { background: var(--bayou); border-color: var(--bayou); color: var(--linen); }
-.chip .soon { font-weight: 500; opacity: 0.75; }
+.finder { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; padding-bottom: 72px; }
+.panel { grid-column: 1 / -1; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 16px; display: flex; align-items: center; gap: 16px; }
+.panel .filter { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 0; }
+.panel .filter.fit { flex: none; }
+.panel > .btn { flex: none; }
+.panel .seg button { white-space: nowrap; }
+.panel h3 { white-space: nowrap; font-size: 13px; font-family: var(--f-body); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brick); }
 .seg { display: inline-flex; background: var(--sand); border-radius: 999px; padding: 4px; gap: 4px; }
 .seg button { border: 0; background: transparent; padding: 8px 18px; border-radius: 999px; font-weight: 700; cursor: pointer; min-height: 40px; color: var(--ink-2); }
 .seg button.on { background: var(--bayou); color: var(--linen); }
 select.inp { width: 100%; min-height: 44px; padding: 8px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); }
-.legend { display: grid; gap: 8px; font-size: 14px; color: var(--ink-2); }
-.legend div { display: flex; align-items: center; gap: 10px; }
 .results-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .list { display: grid; gap: 14px; }
 .rc { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r); padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
@@ -148,7 +141,6 @@ select.inp { width: 100%; min-height: 44px; padding: 8px 12px; border-radius: 12
 .badge.new { background: #FCE7DF; border-color: #F4C2AF; color: #8F3215; }
 .badge.fp { background: #FBEBC4; border-color: #F2D489; color: #5E4205; }
 .rc-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-.sample { font-size: 12px; color: var(--muted); }
 .mapbox { position: sticky; top: 86px; height: calc(100vh - 120px); min-height: 460px; border-radius: var(--r); overflow: hidden; border: 1px solid var(--line); background: var(--sand); }
 #map { width: 100%; height: 100%; }
 .map-note { position: absolute; left: 12px; bottom: 12px; z-index: 500; background: rgba(23,42,42,0.88); color: var(--linen); font-size: 13px; padding: 6px 12px; border-radius: 999px; }
@@ -207,9 +199,10 @@ footer a:hover { color: var(--linen); text-decoration: underline; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--bayou); color: var(--linen); padding: 12px 20px; border-radius: 999px; font-weight: 600; z-index: 3000; max-width: calc(100% - 32px); }
 
 @media (max-width: 1080px) {
-  .finder { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .panel { grid-column: 1 / -1; position: static; }
   .plans { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 761px) and (max-width: 1000px) {
+  .panel h3 { position: absolute; left: -9999px; }
 }
 @media (max-width: 760px) {
   section { padding-block: 52px; }
@@ -218,6 +211,10 @@ footer a:hover { color: var(--linen); text-decoration: underline; }
   .finder { grid-template-columns: 1fr; }
   .mapbox { position: relative; top: 0; height: 340px; min-height: 0; order: -1; }
   .filters-toggle { display: inline-flex; }
+  .panel { flex-direction: column; align-items: stretch; }
+  .panel .filter { flex: none; }
+  .panel h3 { min-width: 76px; }
+  .panel .seg button { padding: 8px 12px; }
   .panel.collapsed { display: none; }
   .insider { padding: 28px 22px; }
   .nav { order: 3; flex-basis: 100%; overflow-x: auto; flex-wrap: nowrap; }
@@ -308,62 +305,42 @@ function mark(size, cut) {
 }
 document.querySelectorAll('[data-logo]').forEach((el) => { el.innerHTML = mark(el.dataset.logo, el.dataset.dark ? '#172A2A' : '#F6F4EF'); el.style.display = 'inline-flex'; });
 
-// ---------- Data (sample listings, fictional) ----------
-const DISTRICTS = [
-  { id: 'rice', name: 'Rice Village / West U', lat: 29.7174, lng: -95.4153, live: true },
-  { id: 'montrose', name: 'Montrose', lat: 29.7454, lng: -95.3909, live: true },
-  { id: 'heights', name: 'The Heights', lat: 29.7980, lng: -95.3980, live: true },
-  { id: 'downtown', name: 'Midtown \u00B7 Downtown \u00B7 EaDo', lat: 29.7520, lng: -95.3650, live: true },
-  { id: 'tmc', name: 'Medical Center / Museum District', lat: 29.7140, lng: -95.3960, live: true },
-  { id: 'bellaire', name: 'Bellaire Blvd / Chinatown', lat: 29.7058, lng: -95.5450, live: true },
-  { id: 'galleria', name: 'Galleria / Uptown', lat: 29.7400, lng: -95.4630, live: false },
-  { id: 'memorial', name: 'Memorial / Washington Ave', lat: 29.7700, lng: -95.4050, live: false },
-  { id: 'sugarland', name: 'Sugar Land', lat: 29.6197, lng: -95.6349, live: false },
-  { id: 'katy', name: 'Katy', lat: 29.7858, lng: -95.8245, live: false },
-  { id: 'woodlands', name: 'The Woodlands', lat: 30.1658, lng: -95.4613, live: false },
-  { id: 'pearland', name: 'Pearland', lat: 29.5636, lng: -95.2860, live: false },
-];
-const OFFERS = {
-  ten: '10% off food \u00B7 Sun\u2013Thu',
-  fifteen: '15% off food \u00B7 Mon\u2013Thu',
-  app: 'Free appetizer with 2 entr\u00E9es \u00B7 Sun\u2013Thu',
-  dessert: 'Free dessert with 2 entr\u00E9es \u00B7 Daily',
-  drink: 'Free drink or pastry with purchase \u00B7 Daily',
-};
-// [name, district, cuisine, description, offer, pickup, isNew, founding, price, dLat, dLng]
-const R = [
-  ['Juniper Table', 'rice', 'Mediterranean', 'Mezze plates, wood-grilled kebabs and big shared salads.', 'ten', true, false, true, 2, 0.002, -0.003],
-  ['Kiko Ramen House', 'rice', 'Japanese', 'Rich tonkotsu and miso bowls, gyoza and rice plates.', 'fifteen', true, true, false, 2, -0.002, 0.002],
-  ['Bluebonnet Bakeshop', 'rice', 'Bakery & caf\u00E9', 'Morning pastries, kolaches and pour-over coffee.', 'drink', true, false, true, 1, 0.001, 0.004],
-  ['Rio Verde Cantina', 'rice', 'Tex-Mex', 'Fajitas, queso and enchiladas on a shaded patio.', 'app', false, false, false, 2, -0.003, -0.001],
-  ['Marigold Thai Kitchen', 'montrose', 'Thai', 'Curries, khao soi and wok-fired noodles.', 'ten', true, false, true, 2, 0.002, 0.002],
-  ['The Copper Pot', 'montrose', 'American', 'Neighborhood bistro: burgers, roast chicken, seasonal sides.', 'fifteen', false, true, false, 3, -0.002, -0.003],
-  ['Little Lagos', 'montrose', 'West African', 'Jollof, suya and slow-cooked stews.', 'app', true, true, false, 2, 0.003, -0.001],
-  ['Westheimer Noodle Co.', 'montrose', 'Vietnamese', 'Pho, vermicelli bowls and crispy egg rolls.', 'ten', true, false, false, 1, -0.001, 0.004],
-  ['Studio Smokehouse', 'heights', 'BBQ', 'Post-oak brisket, ribs and scratch sides.', 'ten', true, false, true, 2, 0.002, 0.003],
-  ['Ivy & Oak Trattoria', 'heights', 'Italian', 'Hand-rolled pasta, wood-fired pizza and antipasti.', 'app', false, false, true, 3, -0.003, -0.002],
-  ['Porch Light Coffee', 'heights', 'Bakery & caf\u00E9', 'Espresso, breakfast tacos and laptop-friendly tables.', 'drink', true, true, false, 1, 0.001, -0.004],
-  ['Bayou Biscuit Co.', 'heights', 'Southern', 'Brunch all day: biscuits, gravy and fried chicken.', 'fifteen', false, false, false, 2, -0.001, 0.001],
-  ['Main Street Dumpling Bar', 'downtown', 'Chinese', 'Soup dumplings, scallion pancakes and noodles.', 'ten', true, true, false, 2, 0.004, -0.004],
-  ['Eastwood Taqueria', 'downtown', 'Mexican', 'Al pastor, barbacoa and handmade tortillas.', 'fifteen', true, false, true, 1, -0.002, 0.012],
-  ['Market Square Pizza Co.', 'downtown', 'Pizza', 'New York\u2013style slices and whole pies.', 'ten', true, false, false, 1, 0.006, 0.004],
-  ['Gulf & Grain', 'downtown', 'Seafood', 'Gulf oysters, redfish and grain bowls.', 'app', false, false, false, 3, -0.006, -0.006],
-  ['Museum Mile Kitchen', 'tmc', 'Healthy', 'Grain bowls, wraps and fresh juices near the museums.', 'fifteen', true, false, true, 1, 0.003, 0.004],
-  ['Almeda Curry House', 'tmc', 'Indian', 'Biryani, tikka and weekday lunch thalis.', 'ten', true, true, false, 2, -0.004, 0.006],
-  ['Fannin Street Deli', 'tmc', 'Deli', 'Stacked sandwiches and soups for the after-shift crowd.', 'drink', true, false, false, 1, -0.002, -0.002],
-  ['Third Ward Wing Shop', 'tmc', 'Wings', 'Lemon-pepper, honey-hot and dry-rub wings.', 'ten', true, false, false, 1, 0.004, 0.012],
-  ['Lotus Lane Dim Sum', 'bellaire', 'Chinese', 'Cart-style dim sum and Cantonese roast meats.', 'app', true, false, true, 2, 0.002, 0.004],
-  ['Spoon & Seoul', 'bellaire', 'Korean', 'Tableside barbecue, stews and banchan.', 'dessert', false, true, false, 3, -0.002, -0.004],
-  ['Bayou Banh Mi', 'bellaire', 'Vietnamese', 'Banh mi, rice plates and Vietnamese coffee.', 'drink', true, false, false, 1, 0.003, -0.002],
-  ['Kesar Grill', 'bellaire', 'Pakistani', 'Charcoal kebabs, karahi and fresh naan.', 'fifteen', true, false, false, 2, -0.003, 0.002],
-];
-const D = Object.fromEntries(DISTRICTS.map((d) => [d.id, d]));
-const RESTAURANTS = R.map((r, i) => ({ id: 'r' + i, name: r[0], district: r[1], cuisine: r[2], desc: r[3], offer: OFFERS[r[4]], pickup: r[5], isNew: r[6], founding: r[7], price: r[8], lat: D[r[1]].lat + r[9], lng: D[r[1]].lng + r[10], order: i }));
-const CUISINES = [...new Set(RESTAURANTS.map((r) => r.cuisine))].sort();
+// ---------- Data: districts and restaurants live in Supabase; the admin panel adds them ----------
+let DISTRICTS = [];
+let D = {};
+let RESTAURANTS = [];
+let CUISINES = [];
+const directory = { loaded: false, error: false };
+const NEW_DAYS = 30;
+function restaurantFromRow(r, i) {
+  const listed = Date.parse(r.listed_at || '') || 0;
+  return { id: r.id, name: r.name, district: r.district_id, cuisine: r.cuisine, desc: r.description, offer: r.offer_text, dineIn: r.dine_in, pickup: r.pickup, isNew: Date.now() - listed < NEW_DAYS * 86400000, founding: !!r.founding_until && Date.parse(r.founding_until) > Date.now(), price: r.price_level, lat: r.lat, lng: r.lng, address: r.address, hours: r.hours, phone: r.phone, website: r.website_url, order: i };
+}
+const districtOptions = () => DISTRICTS.map((d) => `<option>${esc(d.name)}</option>`).join('') + '<option>Somewhere else in Houston</option>';
+async function loadDirectory() {
+  directory.error = false;
+  if (sb) {
+    try {
+      const [d, r] = await Promise.all([
+        sb.from('districts').select('id, name, lat, lng, live').order('sort_order'),
+        sb.from('restaurants').select('id, name, description, cuisine, district_id, address, hours, phone, website_url, lat, lng, price_level, dine_in, pickup, offer_text, founding_until, listed_at').eq('status', 'active').order('name'),
+      ]);
+      if (d.error || r.error) throw d.error || r.error;
+      DISTRICTS = d.data;
+      D = Object.fromEntries(DISTRICTS.map((x) => [x.id, x]));
+      RESTAURANTS = r.data.map(restaurantFromRow);
+      CUISINES = [...new Set(RESTAURANTS.map((x) => x.cuisine).filter(Boolean))].sort();
+    } catch (e) { directory.error = true; console.warn('FoodiePass: restaurants not loaded', e); }
+  }
+  directory.loaded = true;
+  if (view === 'home' || view === 'restaurants') { const y = window.scrollY; go(view); window.scrollTo(0, y); }
+  const sel = document.getElementById('pDistrict');
+  if (sel) { const v = sel.value; sel.innerHTML = districtOptions(); if ([...sel.options].some((o) => o.value === v)) sel.value = v; }
+}
 
 // ---------- State ----------
 const store = { get(k) { try { return JSON.parse(localStorage.getItem('fp-' + k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem('fp-' + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } } };
-const ui = { districts: [], cuisine: '', sort: 'new', mode: 'dine', q: '', hl: null, plan: 'member', filtersOpen: false, joined: false };
+const ui = { cuisine: '', sort: 'new', mode: 'dine', q: '', hl: null, plan: 'member', filtersOpen: false, joined: false };
 // ---------- Accounts: Supabase Auth (email one-time code, optional Google/Facebook/Apple) ----------
 // Fill these in from your Supabase project (Project Settings > API). The anon/publishable key is safe in a
 // browser. Never put the service-role key or any provider secret here.
@@ -545,92 +522,7 @@ function accountPanel() {
     </div>`}
   </div></section>`;
 }
-// ---------- Member pass: paid members only, opened for one restaurant, closed by a staff swipe ----------
-const PASS_MINUTES = 15;
-const VISIT_KEY = 'fp-visit';
-let visit = (() => { try { return JSON.parse(sessionStorage.getItem(VISIT_KEY)); } catch (e) { return null; } })();
-function saveVisit() { try { if (visit) sessionStorage.setItem(VISIT_KEY, JSON.stringify(visit)); else sessionStorage.removeItem(VISIT_KEY); } catch (e) { /* ignore */ } }
 const isPaid = () => !!member && (member.live ? !!member.membershipActive : true);
-const visitLeft = () => (visit ? PASS_MINUTES * 60000 - (Date.now() - visit.openedAt) : 0);
-const visitExpired = () => !!visit && !visit.confirmedAt && visitLeft() <= 0;
-function openVisit(rid) {
-  closeDrawer();
-  if (!isPaid()) return go('pass');
-  visit = { rid, openedAt: Date.now(), confirmedAt: null, code: null };
-  saveVisit();
-  go('pass');
-}
-function endVisit() { visit = null; saveVisit(); go('pass'); }
-function visitCode() { const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from(crypto.getRandomValues(new Uint8Array(6)), (x) => a[x % a.length]).join(''); }
-async function confirmVisit() {
-  if (!visit || visit.confirmedAt || visitExpired()) return;
-  visit.confirmedAt = Date.now(); visit.code = visitCode(); saveVisit();
-  if (navigator.vibrate) navigator.vibrate(60);
-  go('pass');
-  if (AUTH_LIVE && member && member.live) {
-    const r = RESTAURANTS.find((x) => x.id === visit.rid);
-    try {
-      const { error } = await sb.from('redemptions').insert({ restaurant_id: visit.rid, restaurant_name: r ? r.name : null, offer: r ? r.offer : null, code: visit.code, opened_at: new Date(visit.openedAt).toISOString(), confirmed_at: new Date(visit.confirmedAt).toISOString() });
-      if (error) console.warn('FoodiePass: visit not recorded', error);
-    } catch (e) { console.warn('FoodiePass: visit not recorded', e); }
-  }
-}
-function passList() {
-  const q = (ui.passQ || '').toLowerCase();
-  const items = RESTAURANTS.filter((r) => !q || (r.name + ' ' + r.cuisine + ' ' + D[r.district].name).toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name));
-  if (!items.length) return '<div class="card"><h3>No match</h3><p>Check the spelling, or search by neighborhood or cuisine.</p></div>';
-  return items.map((r) => `<div class="rc" style="flex-direction:row; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap"><div style="display:grid; gap:4px; min-width:0"><h3 style="font-size:21px">${esc(r.name)}</h3><p class="small muted">${esc(D[r.district].name)} \u00b7 ${esc(r.offer)}</p></div><button class="btn pri sm" data-usepass="${r.id}">I\u2019m here</button></div>`).join('');
-}
-function vVisit(until) {
-  const r = RESTAURANTS.find((x) => x.id === visit.rid);
-  const done = !!visit.confirmedAt;
-  let body;
-  if (done) {
-    body = `<div class="pass" style="max-width:none; background:#DDEFE3">
-      <div class="pass-top"><span class="eyebrow" style="color:#1F4D35">Confirmed by staff</span><span class="pass-live">\u2713 Used</span></div>
-      <p class="pass-name">${esc(member.name)}</p>
-      <p style="font-size:22px; font-weight:700">Apply: ${esc(r.offer)}</p>
-      <div class="pass-row"><div><p class="k">Confirmed at</p><p class="v">${new Date(visit.confirmedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</p></div><div style="text-align:right"><p class="k">Visit code</p><p class="v tabular">${esc(visit.code)}</p></div></div>
-      <p class="small muted">This pass has been used for this visit. Enjoy your meal.</p>
-    </div>`;
-  } else if (visitExpired()) {
-    body = `<div class="card"><h3>This pass timed out</h3><p>A pass stays open for ${PASS_MINUTES} minutes. Open it again when you\u2019re ready to pay.</p><button class="btn pri" data-usepass="${r.id}" style="align-self:flex-start">Open pass again</button></div>`;
-  } else {
-    body = `<div class="pass" style="max-width:none">
-      <div class="pass-top"><span class="eyebrow">Member pass</span><span class="pass-live"><span class="pulse"></span>Live</span></div>
-      <p class="pass-name">${esc(member.name)}</p>
-      <p style="font-size:22px; font-weight:700">${esc(r.offer)}</p>
-      <div class="pass-clock tabular" data-clock>--:--:--</div>
-      <div class="pass-row"><div><p class="k">Member through</p><p class="v">${esc(until.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }))}</p></div><div style="text-align:right"><p class="k">Pass closes in</p><p class="v tabular" data-countdown>--:--</p></div></div>
-      <div class="swipe" id="swipe" role="group" aria-label="Staff confirmation"><span class="swipe-label">Staff: swipe to confirm \u2192</span><button type="button" class="swipe-knob" id="swipeKnob" aria-label="Staff: slide right, or press Enter, to confirm this pass">\u2192</button></div>
-      <p class="small muted">For restaurant staff. Swiping confirms the member showed this pass, and closes it.</p>
-    </div>`;
-  }
-  return `<section><div class="wrap" style="max-width:640px">
-    <div class="sec-head" style="margin-bottom:20px"><p class="eyebrow">Member pass \u00b7 ${esc(D[r.district].name)}</p><h1 style="font-size: clamp(34px, 5vw, 52px)">${esc(r.name)}</h1></div>
-    ${body}
-    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:18px"><button class="btn" data-act="endVisit">${done ? 'Done' : 'Choose a different restaurant'}</button><button class="btn" data-act="report">Report a problem</button></div>
-  </div></section>`;
-}
-// Staff swipe: drag the knob across the track (or focus it and press Enter).
-let drag = null;
-document.addEventListener('pointerdown', (e) => {
-  const k = e.target.closest && e.target.closest('#swipeKnob'); if (!k) return;
-  const track = document.getElementById('swipe');
-  drag = { k, startX: e.clientX, max: track.clientWidth - k.offsetWidth - 12, dx: 0 };
-  try { k.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-  e.preventDefault();
-});
-document.addEventListener('pointermove', (e) => { if (!drag) return; drag.dx = Math.max(0, Math.min(drag.max, e.clientX - drag.startX)); drag.k.style.transform = 'translateX(' + drag.dx + 'px)'; });
-function endDrag() {
-  if (!drag) return; const d = drag; drag = null;
-  if (d.dx >= d.max * 0.85) { d.k.style.transform = 'translateX(' + d.max + 'px)'; confirmVisit(); }
-  else { d.k.style.transition = 'transform .2s'; d.k.style.transform = 'translateX(0)'; setTimeout(() => { d.k.style.transition = ''; }, 220); }
-}
-document.addEventListener('pointerup', endDrag);
-document.addEventListener('pointercancel', endDrag);
-document.addEventListener('keydown', (e) => { if (e.target && e.target.id === 'swipeKnob' && e.key === 'Enter') { e.preventDefault(); confirmVisit(); } });
-document.addEventListener('input', (e) => { if (e.target.id === 'passQ') { ui.passQ = e.target.value; const l = document.getElementById('passList'); if (l) l.innerHTML = passList(); } });
 function memberFromUser(u) {
   if (!u) return null;
   const md = u.user_metadata || {};
@@ -641,7 +533,7 @@ function setReturnTo(r) { try { localStorage.setItem(RETURN_KEY, JSON.stringify(
 function takeReturnTo() {
   let r = null;
   try { r = JSON.parse(localStorage.getItem(RETURN_KEY)); localStorage.removeItem(RETURN_KEY); } catch (e) { r = null; }
-  return r && typeof r.view === 'string' && ['join', 'pass', 'restaurants', 'home'].includes(r.view) ? r : null;
+  return r && typeof r.view === 'string' && ['join', 'pass', 'restaurants', 'home', 'admin'].includes(r.view) ? r : null;
 }
 const isAppleDevice = /iPhone|iPad|Macintosh/.test(navigator.userAgent);
 function providerButtons() {
@@ -735,6 +627,7 @@ function afterSignIn() {
   const r = takeReturnTo();
   if (r) { if (r.plan) ui.plan = r.plan; return go(r.view, r.anchor); }
   if (view === 'join') return go('join', 'checkout');
+  if (view === 'admin') return go('admin');
   return go('pass');
 }
 function refreshChrome() { const b = $('#signinBtn'); if (b) b.textContent = member ? 'My pass' : 'Sign in'; }
@@ -753,12 +646,12 @@ const I = {
 };
 
 // ---------- Pages ----------
-// Home hero: sample offers only. The member pass itself appears only for paid members (see My pass).
+// Home hero: a few live offers. The member pass itself appears only for paid members (see My pass).
 function heroOffers() {
-  const picks = RESTAURANTS.filter((r) => r.founding).slice(0, 3);
-  return `<div class="pass" aria-label="Sample member offers">
-    <div class="pass-top"><span class="eyebrow">Member offers</span><span class="small muted">Samples</span></div>
-    ${picks.map((r) => `<div class="pass-row" style="flex-direction:column; gap:2px"><p class="v">${esc(r.name)}</p><p class="small muted">${esc(D[r.district].name)} \u00b7 ${esc(r.offer)}</p></div>`).join('')}
+  const picks = RESTAURANTS.filter((r) => r.founding).concat(RESTAURANTS.filter((r) => !r.founding)).slice(0, 3);
+  return `<div class="pass" aria-label="Member offers">
+    <div class="pass-top"><span class="eyebrow">Member offers</span></div>
+    ${!picks.length ? '<p class="small muted">Partner restaurants are being added now.</p>' : ''}${picks.map((r) => `<div class="pass-row" style="flex-direction:column; gap:2px"><p class="v">${esc(r.name)}</p><p class="small muted">${esc(D[r.district].name)} \u00b7 ${esc(r.offer)}</p></div>`).join('')}
     <a class="btn pri" href="#join" data-go="join">Join to unlock your pass</a>
   </div>`;
 }
@@ -771,10 +664,9 @@ function restaurantCard(r, compact) {
     ${compact ? '' : `<p style="color: var(--ink-2)">${esc(r.desc)}</p>`}
     <span class="offer">${I.spark}${esc(r.offer)}</span>
     <div class="rc-actions">
-      <div class="badges">${r.isNew ? `<span class="badge new">${I.star}New</span>` : ''}${r.founding ? `<span class="badge fp">${I.star}Founding partner</span>` : ''}<span class="badge">${I.dine}Dine-in</span>${r.pickup ? `<span class="badge">${I.pickup}Pickup</span>` : ''}</div>
+      <div class="badges">${r.isNew ? `<span class="badge new">${I.star}New</span>` : ''}${r.founding ? `<span class="badge fp">${I.star}Founding partner</span>` : ''}${r.dineIn ? `<span class="badge">${I.dine}Dine-in</span>` : ''}${r.pickup ? `<span class="badge">${I.pickup}Pickup</span>` : ''}</div>
       <button class="btn sm dark" data-open="${r.id}">View restaurant</button>
     </div>
-    <p class="sample">Sample listing. Real partners will be announced before launch.</p>
   </article>`;
 }
 
@@ -822,10 +714,10 @@ function vHome() {
     </div>
   </div></section>
 
-  <section><div class="wrap">
+  ${featured.length ? `<section><div class="wrap">
     <div class="results-head"><div class="sec-head" style="margin:0"><p class="eyebrow">Founding partners</p><h2>A taste of the map</h2></div><a class="btn" href="#restaurants" data-go="restaurants">See all restaurants</a></div>
     <div class="grid g3" style="margin-top: 24px">${featured.map((r) => restaurantCard(r, true)).join('')}</div>
-  </div></section>
+  </div></section>` : ''}
 
   <section class="dark on-dark"><div class="wrap band">
     <div class="sec-head" style="margin:0"><p class="eyebrow">For restaurant owners</p><h2 style="color: var(--linen)">Fill your slow nights. Free to join.</h2><p>No fee, no commission, no new hardware. You choose the offer and the days, and you can leave with 30 days\u2019 notice.</p><div style="margin-top:14px"><a class="btn pri" href="#partners" data-go="partners">Become a partner</a></div></div>
@@ -845,7 +737,7 @@ function vHow() {
     <div class="grid" style="gap:16px">
       ${[
         ['Join FoodiePass', 'Pay $30 for 12 months. Sign-up takes about two minutes and your pass is active right away.'],
-        ['Find a restaurant you love', 'Use the map or list to find partners near you. Filter by neighborhood, cuisine, dine-in or pickup.'],
+        ['Find a restaurant you love', 'Use the map or list to find partners near you. Filter by cuisine, dine-in or pickup.'],
         ['Show your live pass', 'Open your pass before you pay. It shows your name, your expiry date and a moving clock, so staff know it isn\u2019t a screenshot.'],
         ['Save on your bill', 'Your server applies the restaurant\u2019s offer, such as 10% off food or a free appetizer. For pickup, show your pass when you pay.'],
         ['Bring a friend', 'Share your referral link. When a friend joins, you both get two extra months free.'],
@@ -884,20 +776,13 @@ function vRestaurants() {
   </div></section>
   <div class="wrap finder">
     <aside class="panel${ui.filtersOpen ? '' : ' collapsed'}" aria-label="Filters">
-      <div style="display:grid; gap:10px"><h3>Service</h3><div class="seg" role="group" aria-label="Service type"><button class="${ui.mode === 'dine' ? 'on' : ''}" data-mode="dine" aria-pressed="${ui.mode === 'dine'}">Dine-in</button><button class="${ui.mode === 'pickup' ? 'on' : ''}" data-mode="pickup" aria-pressed="${ui.mode === 'pickup'}">Pickup</button></div></div>
-      <div style="display:grid; gap:10px"><h3>Neighborhood</h3><div class="chips">${DISTRICTS.map((d) => `<button class="chip${ui.districts.includes(d.id) ? ' on' : ''}" data-district="${d.id}" aria-pressed="${ui.districts.includes(d.id)}" ${d.live ? '' : 'title="Opening in 2027"'}>${esc(d.name)}${d.live ? '' : ' <span class="soon">\u00B7 soon</span>'}</button>`).join('')}</div></div>
-      <div style="display:grid; gap:10px"><h3><label for="cuisineSel">Cuisine</label></h3><select id="cuisineSel" class="inp"><option value="">All cuisines</option>${CUISINES.map((c) => `<option${c === ui.cuisine ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
-      <div style="display:grid; gap:10px"><h3><label for="sortSel">Sort by</label></h3><select id="sortSel" class="inp"><option value="new"${ui.sort === 'new' ? ' selected' : ''}>New first</option><option value="az"${ui.sort === 'az' ? ' selected' : ''}>Alphabetical</option><option value="near"${ui.sort === 'near' ? ' selected' : ''}>Nearest${ui.here ? '' : ' (use my location)'}</option></select></div>
+      <div class="filter fit"><h3>Service</h3><div class="seg" role="group" aria-label="Service type"><button class="${ui.mode === 'dine' ? 'on' : ''}" data-mode="dine" aria-pressed="${ui.mode === 'dine'}">Dine-in</button><button class="${ui.mode === 'pickup' ? 'on' : ''}" data-mode="pickup" aria-pressed="${ui.mode === 'pickup'}">Pickup</button></div></div>
+      <div class="filter"><h3><label for="cuisineSel">Cuisine</label></h3><select id="cuisineSel" class="inp"><option value="">All cuisines</option>${CUISINES.map((c) => `<option${c === ui.cuisine ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
+      <div class="filter"><h3><label for="sortSel">Sort by</label></h3><select id="sortSel" class="inp"><option value="new"${ui.sort === 'new' ? ' selected' : ''}>New first</option><option value="az"${ui.sort === 'az' ? ' selected' : ''}>Alphabetical</option><option value="near"${ui.sort === 'near' ? ' selected' : ''}>Nearest${ui.here ? '' : ' (use my location)'}</option></select></div>
       <button class="btn sm" data-act="clear">Clear filters</button>
-      <div style="display:grid; gap:10px"><h3>Legend</h3><div class="legend">
-        <div><span class="badge new">${I.star}New</span> Joined in the last 30 days</div>
-        <div><span class="badge fp">${I.star}Founding</span> First partners in a district</div>
-        <div><span class="badge">${I.dine}Dine-in</span> Offer at the table</div>
-        <div><span class="badge">${I.pickup}Pickup</span> Offer on pickup orders</div>
-      </div></div>
     </aside>
     <div>
-      <div class="results-head"><p><b class="tabular">${n}</b> restaurant${n === 1 ? '' : 's'} ${ui.here ? 'near you' : 'found'}${ui.districts.length ? ' in ' + ui.districts.map((d) => esc(D[d].name)).join(', ') : ''}</p>${(ui.districts.length || ui.cuisine || ui.q || ui.mode !== 'dine') ? '<button class="btn sm" data-act="clear">Reset filters</button>' : ''}</div>
+      <div class="results-head"><p><b class="tabular">${n}</b> restaurant${n === 1 ? '' : 's'} ${ui.here ? 'near you' : 'found'}</p>${(ui.cuisine || ui.q || ui.mode !== 'dine') ? '<button class="btn sm" data-act="clear">Reset filters</button>' : ''}</div>
       <div class="list" id="list">${renderList()}</div>
     </div>
     <div class="mapbox"><div id="map" role="region" aria-label="Map of partner restaurants"></div><p class="map-note" id="mapNote" hidden>Simplified map \u00B7 open the full site for street maps</p></div>
@@ -906,17 +791,18 @@ function vRestaurants() {
 
 function renderList() {
   const items = filtered();
+  if (!directory.loaded) return '<div class="card"><p>Loading restaurants…</p></div>';
+  if (directory.error) return '<div class="card"><h3>We couldn’t load the restaurants</h3><p>Check your connection and refresh this page.</p></div>';
+  if (!RESTAURANTS.length) return '<div class="card"><h3>Partners are being added now</h3><p>Our first restaurants will appear here soon. <a href="#partners" data-go="partners">Own a restaurant? Join free.</a></p></div>';
   if (!items.length) {
-    const soon = ui.districts.filter((d) => !D[d].live);
-    return `<div class="card"><h3>No results</h3><p>${soon.length ? `${esc(soon.map((d) => D[d].name).join(', '))} ${soon.length > 1 ? 'open' : 'opens'} in 2027. Join the Insider list to hear first.` : 'Try another neighborhood or clear your filters.'}</p><button class="btn sm" data-act="clear" style="align-self:flex-start">Clear filters</button></div>`;
+    return `<div class="card"><h3>No results</h3><p>Try another search or clear your filters.</p><button class="btn sm" data-act="clear" style="align-self:flex-start">Clear filters</button></div>`;
   }
   return items.map((r) => restaurantCard(r, false)).join('');
 }
 
 function filtered() {
   let items = RESTAURANTS.slice();
-  if (ui.mode === 'pickup') items = items.filter((r) => r.pickup);
-  if (ui.districts.length) items = items.filter((r) => ui.districts.includes(r.district));
+  items = items.filter((r) => (ui.mode === 'pickup' ? r.pickup : r.dineIn));
   if (ui.cuisine) items = items.filter((r) => r.cuisine === ui.cuisine);
   if (ui.q) { const q = ui.q.toLowerCase(); items = items.filter((r) => (r.name + ' ' + r.cuisine + ' ' + r.desc + ' ' + D[r.district].name).toLowerCase().includes(q)); }
   if (ui.sort === 'az') items.sort((a, b) => a.name.localeCompare(b.name));
@@ -986,17 +872,21 @@ function vPass() {
     return `<section><div class="wrap band">
       <div class="sec-head" style="margin:0"><p class="eyebrow">My pass</p><h1 style="font-size: clamp(40px, 5.4vw, 60px)">Your account is verified</h1>
         <p>Signed in as <b>${esc(member.email)}</b>. Your member pass appears here once your $30 membership is active.</p>${notice}${tools}</div>
-      <div class="card"><h3>How the pass works</h3><p>At the restaurant, open My pass and tap the place you\u2019re eating. Show the screen before you pay. A staff member swipes to confirm, and the pass closes for that visit.</p></div>
+      <div class="card"><h3>How the pass works</h3><p>At the restaurant, open My pass and show the screen to your server before you pay. The moving clock shows it isn\u2019t a screenshot, and your server applies the offer.</p></div>
     </div></section>${accountPanel()}`;
   }
-  // A pass is open for one restaurant.
-  if (visit && RESTAURANTS.some((r) => r.id === visit.rid)) return vVisit(until);
-  // Paid, no pass open: pick the restaurant first.
-  return `<section><div class="wrap">
-    <div class="sec-head"><p class="eyebrow">My pass</p><h1 style="font-size: clamp(40px, 5.4vw, 60px)">Where are you eating?</h1>
-      <p>Tap the restaurant when you\u2019re ready to pay. Your pass opens for ${PASS_MINUTES} minutes and closes once staff confirm it. Member through ${esc(until.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }))}.</p>${notice}${tools}</div>
-    <form id="passSearch" class="searchbar" role="search" style="margin-top:0"><label for="passQ" style="position:absolute; left:-9999px">Search restaurants</label><input id="passQ" value="${esc(ui.passQ || '')}" placeholder="Search by name, cuisine or neighborhood" autocomplete="off"></form>
-    <div class="list" id="passList" style="margin-top:18px">${passList()}</div>
+  // Paid: the pass itself. Staff only need to look at it.
+  return `<section><div class="wrap" style="max-width:640px">
+    <div class="sec-head" style="margin-bottom:20px"><p class="eyebrow">My pass</p><h1 style="font-size: clamp(34px, 5vw, 52px)">Show this before you pay</h1>${notice}</div>
+    <div class="pass" style="max-width:none">
+      <div class="pass-top"><span class="eyebrow">Member pass</span><span class="pass-live"><span class="pulse"></span>Active</span></div>
+      <p class="pass-name">${esc(member.name)}</p>
+      <div class="pass-clock tabular" data-clock aria-label="Live clock">--:--:--</div>
+      <p class="small muted" style="text-align:center"><span data-date></span> \u00b7 This clock keeps moving, so a screenshot won\u2019t pass.</p>
+      <div class="pass-row"><div><p class="k">Annual dues</p><p class="v">Paid</p></div><div style="text-align:right"><p class="k">Member through</p><p class="v tabular">${esc(until.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }))}</p></div></div>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:18px"><a class="btn" href="#restaurants" data-go="restaurants">See restaurants and offers</a><button class="btn" data-act="report">Report a problem</button></div>
+    ${tools}
   </div></section>${accountPanel()}`;
 }
 
@@ -1019,17 +909,21 @@ function vPartners() {
     </div>
   </div></section>
   <section class="sand"><div class="wrap band">
-    <div class="sec-head" style="margin:0"><p class="eyebrow">What we ask</p><h2>Three things, and we do the rest</h2><p>1. Honor your offer for any member with a live pass. 2. Keep our window sticker up and sign-up cards on the tables. 3. Brief your staff; we bring a half-page sheet and visit in week one.</p><p style="margin-top:10px"><b>Founding partners</b> in each district get top placement on the map for 12 months.</p></div>
+    <div class="sec-head" style="margin:0"><p class="eyebrow">What we ask</p><h2>Three things, and we do the rest</h2><p>1. Honor your offer for any member with a live pass. 2. Keep our window sticker up and sign-up cards on the tables. 3. Brief your staff; we bring a half-page sheet and visit in week one.</p><p style="margin-top:10px">No logins or passwords to keep track of. We set up your listing, and you can email us any time something changes.</p><p style="margin-top:10px"><b>Founding partners</b> in each district get top placement on the map for 12 months.</p></div>
     <div class="card">
-      ${ui.partnerSent ? '<div class="note ok"><b>Thanks!</b> We\u2019ll call within two business days to set up a short visit.</div>' : `<h3>Tell us about your restaurant</h3>
+      ${ui.partnerSent ? '<div class="note ok"><b>Thanks!</b> We have your details. We\u2019ll be in touch within two business days and add your restaurant to the map.</div>' : `<h3>Tell us about your restaurant</h3>
       <form class="stack" id="partnerForm">
-        <label class="f">Restaurant name<input id="pName" required></label>
-        <label class="f">Your name<input id="pContact" required autocomplete="name"></label>
-        <label class="f">Phone or email<input id="pReach" required></label>
-        <label class="f">Neighborhood<select id="pDistrict">${DISTRICTS.map((d) => `<option>${esc(d.name)}</option>`).join('')}<option>Somewhere else in Houston</option></select></label>
-        <label class="f">Your slowest nights<input id="pSlow" placeholder="e.g. Monday to Wednesday"></label>
-        <button class="btn pri" type="submit">Request a visit</button>
-        <p class="small muted">Preview only: nothing is sent from this page yet.</p>
+        <label class="f">Restaurant name<input id="pName" required maxlength="120"></label>
+        <label class="f">Your name<input id="pContact" required maxlength="120" autocomplete="name"></label>
+        <label class="f">Phone or email<input id="pReach" required maxlength="200"></label>
+        <label class="f">Address<input id="pAddress" maxlength="300" autocomplete="street-address"></label>
+        <label class="f">Neighborhood<select id="pDistrict">${districtOptions()}</select></label>
+        <label class="f">Cuisine<input id="pCuisine" maxlength="120" placeholder="e.g. Thai"></label>
+        <label class="f">Describe your restaurant<textarea id="pDesc" required maxlength="2000" rows="4"></textarea></label>
+        <label class="f">The offer you\u2019d like to give members<input id="pOffer" maxlength="200" placeholder="e.g. 10% off food, Sun\u2013Thu"></label>
+        <label class="f">Your slowest nights<input id="pSlow" maxlength="200" placeholder="e.g. Monday to Wednesday"></label>
+        <label aria-hidden="true" style="position:absolute; left:-9999px">Leave this empty<input id="pHp" tabindex="-1" autocomplete="off"></label>
+        <button class="btn pri" type="submit" id="pSend">Send</button>
       </form>`}
     </div>
   </div></section>`;
@@ -1044,7 +938,7 @@ const FAQS = [
   ['Does it cover alcohol?', 'Not by default. A few restaurants may choose a drink offer, and their card will say so.'],
   ['Can I share my pass?', 'No. Each pass is for one person, signed in on one phone at a time. The moving clock shows staff it\u2019s live.'],
   ['What if a restaurant doesn\u2019t honor my pass?', 'Tap \u201CReport a problem\u201D on your pass. We follow up with the restaurant and remove partners who don\u2019t honor offers.'],
-  ['How do I add my restaurant?', 'Restaurants join free. Visit the For restaurants page and request a short visit.'],
+  ['How do I add my restaurant?', 'Restaurants join free. Fill out the short form on the For restaurants page and we’ll set up your listing.'],
   ['Can I get a refund?', '[Refund policy to be confirmed before launch.]'],
 ];
 function vFaq() {
@@ -1067,6 +961,176 @@ function vConduct() {
     <div class="card" id="terms" style="margin-top:28px"><h3>Terms</h3><p>[Membership terms to be published before launch.]</p></div>
     <div class="card" id="privacy" style="margin-top:12px"><h3>Privacy</h3><p>[Privacy policy to be published before launch. Card details are handled by our payment provider and are never stored by FoodiePass.]</p></div>
   </div></section>`;
+}
+
+// ---------- Admin panel (#admin): review restaurant applications and add restaurants to the map ----------
+// Access is enforced by row level security; this page only decides what to show.
+const adminState = { checkedFor: null, loaded: false, isAdmin: false, failed: false, tab: 'applications', apps: [], restaurants: [], draft: null, msg: null };
+let adminMap = null, adminPin = null;
+const blankDraft = () => ({ id: null, appId: null, name: '', description: '', cuisine: '', district_id: '', address: '', hours: '', phone: '', website_url: '', lat: null, lng: null, price_level: 2, dine_in: true, pickup: false, offer_text: '', founding_until: null, status: 'draft' });
+async function loadAdminData() {
+  const [a, r] = await Promise.all([
+    sb.from('partner_applications').select('*').order('created_at', { ascending: false }),
+    sb.from('restaurants').select('*').order('name'),
+  ]);
+  if (a.error || r.error) throw a.error || r.error;
+  adminState.apps = a.data; adminState.restaurants = r.data;
+}
+async function loadAdmin() {
+  adminState.checkedFor = member.id; adminState.isAdmin = false; adminState.failed = false; adminState.loaded = false;
+  try {
+    const { data, error } = await sb.from('platform_admins').select('user_id').eq('user_id', member.id).maybeSingle();
+    if (error) throw error;
+    adminState.isAdmin = !!data;
+    if (adminState.isAdmin) await loadAdminData();
+  } catch (e) { adminState.failed = true; console.warn('FoodiePass: admin not loaded', e); }
+  adminState.loaded = true;
+  if (view === 'admin') go('admin');
+}
+function adminApps() {
+  if (!adminState.apps.length) return '<div class="card"><h3>No applications yet</h3><p>New restaurant sign-ups will appear here.</p></div>';
+  const row = (k, v) => (v ? `<p><b>${k}:</b> ${esc(v)}</p>` : '');
+  return adminState.apps.map((a) => `<div class="card" style="gap:8px">
+    <div class="rc-top"><h3>${esc(a.restaurant_name)}</h3><span class="badge">${esc(a.status)}</span></div>
+    <p class="small muted">Received ${esc(fmtDate(a.created_at))}</p>
+    ${row('Contact', a.contact_name)}${row('Reach them at', a.contact_reach)}${row('Address', a.address)}${row('Neighborhood', a.district_text)}${row('Cuisine', a.cuisine)}${row('Description', a.description)}${row('Offer they suggested', a.proposed_offer)}${row('Slowest nights', a.slow_nights)}
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px">
+      ${a.status === 'added' ? '' : `<button class="btn sm pri" data-act="adminFromApp" data-id="${esc(a.id)}">Create listing</button>`}
+      ${a.status === 'new' ? `<button class="btn sm" data-act="adminAppStatus" data-id="${esc(a.id)}" data-status="contacted">Mark contacted</button>` : ''}
+      ${a.status === 'new' || a.status === 'contacted' ? `<button class="btn sm" data-act="adminAppStatus" data-id="${esc(a.id)}" data-status="declined">Decline</button>` : ''}
+    </div>
+  </div>`).join('');
+}
+function adminRestaurants() {
+  const list = adminState.restaurants.length ? adminState.restaurants.map((r) => `<div class="card" style="flex-direction:row; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap">
+    <div style="display:grid; gap:4px; min-width:0"><h3>${esc(r.name)}</h3><p class="small muted">${esc(r.status)}${r.offer_text ? ' · ' + esc(r.offer_text) : ''}</p></div>
+    <button class="btn sm" data-act="adminEdit" data-id="${esc(r.id)}">Edit</button>
+  </div>`).join('') : '<div class="card"><h3>No restaurants yet</h3><p>Add one here, or create a listing from an application.</p></div>';
+  return `<div style="margin-bottom:14px"><button class="btn pri" data-act="adminNew">Add a restaurant</button></div><div class="grid" style="gap:12px">${list}</div>`;
+}
+function adminForm() {
+  const r = adminState.draft;
+  const opt = (v, label, cur) => `<option value="${esc(v)}"${String(v) === String(cur) ? ' selected' : ''}>${esc(label)}</option>`;
+  return `<div class="card">
+    <h2 style="font-size:30px">${r.id ? 'Edit restaurant' : 'Add a restaurant'}</h2>
+    ${adminState.msg ? `<div class="note" role="alert" style="background:#FCE7DF; color:#8F3215">${esc(adminState.msg)}</div>` : ''}
+    <form class="stack" id="adminForm" novalidate>
+      <label class="f">Restaurant name<input id="aName" maxlength="120" value="${esc(r.name)}"></label>
+      <label class="f">Description<textarea id="aDesc" rows="3">${esc(r.description)}</textarea></label>
+      <label class="f">Member offer (one line)<input id="aOffer" maxlength="120" value="${esc(r.offer_text)}" placeholder="10% off food · Sun–Thu"></label>
+      <label class="f">Cuisine<input id="aCuisine" value="${esc(r.cuisine)}"></label>
+      <label class="f">Neighborhood<select id="aDistrict">${opt('', 'Choose one', r.district_id)}${DISTRICTS.map((d) => opt(d.id, d.name, r.district_id)).join('')}</select></label>
+      <label class="f">Address<input id="aAddress" value="${esc(r.address)}"></label>
+      <div><button class="btn sm" type="button" data-act="adminGeocode">Find this address on the map</button></div>
+      <div id="adminMap" role="region" aria-label="Click the map to place the restaurant" style="height:300px; border-radius:14px; border:1.5px solid var(--line)"></div>
+      <p class="small muted">Click the map to place or move the pin.</p>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+        <label class="f">Latitude<input id="aLat" type="number" step="any" value="${esc(r.lat)}"></label>
+        <label class="f">Longitude<input id="aLng" type="number" step="any" value="${esc(r.lng)}"></label>
+      </div>
+      <label class="f">Hours<input id="aHours" value="${esc(r.hours)}"></label>
+      <label class="f">Phone<input id="aPhone" value="${esc(r.phone)}"></label>
+      <label class="f">Website<input id="aWebsite" value="${esc(r.website_url)}" placeholder="https://"></label>
+      <label class="f">Price<select id="aPrice">${[1, 2, 3].map((n) => opt(n, '$'.repeat(n), r.price_level)).join('')}</select></label>
+      <label style="display:flex; gap:10px; align-items:center"><input type="checkbox" id="aDine" style="width:20px; height:20px"${r.dine_in ? ' checked' : ''}> Dine-in</label>
+      <label style="display:flex; gap:10px; align-items:center"><input type="checkbox" id="aPickup" style="width:20px; height:20px"${r.pickup ? ' checked' : ''}> Pickup</label>
+      <label class="f">Founding partner until (optional)<input id="aFounding" type="date" value="${esc((r.founding_until || '').slice(0, 10))}"></label>
+      <label class="f">Status<select id="aStatus">${[['draft', 'Draft (hidden)'], ['active', 'Active (on the map)'], ['paused', 'Paused (hidden)'], ['ended', 'Ended (hidden)']].map(([v, l]) => opt(v, l, r.status)).join('')}</select></label>
+      <div style="display:flex; gap:10px; flex-wrap:wrap"><button class="btn pri" type="submit" id="aSave">Save</button><button class="btn" type="button" data-act="adminCancel">Cancel</button></div>
+    </form>
+  </div>`;
+}
+function vAdmin() {
+  const wrap = (body) => `<section><div class="wrap" style="max-width:820px"><div class="sec-head" style="margin-bottom:20px"><p class="eyebrow">FoodiePass</p><h1 style="font-size: clamp(34px, 5vw, 52px)">Admin</h1></div>${body}</div></section>`;
+  if (!AUTH_LIVE) return wrap('<div class="note">Connect Supabase to use the admin panel.</div>');
+  if (!member) return wrap(`<div class="card">${authPanel('signin')}</div>`);
+  if (adminState.checkedFor !== member.id || !adminState.loaded) return wrap('<p>Checking your access…</p>');
+  if (adminState.failed) return wrap('<div class="note">The admin panel couldn’t load. Refresh the page and try again.</div>');
+  if (!adminState.isAdmin) return wrap(`<div class="note">${esc(member.email || 'This account')} doesn’t have admin access.</div>`);
+  if (adminState.draft) return wrap(adminForm());
+  const newApps = adminState.apps.filter((a) => a.status === 'new').length;
+  const tab = (id, label) => `<button class="${adminState.tab === id ? 'on' : ''}" data-act="adminTab" data-tab="${id}" aria-pressed="${adminState.tab === id}">${label}</button>`;
+  return wrap(`<div class="seg" role="group" aria-label="Admin sections" style="margin-bottom:18px">${tab('applications', `Applications${newApps ? ' (' + newApps + ' new)' : ''}`)}${tab('restaurants', `Restaurants (${adminState.restaurants.length})`)}</div>
+    ${adminState.tab === 'applications' ? `<div class="grid" style="gap:12px">${adminApps()}</div>` : adminRestaurants()}`);
+}
+function mountAdminMap() {
+  const el = document.getElementById('adminMap');
+  if (!el || !window.L || adminMap) return;
+  const r = adminState.draft;
+  adminMap = L.map(el, { scrollWheelZoom: false }).setView(r.lat != null ? [r.lat, r.lng] : [29.745, -95.43], r.lat != null ? 15 : 11);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(adminMap);
+  adminPin = null;
+  if (r.lat != null) setAdminPin(r.lat, r.lng, false);
+  adminMap.on('click', (e) => setAdminPin(e.latlng.lat, e.latlng.lng, true));
+}
+function setAdminPin(lat, lng, writeInputs) {
+  if (!adminMap) return;
+  if (adminPin) adminPin.setLatLng([lat, lng]);
+  else adminPin = L.marker([lat, lng], { icon: L.divIcon({ className: '', html: '<div class="pin hot"></div>', iconSize: [22, 22], iconAnchor: [11, 11] }) }).addTo(adminMap);
+  if (writeInputs) { $('#aLat').value = lat.toFixed(6); $('#aLng').value = lng.toFixed(6); }
+}
+async function adminGeocode() {
+  const a = $('#aAddress').value.trim();
+  if (!a) return toast('Enter an address first.');
+  try {
+    const q = /\btx\b|texas/i.test(a) ? a : a + ', Houston, TX';
+    const res = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=' + encodeURIComponent(q));
+    const hit = res.ok ? (await res.json())[0] : null;
+    if (!hit) return toast('Address not found. Click the map to place the pin instead.');
+    const lat = Number(hit.lat), lng = Number(hit.lon);
+    setAdminPin(lat, lng, true); adminMap.setView([lat, lng], 16);
+  } catch (e) { toast('Address lookup isn’t available. Click the map to place the pin instead.'); }
+}
+async function adminSave() {
+  const v = (id) => $('#' + id).value.trim();
+  const num = (id) => (v(id) === '' ? null : Number(v(id)));
+  let site = v('aWebsite');
+  if (site && !/^https?:\/\//i.test(site)) site = 'https://' + site;
+  const row = {
+    name: v('aName'), description: v('aDesc'), offer_text: v('aOffer'), cuisine: v('aCuisine'), district_id: v('aDistrict'),
+    address: v('aAddress') || null, hours: v('aHours') || null, phone: v('aPhone') || null, website_url: site || null,
+    lat: num('aLat'), lng: num('aLng'), price_level: Number(v('aPrice')), dine_in: $('#aDine').checked, pickup: $('#aPickup').checked,
+    founding_until: v('aFounding') ? new Date(v('aFounding') + 'T12:00:00').toISOString() : null, status: v('aStatus'),
+  };
+  const problem = !row.name ? 'Enter the restaurant name.' : !row.district_id ? 'Choose a neighborhood.'
+    : row.status === 'active' && (!row.offer_text || row.lat === null || row.lng === null) ? 'An active restaurant needs an offer and a pin on the map. Add them, or save it as a draft.' : null;
+  if (problem) { adminState.draft = { ...adminState.draft, ...row }; adminState.msg = problem; return go('admin'); }
+  const btn = $('#aSave'); btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const { id, appId } = adminState.draft;
+    const res = id ? await sb.from('restaurants').update(row).eq('id', id).select('id').single() : await sb.from('restaurants').insert(row).select('id').single();
+    if (res.error) throw res.error;
+    if (appId) { const u = await sb.from('partner_applications').update({ status: 'added', restaurant_id: res.data.id }).eq('id', appId); if (u.error) throw u.error; }
+    adminState.draft = null; adminState.msg = null; adminState.tab = 'restaurants';
+    await loadAdminData(); await loadDirectory();
+    toast('Saved'); go('admin');
+  } catch (e) {
+    console.warn('FoodiePass: restaurant not saved', e);
+    adminState.draft = { ...adminState.draft, ...row }; adminState.msg = 'That didn’t save. Check your connection and try again.'; go('admin');
+  }
+}
+async function adminAppStatus(id, status) {
+  const { error } = await sb.from('partner_applications').update({ status }).eq('id', id);
+  if (error) return toast('That didn’t save. Try again.');
+  try { await loadAdminData(); } catch (e) { /* keep showing the last list */ }
+  go('admin');
+}
+function adminFromApp(id) {
+  const a = adminState.apps.find((x) => x.id === id); if (!a) return;
+  const d = DISTRICTS.find((x) => x.name === a.district_text);
+  adminState.draft = { ...blankDraft(), appId: a.id, name: a.restaurant_name, description: a.description, cuisine: a.cuisine || '', district_id: d ? d.id : '', address: a.address || '', offer_text: (a.proposed_offer || '').slice(0, 120) };
+  adminState.msg = null; go('admin');
+}
+async function submitPartner() {
+  if (!sb) return toast('The sign-up form isn’t connected yet.');
+  const v = (id) => $('#' + id).value.trim();
+  const btn = $('#pSend'); btn.disabled = true; btn.textContent = 'Sending…';
+  const { error } = await sb.rpc('submit_partner_application', { p_restaurant_name: v('pName'), p_contact_name: v('pContact'), p_contact_reach: v('pReach'), p_description: v('pDesc'), p_address: v('pAddress'), p_district: v('pDistrict'), p_cuisine: v('pCuisine'), p_proposed_offer: v('pOffer'), p_slow_nights: v('pSlow'), p_hp: v('pHp') }).then((r) => r, () => ({ error: { message: 'network' } }));
+  if (error) {
+    btn.disabled = false; btn.textContent = 'Send';
+    return toast(error.message === 'rate_limited' ? 'We’re getting a lot of sign-ups. Please try again in a little while.' : 'That didn’t send. Check your connection and try again.');
+  }
+  ui.partnerSent = true; go('partners');
 }
 
 // ---------- Map ----------
@@ -1136,7 +1200,7 @@ function refreshResults(fit) {
   const list = document.getElementById('list');
   if (list) list.innerHTML = renderList();
   const head = document.querySelector('.results-head p');
-  if (head) { const n = filtered().length; head.innerHTML = `<b class="tabular">${n}</b> restaurant${n === 1 ? '' : 's'} ${ui.here ? 'near you' : 'found'}${ui.districts.length ? ' in ' + ui.districts.map((d) => esc(D[d].name)).join(', ') : ''}`; }
+  if (head) { const n = filtered().length; head.innerHTML = `<b class="tabular">${n}</b> restaurant${n === 1 ? '' : 's'} ${ui.here ? 'near you' : 'found'}`; }
   drawPins(fit);
 }
 
@@ -1148,12 +1212,13 @@ function openDrawer(id) {
     <button class="x" data-act="closeDrawer" aria-label="Close">\u00D7</button>
     <p class="eyebrow">${esc(r.cuisine)} \u00B7 ${'$'.repeat(r.price)}</p>
     <h2 id="dTitle">${esc(r.name)}</h2>
-    <p class="muted" style="display:flex; gap:6px; align-items:center">${I.pin}${esc(d.name)}</p>
+    <p class="muted" style="display:flex; gap:6px; align-items:center">${I.pin}${esc(r.address || d.name)}</p>
     <p style="font-size:19px; color: var(--ink-2)">${esc(r.desc)}</p>
+    ${r.hours ? `<p class="small muted">${esc(r.hours)}</p>` : ''}
+    ${r.phone || /^https?:\/\//i.test(r.website || '') ? `<p class="small">${r.phone ? `<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>` : ''}${r.phone && r.website ? ' · ' : ''}${/^https?:\/\//i.test(r.website || '') ? `<a href="${esc(r.website)}" target="_blank" rel="noopener noreferrer">Website</a>` : ''}</p>` : ''}
     <div class="card" style="gap:8px"><p class="eyebrow">Member offer</p><p style="font-family: var(--f-display); font-weight:800; font-size:30px; line-height:1.1">${esc(r.offer)}</p><p class="small muted">Show your live pass before you pay. Alcohol excluded. Not combined with other offers.</p></div>
-    <div class="badges">${r.isNew ? `<span class="badge new">${I.star}New</span>` : ''}${r.founding ? `<span class="badge fp">${I.star}Founding partner</span>` : ''}<span class="badge">${I.dine}Dine-in</span>${r.pickup ? `<span class="badge">${I.pickup}Pickup</span>` : ''}</div>
-    <div style="display:flex; gap:10px; flex-wrap:wrap">${!member ? '<a class="btn pri" href="#join" data-go="join">Join to use this offer</a>' : isPaid() ? `<button class="btn pri" data-usepass="${r.id}">I\u2019m here: open my pass</button>` : '<a class="btn pri" href="#pass" data-go="pass">Activate my pass</a>'}<button class="btn" data-act="closeDrawer">Back to results</button></div>
-    <p class="sample">Sample listing. Real partners, addresses and hours will be announced before launch.</p>
+    <div class="badges">${r.isNew ? `<span class="badge new">${I.star}New</span>` : ''}${r.founding ? `<span class="badge fp">${I.star}Founding partner</span>` : ''}${r.dineIn ? `<span class="badge">${I.dine}Dine-in</span>` : ''}${r.pickup ? `<span class="badge">${I.pickup}Pickup</span>` : ''}</div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap">${!member ? '<a class="btn pri" href="#join" data-go="join">Join to use this offer</a>' : isPaid() ? '<a class="btn pri" href="#pass" data-go="pass">Show my pass</a>' : '<a class="btn pri" href="#pass" data-go="pass">Activate my pass</a>'}<button class="btn" data-act="closeDrawer">Back to results</button></div>
   </div></div>`;
   highlight(id);
   const x = document.querySelector('.drawer .x'); if (x) x.focus();
@@ -1161,16 +1226,21 @@ function openDrawer(id) {
 function closeDrawer() { $('#drawerRoot').innerHTML = ''; }
 
 // ---------- Router ----------
-const VIEWS = { home: vHome, how: vHow, restaurants: vRestaurants, join: vJoin, pass: vPass, partners: vPartners, faq: vFaq, conduct: vConduct };
+const VIEWS = { home: vHome, how: vHow, restaurants: vRestaurants, join: vJoin, pass: vPass, partners: vPartners, faq: vFaq, conduct: vConduct, admin: vAdmin };
 let view = 'home', clockTimer = null;
 function go(name, anchor) {
   view = VIEWS[name] ? name : 'home';
   if (map) { map.remove(); map = null; }
+  if (adminMap) { adminMap.remove(); adminMap = null; }
   $('#app').innerHTML = VIEWS[view]();
   document.querySelectorAll('.nav a').forEach((a) => a.classList.toggle('on', a.dataset.go === view));
   $('#signinBtn').textContent = member ? 'My pass' : 'Sign in';
   if (location.hash !== '#' + view) { try { history.replaceState(null, '', '#' + view); } catch (e) { /* ignore */ } }
   if (view === 'restaurants') setTimeout(mountMap, 0);
+  if (view === 'admin') {
+    if (AUTH_LIVE && member && adminState.checkedFor !== member.id) loadAdmin();
+    setTimeout(mountAdminMap, 0);
+  }
   startClock();
   const target = anchor && document.getElementById(anchor);
   if (target) target.scrollIntoView({ behavior: 'smooth' }); else window.scrollTo(0, 0);
@@ -1181,12 +1251,6 @@ function startClock() {
     const now = new Date();
     document.querySelectorAll('[data-clock]').forEach((el) => (el.textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })));
     document.querySelectorAll('[data-date]').forEach((el) => (el.textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })));
-    const cd = document.querySelector('[data-countdown]');
-    if (cd && visit && !visit.confirmedAt) {
-      const left = visitLeft();
-      if (left <= 0) { clearInterval(clockTimer); return go('pass'); }
-      const s = Math.ceil(left / 1000); cd.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
-    }
   };
   tick();
   if (document.querySelector('[data-clock]')) clockTimer = setInterval(tick, 1000);
@@ -1200,22 +1264,26 @@ document.addEventListener('click', (e) => {
   if (d.act === 'closeDrawer') { if (t.classList.contains('scrim') && e.target !== t) return; e.preventDefault(); return closeDrawer(); }
   if (d.go) { e.preventDefault(); closeDrawer(); if (d.plan) { ui.plan = d.plan; ui.joined = false; } return go(d.go, d.anchor || (d.go === 'join' && d.plan ? 'checkout' : null)); }
   if (d.open) return openDrawer(d.open);
-  if (d.district) { ui.districts = ui.districts.includes(d.district) ? ui.districts.filter((x) => x !== d.district) : [...ui.districts, d.district]; t.classList.toggle('on'); t.setAttribute('aria-pressed', ui.districts.includes(d.district)); return refreshResults(true); }
   if (d.mode) { ui.mode = d.mode; document.querySelectorAll('[data-mode]').forEach((b) => { b.classList.toggle('on', b.dataset.mode === ui.mode); b.setAttribute('aria-pressed', b.dataset.mode === ui.mode); }); return refreshResults(true); }
   if (d.planPick) { ui.plan = d.planPick; ui.joined = false; go('join', 'checkout'); return; }
-  if (d.usepass) { e.preventDefault(); return openVisit(d.usepass); }
   switch (d.act) {
-    case 'endVisit': return endVisit();
-    case 'clear': ui.districts = []; ui.cuisine = ''; ui.q = ''; ui.mode = 'dine'; ui.sort = 'new'; return go('restaurants');
+    case 'adminTab': adminState.tab = d.tab; return go('admin');
+    case 'adminNew': adminState.draft = blankDraft(); adminState.msg = null; return go('admin');
+    case 'adminEdit': { const r = adminState.restaurants.find((x) => x.id === d.id); if (r) { adminState.draft = { ...r, appId: null }; adminState.msg = null; go('admin'); } return; }
+    case 'adminCancel': adminState.draft = null; adminState.msg = null; return go('admin');
+    case 'adminFromApp': return adminFromApp(d.id);
+    case 'adminAppStatus': return adminAppStatus(d.id, d.status);
+    case 'adminGeocode': return adminGeocode();
+    case 'clear': ui.cuisine = ''; ui.q = ''; ui.mode = 'dine'; ui.sort = 'new'; return go('restaurants');
     case 'toggleFilters': ui.filtersOpen = !ui.filtersOpen; document.querySelector('.panel').classList.toggle('collapsed', !ui.filtersOpen); return;
     case 'locate':
-      if (!navigator.geolocation) return toast('Location isn\u2019t available here. Pick a neighborhood instead.');
-      navigator.geolocation.getCurrentPosition((pos) => { ui.here = { lat: pos.coords.latitude, lng: pos.coords.longitude }; ui.sort = 'near'; go('restaurants'); }, () => toast('Location isn\u2019t available here. Pick a neighborhood instead.'), { timeout: 6000 });
+      if (!navigator.geolocation) return toast('Location isn\u2019t available here. Search by name or cuisine instead.');
+      navigator.geolocation.getCurrentPosition((pos) => { ui.here = { lat: pos.coords.latitude, lng: pos.coords.longitude }; ui.sort = 'near'; go('restaurants'); }, () => toast('Location isn\u2019t available here. Search by name or cuisine instead.'), { timeout: 6000 });
       return;
     case 'signout':
     case 'signoutAll':
       if (AUTH_LIVE) { sb.auth.signOut(d.act === 'signoutAll' ? { scope: 'global' } : undefined).catch(() => {}); }
-      member = null; store.set('member', null); auth.step = 'email'; auth.msg = null; visit = null; saveVisit();
+      member = null; store.set('member', null); auth.step = 'email'; auth.msg = null;
       toast(d.act === 'signoutAll' ? 'Signed out on all devices' : 'Signed out'); return go('pass');
     case 'oauth':
       if (!AUTH_LIVE) return;
@@ -1245,12 +1313,16 @@ document.addEventListener('mouseover', (e) => { const c = e.target.closest('.rc'
 document.addEventListener('change', (e) => {
   if (e.target.id === 'cuisineSel') { ui.cuisine = e.target.value; refreshResults(true); }
   if (e.target.id === 'sortSel') { ui.sort = e.target.value; if (ui.sort === 'near' && !ui.here) toast('Tap \u201CUse my location\u201D to sort by distance.'); refreshResults(false); }
+  if (e.target.id === 'aLat' || e.target.id === 'aLng') { const lat = parseFloat($('#aLat').value), lng = parseFloat($('#aLng').value); if (isFinite(lat) && isFinite(lng)) setAdminPin(lat, lng, false); }
+});
+// Coming back to the tab re-checks the membership, so an ended membership can't keep showing a pass.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && view === 'pass' && member && member.live && !billing.delStep) loadStatus().then(rerender);
 });
 document.addEventListener('submit', (e) => {
   e.preventDefault();
   const f = e.target;
   if (f.id === 'searchForm') { ui.q = $('#q').value.trim(); return refreshResults(true); }
-  if (f.id === 'passSearch') return;
   if (f.id === 'insiderForm') { f.outerHTML = '<p style="font-weight:700; font-size:20px">Thanks! You\u2019re on the Insider list. (Preview only: nothing was sent.)</p>'; return; }
   if (f.id === 'joinForm') {
     if (ui.plan === 'member') { member = { name: $('#jName').value.trim(), since: Date.now(), code: 'FP-' + Math.random().toString(36).slice(2, 7).toUpperCase() }; store.set('member', member); ui.joined = true; toast('Welcome to FoodiePass'); return go('join', 'checkout'); }
@@ -1258,9 +1330,11 @@ document.addEventListener('submit', (e) => {
     return;
   }
   if (f.id === 'signinForm') { member = { name: $('#sName').value.trim(), since: Date.now(), code: 'FP-' + Math.random().toString(36).slice(2, 7).toUpperCase() }; store.set('member', member); return go('pass'); }
-  if (f.id === 'partnerForm') { ui.partnerSent = true; return go('partners'); }
+  if (f.id === 'partnerForm') return submitPartner();
+  if (f.id === 'adminForm') return adminSave();
   if (f.id === 'authEmailForm') {
     if (view === 'join') setReturnTo({ view: 'join', anchor: 'checkout', plan: ui.plan });
+    if (view === 'admin') setReturnTo({ view: 'admin' });
     const n = document.getElementById('authName'), m = document.getElementById('authMarketing');
     return sendCode($('#authEmail').value.trim().toLowerCase(), n ? n.value.trim() : '', m ? m.checked : false);
   }
@@ -1272,6 +1346,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#draw
 
 const start = (location.hash || '').replace('#', '');
 go(VIEWS[start] ? start : 'home');
+loadDirectory();
 
 if (AUTH_LIVE) {
   // Provider errors come back in the URL (e.g. the person cancelled Google sign-in).
@@ -1291,7 +1366,7 @@ if (AUTH_LIVE) {
     refreshChrome();
     if (signedIn) await loadStatus();
     if (portalReturn) toast('Billing updated.');
-    if (view === 'pass' || view === 'join') go(view, view === 'join' && member ? 'checkout' : null);
+    if (view === 'pass' || view === 'join' || view === 'admin') go(view, view === 'join' && member ? 'checkout' : null);
   });
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') { member = null; billing.status = null; refreshChrome(); return; }
