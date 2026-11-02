@@ -8,6 +8,7 @@ One $30 yearly pass for offers at independent restaurants across Houston. Restau
 | `tools/build_site.py` | Escapes non-ASCII and builds `netlify-deploy/index.html` + `foodiepass-netlify.zip` |
 | `netlify-deploy/_headers` | Security headers for the Netlify deploy |
 | `foodiepass-backend/` | Supabase database migration, Edge Functions (Stripe Checkout, portal, webhook, status, gifts, account deletion) and tests. See its README for setup |
+| `foodiepass-app/` | iOS and Android app (Expo / React Native): inKind-style phone sign-up, explore, paid-only member pass with staff swipe. See its README |
 | `login-and-payments-spec.md` | The accounts and payments spec the backend implements |
 
 ## Build the deployable site
