@@ -35,7 +35,27 @@ export type BillingStatus = {
 
 export const getConfig = () => api<BillingConfig>('billing-config', { auth: false });
 export const getStatus = (attempt?: string) => api<BillingStatus>('billing-status' + (attempt ? '?attempt=' + encodeURIComponent(attempt) : ''));
-export const startCheckout = (offeringId: string, attemptId: string) => api<{ url: string }>('billing-checkout', { method: 'POST', body: { offeringId, attemptId } });
+
+// If the server functions can't be reached, the member's own entitlement rows still prove access.
+async function statusFromEntitlements(userId: string): Promise<BillingStatus | null> {
+  const { data, error } = await supabase.from('entitlements').select('source, access_expires_at, grace_expires_at').eq('user_id', userId).eq('feature', 'membership');
+  if (error || !data) return null;
+  const now = Date.now();
+  const rows = data.filter((r) => Math.max(Date.parse(r.access_expires_at), r.grace_expires_at ? Date.parse(r.grace_expires_at) : 0) > now);
+  if (!rows.length) return null;
+  const isAdmin = rows.some((r) => r.source === 'admin');
+  const until = isAdmin ? now + 365 * 86400000 : Math.max(...rows.map((r) => Date.parse(r.access_expires_at)));
+  const inGrace = until <= now;
+  return {
+    membership: { active: true, access_until: new Date(until).toISOString(), in_grace: inGrace, grace_until: inGrace ? rows.map((r) => r.grace_expires_at).filter(Boolean).sort().pop() ?? null : null, source: isAdmin ? 'admin' : 'other' },
+    subscription: null, gift_codes: [], can_manage_billing: false, attempt_status: null,
+  };
+}
+export async function getStatusOrEntitlements(userId: string): Promise<BillingStatus | null> {
+  try { return await getStatus(); } catch { return statusFromEntitlements(userId); }
+}
+
+export const startCheckout =(offeringId: string, attemptId: string) => api<{ url: string }>('billing-checkout', { method: 'POST', body: { offeringId, attemptId } });
 export const openPortal = () => api<{ url: string }>('billing-portal', { method: 'POST' });
 export const redeemGift = (code: string) => api<{ access_until: string }>('gift-redeem', { method: 'POST', body: { code } });
 export const deleteAccount = () => api<{ ok: true }>('account-delete', { method: 'POST', body: { confirm: 'DELETE' } });

@@ -411,15 +411,34 @@ async function api(path, opts) {
   if (!res.ok) throw (body && body.error) || { code: 'server_error', message: 'Something went wrong on our side. Please try again.' };
   return body;
 }
+// If the server functions can't be reached, the member's own entitlement rows still prove access.
+async function statusFromEntitlements() {
+  try {
+    const { data, error } = await sb.from('entitlements').select('source, access_expires_at, grace_expires_at').eq('user_id', member.id).eq('feature', 'membership');
+    if (error) return null;
+    const now = Date.now();
+    const rows = data.filter((r) => Math.max(Date.parse(r.access_expires_at), r.grace_expires_at ? Date.parse(r.grace_expires_at) : 0) > now);
+    if (!rows.length) return null;
+    const isAdmin = rows.some((r) => r.source === 'admin');
+    const until = isAdmin ? now + 365 * 86400000 : Math.max(...rows.map((r) => Date.parse(r.access_expires_at)));
+    return { membership: { active: true, access_until: new Date(until).toISOString(), in_grace: until <= now, grace_until: until <= now ? rows.map((r) => r.grace_expires_at).filter(Boolean).sort().pop() : null, source: isAdmin ? 'admin' : 'other' }, subscription: null, gift_codes: [], can_manage_billing: false };
+  } catch (e) { return null; }
+}
+async function loadStatusFallback() {
+  const s = await statusFromEntitlements();
+  billing.statusError = !s;
+  if (s && member) { billing.status = s; member.membershipActive = true; }
+  return s;
+}
 async function loadStatus(attempt) {
   if (!AUTH_LIVE || !member) return null;
-  if (billing.fnOk === false) { billing.statusError = true; return null; }
+  if (billing.fnOk === false) return loadStatusFallback();
   try {
     const s = await api('billing-status' + (attempt ? '?attempt=' + encodeURIComponent(attempt) : ''));
     billing.status = s; billing.statusError = false;
     if (member) member.membershipActive = !!(s.membership && s.membership.active);
     return s;
-  } catch (e) { billing.statusError = true; return null; }
+  } catch (e) { return loadStatusFallback(); }
 }
 // Re-render the current page in place (no jump to the top).
 function rerender() { if (view !== 'pass' && view !== 'join') return; const y = window.scrollY; go(view); window.scrollTo(0, y); }
@@ -492,7 +511,7 @@ function accountPanel() {
     : '<p class="small muted">Loading your membership\u2026</p>';
   if (s) {
     if (m.active && m.in_grace) state = `<div class="note" role="alert" ${err}><b>Your renewal payment didn\u2019t go through.</b> Your pass stays active until ${fmtDate(m.grace_until)}. Update your card in Manage billing to keep it.</div>`;
-    else if (m.active) state = `<div class="note ok"><b>Membership active</b> through ${fmtDate(m.access_until)}.${sub ? (sub.cancel_at_period_end ? ' It will not renew.' : sub.renews ? ' It renews automatically; we remind you 30 days before.' : '') : ' (gift membership)'}</div>`;
+    else if (m.active) state = `<div class="note ok"><b>Membership active</b> through ${fmtDate(m.access_until)}.${sub ? (sub.cancel_at_period_end ? ' It will not renew.' : sub.renews ? ' It renews automatically; we remind you 30 days before.' : '') : m.source === 'gift' ? ' (gift membership)' : ''}</div>`;
     else state = '<div class="note">No active membership yet. <a href="#join" data-go="join" data-plan="member">Activate for $30 a year</a>.</div>';
   }
   const gifts = s && s.gift_codes && s.gift_codes.length ? `<h3 style="margin-top:8px">Gift codes you bought</h3><ul style="display:grid; gap:8px; padding:0; list-style:none">${s.gift_codes.map((g) => `<li style="display:flex; gap:10px; align-items:center; flex-wrap:wrap"><code style="font-size:17px">${esc(g.code)}</code><span class="small muted">${g.revoked ? 'Cancelled' : g.redeemed ? 'Redeemed' : 'Ready to give'}</span>${!g.revoked && !g.redeemed ? `<button class="btn sm" data-act="copyGift" data-code="${esc(g.code)}">Copy</button>` : ''}</li>`).join('')}</ul>` : '';

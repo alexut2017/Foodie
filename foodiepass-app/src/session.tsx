@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
-import { getConfig, getStatus, type BillingStatus } from './billing';
+import { getConfig, getStatusOrEntitlements, type BillingStatus } from './billing';
 
 type Ctx = {
   ready: boolean;
@@ -32,7 +32,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const loadStatus = useCallback(async (s: Session | null) => {
     if (!s) { setStatus(null); return; }
-    try { setStatus(await getStatus()); } catch { setStatus(null); }
+    try { setStatus(await getStatusOrEntitlements(s.user.id)); } catch { setStatus(null); }
   }, []);
 
   useEffect(() => {

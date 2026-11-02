@@ -109,6 +109,8 @@ Restaurants have no logins. They fill out the form on the website, then the admi
 insert into public.platform_admins (user_id) select id from auth.users where email = 'you@example.com';
 ```
 
+Admins are members without paying: adding someone here gives them an active pass, and removing them takes it away. Their pass shows a member-through date one year from today, like a normal membership.
+
 ## Planned: fundraisers (not built)
 
 Groups get their own QR code or link, and sales are tracked per group. The admin chooses how long a group earns on recurring renewals, set per campaign and adjustable per code (for example, 48 months for a high school freshman, 12 for a senior).

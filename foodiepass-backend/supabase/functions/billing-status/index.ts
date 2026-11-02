@@ -31,7 +31,9 @@ Deno.serve(async (req) => {
     const now = Date.now();
     const rows = ent.data ?? [];
     const activeRows = rows.filter((r) => Math.max(Date.parse(r.access_expires_at), r.grace_expires_at ? Date.parse(r.grace_expires_at) : 0) > now);
-    const accessUntil = activeRows.reduce<number>((m, r) => Math.max(m, Date.parse(r.access_expires_at)), 0);
+    const isAdmin = activeRows.some((r) => r.source === 'admin');
+    // Admin access has no real end date, so show the date a normal membership would have.
+    const accessUntil = isAdmin ? now + 365 * 86400_000 : activeRows.reduce<number>((m, r) => Math.max(m, Date.parse(r.access_expires_at)), 0);
     const inGrace = activeRows.length > 0 && accessUntil <= now;
     const sub = subs.data?.[0] ?? null;
 
@@ -41,7 +43,7 @@ Deno.serve(async (req) => {
         access_until: accessUntil ? new Date(accessUntil).toISOString() : null,
         in_grace: inGrace,
         grace_until: inGrace ? activeRows.map((r) => r.grace_expires_at).filter(Boolean).sort().pop() : null,
-        source: activeRows.some((r) => r.source.startsWith('subscription:')) ? 'subscription' : activeRows.length ? 'gift' : null,
+        source: isAdmin ? 'admin' : activeRows.some((r) => r.source.startsWith('subscription:')) ? 'subscription' : activeRows.length ? 'gift' : null,
       },
       subscription: sub && {
         status: sub.provider_status,

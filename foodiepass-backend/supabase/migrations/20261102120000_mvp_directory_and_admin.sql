@@ -234,6 +234,23 @@ alter policy "own gift codes" on public.gift_codes to authenticated;
 alter policy "own purchases" on public.purchases to authenticated;
 alter policy "own subscriptions" on public.subscriptions to authenticated;
 
+-- ---------- Admins are members without paying, through the same entitlement check paying members use ----------
+create function private.sync_admin_membership() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if tg_op = 'DELETE' then
+    delete from public.entitlements where user_id = old.user_id and feature = 'membership' and source = 'admin';
+    return old;
+  end if;
+  insert into public.entitlements (user_id, feature, source, access_expires_at)
+  values (new.user_id, 'membership', 'admin', '2099-12-31T00:00:00Z')
+  on conflict (user_id, feature, source) do update set access_expires_at = excluded.access_expires_at, updated_at = now();
+  return new;
+end $$;
+revoke all on function private.sync_admin_membership() from public;
+create trigger platform_admins_membership after insert or delete on public.platform_admins
+  for each row execute function private.sync_admin_membership();
+
 -- ---------- Functions only the server or the database should call ----------
 revoke all on function public.has_membership(uuid) from public, anon, authenticated;
 grant execute on function public.has_membership(uuid) to service_role;
