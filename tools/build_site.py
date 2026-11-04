@@ -16,7 +16,7 @@ HEAD = '''<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="FoodiePass: one $30 yearly pass for deals at independent restaurants across Houston. Restaurants join free.">
+<meta name="description" content="GrubScout: one $30 yearly pass for deals at independent restaurants. Restaurants join free.">
 <meta name="theme-color" content="#172A2A">
 '''
 
