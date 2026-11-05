@@ -10,6 +10,9 @@ verify_jwt = false   # Stripe calls it; protected by the Stripe signature
 [functions.billing-reconcile]
 verify_jwt = false   # cron calls it; protected by the x-cron-secret header
 
+[functions.account-cleanup]
+verify_jwt = false   # cron calls it; protected by the x-cron-secret header
+
 [functions.billing-checkout]
 verify_jwt = true
 

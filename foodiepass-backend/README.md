@@ -15,8 +15,11 @@ This is the server half of `login-and-payments-spec.md`. It runs on Supabase (Po
 | `supabase/functions/billing-reconcile` | Cron job every 15 minutes. Retries failed events, re-syncs from Stripe, closes stale attempts, prunes old rows |
 | `supabase/functions/gift-redeem` | `POST {code}`. Adds 12 months on top of any existing access |
 | `supabase/functions/account-delete` | `POST {confirm:"DELETE"}`. Needs a sign-in in the last 10 minutes. Cancels renewals, then deletes the account |
+| `supabase/functions/account-cleanup` | Daily cron job. Deletes accounts that never paid after 2 days, and lapsed accounts 30 days after access ended. Only reports until `ACCOUNT_CLEANUP_ENABLED=true` |
 | `supabase/functions/_shared/entitlements.ts` | Pure access rules: paid period, 3-day grace, cancel at period end |
+| `supabase/functions/_shared/account-cleanup.ts` | Pure rule for when an unpaid account may be deleted |
 | `tests/entitlements.test.ts` | `node --experimental-strip-types --test tests/entitlements.test.ts` |
+| `tests/account-cleanup.test.ts` | `node --experimental-strip-types --test tests/account-cleanup.test.ts` |
 
 ## Setup (about an hour, test mode first)
 
@@ -64,7 +67,7 @@ supabase secrets set \
   CHECKOUT_ENABLED=true
 
 supabase functions deploy billing-config billing-checkout billing-portal billing-status gift-redeem account-delete
-supabase functions deploy billing-webhook billing-reconcile --no-verify-jwt
+supabase functions deploy billing-webhook billing-reconcile account-cleanup --no-verify-jwt
 ```
 
 Supabase supplies `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to the functions automatically. Never put the service-role key or any Stripe secret in the website.
@@ -80,6 +83,25 @@ select cron.schedule('billing-reconcile', '*/15 * * * *', $$
     headers := jsonb_build_object('x-cron-secret', '<CRON_SECRET>')
   );
 $$);
+```
+
+### 4a. Unpaid account cleanup
+
+This job deletes accounts permanently. Admins, live subscriptions, checkouts in progress and unused gift codes are always kept. Schedule it, then read its report for a few days before turning deletion on. It reports the number of accounts it would delete, and it does nothing while `CHECKOUT_ENABLED=false`.
+
+```sql
+select cron.schedule('account-cleanup', '0 8 * * *', $$
+  select net.http_post(
+    url := 'https://<ref>.supabase.co/functions/v1/account-cleanup',
+    headers := jsonb_build_object('x-cron-secret', '<CRON_SECRET>')
+  );
+$$);
+```
+
+When the report looks right, turn deletion on:
+
+```bash
+supabase secrets set ACCOUNT_CLEANUP_ENABLED=true
 ```
 
 ### 5. Website
