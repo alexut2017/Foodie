@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:wght@400..700&display=swap">
 <style>
-/* Layout: sticky brand header; hash-routed pages (home, how, restaurants, join, pass, partners, faq, conduct); finder = filter row above list | map, stacking on phones. */
+/* Layout: sticky brand header; hash-routed pages (home, how, restaurants, join, pass, partners, faq, conduct, terms, privacy); finder = filter row above list | map, stacking on phones. */
 :root {
   --linen: #F6F4EF;   /* main ground */
   --sand: #EDE8DE;    /* second ground */
@@ -297,7 +297,7 @@ footer a:hover { color: var(--linen); text-decoration: underline; }
     </div>
     <div class="foot-bottom">
       <span>&#xA9; 2026 GrubScout &#xB7; v0.2.2</span>
-      <span><a href="#conduct" data-go="conduct" data-anchor="terms">Terms</a> &#xB7; <a href="#conduct" data-go="conduct" data-anchor="privacy">Privacy</a></span>
+      <span><a href="#terms" data-go="terms">Terms Of Use</a> &#xB7; <a href="#privacy" data-go="privacy">Privacy Policy</a></span>
     </div>
   </div>
 </footer>
@@ -358,7 +358,7 @@ const AUTH_CONFIG = {
   // 'link' while Supabase's built-in mailer is used (its default email has a sign-in link, not a code).
   // Switch to 'code' after custom SMTP is set up and the email templates include {{ .Token }}.
   emailMode: 'link',
-  termsVersion: '2026-10-25',
+  termsVersion: '2026-11-04',
   resendSeconds: 60,
 };
 let sb = null;
@@ -599,7 +599,7 @@ function authInner(mode) {
       <label class="f">Email<input id="authEmail" type="email" required autocomplete="email" value="${esc(auth.email)}"></label>
       ${mode === 'join' ? '<label style="display:flex; gap:10px; align-items:flex-start; font-size:15px"><input type="checkbox" id="authMarketing" style="width:20px; height:20px; margin-top:2px"> Send me new restaurants and member offers (optional)</label>' : ''}
       <button class="btn pri" type="submit" ${auth.busy ? 'disabled' : ''}>${auth.busy ? 'Sending\u2026' : 'Continue with email'}</button>
-      <p class="small muted">We\u2019ll email you a one-time ${AUTH_CONFIG.emailMode === 'link' ? 'sign-in link' : 'code'}. No password needed, and no card to create an account. By continuing you agree to the <a href="#conduct" data-go="conduct" data-anchor="terms">Terms</a> and <a href="#conduct" data-go="conduct" data-anchor="privacy">Privacy Policy</a>.</p>
+      <p class="small muted">We\u2019ll email you a one-time ${AUTH_CONFIG.emailMode === 'link' ? 'sign-in link' : 'code'}. No password needed, and no card to create an account. By continuing you agree to the <a href="#terms" data-go="terms">Terms Of Use</a> and <a href="#privacy" data-go="privacy">Privacy Policy</a>.</p>
     </form>`;
 }
 function authPanel(mode) { return `<div id="authPanel" data-mode="${mode}" style="display:grid; gap:14px">${authInner(mode)}</div>`; }
@@ -843,7 +843,7 @@ function dist(r) { const dl = r.lat - ui.here.lat, dg = (r.lng - ui.here.lng) * 
 function vJoin() {
   const p = ui.plan;
   const plans = [
-    ['member', 'Membership', '$30', '/year', ['Offers at every partner restaurant', 'Active the minute you pay', '12 months from the day you join', 'Renewal reminder 30 days before expiry'], 'Join now'],
+    ['member', 'Membership', '$30', '/year', ['Offers at every partner restaurant', 'Active the minute you pay', 'Renews at $30 a year until you cancel', 'Renewal reminder 30 days before each charge'], 'Join now'],
     ['gift', 'Gift', '$30', '/year', ['A year of GrubScout for someone else', 'Delivered as a code by email or text', 'Starts when they redeem it'], 'Give a gift'],
     ['group', 'Group', '$22.50', '/seat', ['For 50 or more people', 'Employers, hospitals, universities, apartment buildings', 'One invoice, simple seat list'], 'Ask about groups'],
     ['fundraiser', 'Fundraiser', '$7.50', ' kept per sale', ['For schools, teams and nonprofits', 'Sell memberships at $30', 'Your cause keeps $7.50 of each'], 'Start a fundraiser'],
@@ -860,7 +860,7 @@ function vJoin() {
       <p>Your membership is active through ${fmtDate(billing.status && billing.status.membership.access_until)}. Want to treat someone? <a href="#join" data-go="join" data-plan="gift">Send a gift</a>.</p>
       <a class="btn pri" href="#pass" data-go="pass" style="align-self:flex-start">Open my pass</a>` : `
       <h2 style="font-size:34px">${p === 'gift' ? 'Send a gift membership' : 'Activate your membership'}</h2>
-      <p>Signed in as <b>${esc(member.email)}</b>. Your account is free; the $30 ${p === 'gift' ? 'gift' : 'membership'} is a separate payment.${p === 'gift' ? ' After payment you\u2019ll get a gift code on your My pass page to send however you like.' : ' It renews yearly; you can turn that off any time.'}</p>
+      <p>Signed in as <b>${esc(member.email)}</b>. Your account is free; the $30 ${p === 'gift' ? 'gift' : 'membership'} is a separate payment.${p === 'gift' ? ' After payment you\u2019ll get a gift code on your My pass page to send however you like.' : ' It renews automatically at $30 a year until you cancel. Cancel any time in Manage billing to stop future charges. Payments are non-refundable except where the law requires otherwise. See the <a href="#terms" data-go="terms">Terms Of Use</a>.'}</p>
       ${offeringLive(p) ? `<button class="btn pri" id="checkoutBtn" data-act="checkout" style="align-self:flex-start" ${billing.busy ? 'disabled' : ''}>Continue to payment \u00b7 $30</button>`
         : billing.live === null ? '<button class="btn pri" style="align-self:flex-start" disabled>Loading payment options\u2026</button>'
         : `<div class="note ok"><b>Your account is ready.</b> Online payment opens at launch. We\u2019ll email ${esc(member.email)} as soon as you can ${p === 'gift' ? 'send a gift' : 'activate your membership'}.</div>`}
@@ -961,19 +961,19 @@ const FAQS = [
   ['How do I know a restaurant takes GrubScout?', 'Partners show a GrubScout sticker in the window and sign-up cards on the tables. You can also search for the restaurant on our map.'],
   ['How does the discount work?', 'Show your live pass before you pay. Your server applies that restaurant\u2019s offer, such as 10% off food or a free appetizer. Each offer and its days are listed on the restaurant\u2019s card.'],
   ['How much is GrubScout?', '$30 a year. Your membership lasts 12 months from the day you join, not until the end of the calendar year.'],
-  ['Does it renew automatically?', 'We email you 30 days before your membership ends, with every restaurant added since you joined. [Auto-renew policy to be confirmed before launch.]'],
+  ['Does it renew automatically?', 'Yes. Your membership renews at $30 a year until you cancel. We email you 30 days before each renewal, and you can turn renewal off any time in Manage billing on your My Pass page.'],
   ['Can I combine it with other deals?', 'Usually not. GrubScout offers can\u2019t be combined with happy hour, other coupons or specials unless the restaurant says so.'],
   ['Does it cover alcohol?', 'Not by default. A few restaurants may choose a drink offer, and their card will say so.'],
   ['Can I share my pass?', 'No. Each pass is for one person, signed in on one phone at a time. The moving clock shows staff it\u2019s live.'],
   ['What if a restaurant doesn\u2019t honor my pass?', 'Tap \u201CReport a problem\u201D on your pass. We follow up with the restaurant and remove partners who don\u2019t honor offers.'],
   ['How do I add my restaurant?', 'Restaurants join free. Fill out the short form on the For restaurants page and we’ll set up your listing.'],
-  ['Can I get a refund?', '[Refund policy to be confirmed before launch.]'],
+  ['Can I get a refund?', 'Membership payments, including renewals, are non-refundable except where the law requires otherwise. If you cancel, your pass keeps working until the end of the period you paid for.'],
 ];
 function vFaq() {
   return `<section><div class="wrap" style="max-width: 900px">
     <div class="sec-head"><p class="eyebrow">Help</p><h1 style="font-size: clamp(40px, 5.4vw, 60px)">Frequently asked questions</h1></div>
     ${FAQS.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}
-    <div class="card" id="contact" style="margin-top:28px"><h3>Contact us</h3><p>Email [hello@yourdomain] or call [phone]. We answer within one business day.</p></div>
+    <div class="card" id="contact" style="margin-top:28px"><h3>Contact us</h3><p>Email ${LEGAL_EMAIL}. We answer within one business day.</p></div>
   </div></section>`;
 }
 
@@ -986,9 +986,57 @@ function vConduct() {
       <div class="card"><h3>Keep your pass to yourself</h3><p>One pass, one person. Shared or copied passes are cancelled.</p></div>
       <div class="card"><h3>Be kind if something goes wrong</h3><p>Use \u201CReport a problem\u201D and let us sort it out with the restaurant.</p></div>
     </div>
-    <div class="card" id="terms" style="margin-top:28px"><h3>Terms</h3><p>[Membership terms to be published before launch.]</p></div>
-    <div class="card" id="privacy" style="margin-top:12px"><h3>Privacy</h3><p>[Privacy policy to be published before launch. Card details are handled by our payment provider and are never stored by GrubScout.]</p></div>
   </div></section>`;
+}
+
+// ---------- Legal pages. Keep these matched to what the site and app actually do. ----------
+// Contact address shown on the FAQ and both legal pages.
+const LEGAL_EMAIL = 'joingrubscout@outlook.com';
+const LEGAL_UPDATED = 'November 4, 2026';
+function legalPage(title, intro, sections) {
+  return `<section><div class="wrap" style="max-width: 900px">
+    <div class="sec-head"><p class="eyebrow">Legal</p><h1 style="font-size: clamp(40px, 5.4vw, 60px)">${title}</h1><p>Last updated ${LEGAL_UPDATED}. ${intro}</p></div>
+    <div class="grid" style="gap:12px">${sections.map(([h, body]) => `<div class="card"><h3>${h}</h3>${body}</div>`).join('')}</div>
+  </div></section>`;
+}
+
+function vTerms() {
+  return legalPage('Terms Of Use', 'These terms are an agreement between you and GrubScout. By creating an account or using our website or app, you agree to them.', [
+    ['What GrubScout is', '<p>GrubScout sells a yearly membership that gives you a digital pass. You show the pass at participating restaurants to get the offer listed for that restaurant. GrubScout does not own or run the restaurants, and we are not responsible for their food, service, premises or conduct.</p>'],
+    ['Your account', '<p>You must be at least 18 to buy a membership. Give us accurate information and keep access to your email or phone secure, because that is how you sign in. You are responsible for activity on your account.</p>'],
+    ['Price and payment', '<p>Membership costs $30 a year plus any applicable tax. Your membership starts when your payment is confirmed and lasts 12 months. Our payment provider, Stripe, processes payments. We may change the price for future periods, and we will tell you before a new price applies.</p>'],
+    ['Automatic renewal', '<p><b>Your membership renews automatically every 12 months at the then-current price, and your payment method is charged, until you cancel.</b> We email you about 30 days before each renewal. To cancel, use Manage billing on your My Pass page before the renewal date. You keep access until the end of the period you paid for. If a renewal payment fails, we may retry it, and your pass may stay active for a short grace period before it ends.</p>'],
+    ['Refunds', '<p>Membership payments, including renewals, are non-refundable except where the law requires otherwise. Cancelling stops future charges but does not refund the current period.</p>'],
+    ['Gift memberships', '<p>A gift membership is paid once and does not renew. It runs for 12 months from the day the code is redeemed. Gift codes are non-refundable and cannot be exchanged for cash, except where the law requires otherwise. Keep your code safe, because anyone who has it can redeem it.</p>'],
+    ['Restaurant offers', '<p>Each restaurant chooses its offer and the days it runs, and both are shown on its listing. Unless the restaurant says otherwise, offers cannot be combined with other discounts and do not cover alcohol. Restaurants may change their offers or leave GrubScout at any time, and we do not guarantee that a particular restaurant or offer will stay available. If a restaurant does not honor its listed offer, tell us and we will follow up with them.</p>'],
+    ['Using your pass', '<p>Each pass is for one person. Show your live pass before you pay. Do not share, copy, resell or fake a pass, and do not misuse the service or interfere with how it works. We may suspend or end your membership without a refund if you break these terms or the <a href="#conduct" data-go="conduct">Member Code Of Conduct</a>.</p>'],
+    ['Deleting your account', '<p>You can delete your account from your My Pass page. Doing so cancels any renewing membership right away, ends your pass, and removes unused gift codes. It does not entitle you to a refund.</p>'],
+    ['Our content', '<p>GrubScout owns its name, logo, website and app. You may use them only to use the service. Restaurant details can change, so check with the restaurant if something matters to you, such as hours or allergens.</p>'],
+    ['Disclaimers', '<p>The service is provided “as is” and “as available.” To the extent the law allows, we disclaim all implied warranties, and we do not promise that the service will always be available or error-free.</p>'],
+    ['Limit on liability', '<p>To the extent the law allows, GrubScout is not liable for indirect, incidental, special or consequential damages, and our total liability for any claim is limited to the amount you paid us in the 12 months before the claim arose. Some places do not allow these limits, so they may not fully apply to you.</p>'],
+    ['Disputes', '<p>Please contact us first so we can try to resolve the problem. Texas law governs these terms, without regard to its conflict of law rules. Any lawsuit must be brought in the state or federal courts located in Harris County, Texas, except that either of us may use small claims court if the claim qualifies. This does not take away consumer rights that your home state says cannot be waived.</p>'],
+    ['Changes to these terms', '<p>We may update these terms. If a change is significant, we will tell you by email or in the service before it takes effect. If you do not agree, you can cancel before your next renewal. Continuing to use the service means you accept the updated terms.</p>'],
+    ['Contact us', `<p>Email ${LEGAL_EMAIL}.</p>`],
+  ]);
+}
+
+function vPrivacy() {
+  return legalPage('Privacy Policy', 'This policy explains what GrubScout collects through its website and app, how we use it, and the choices you have.', [
+    ['What we collect', '<ul><li><b>Account details:</b> your email, your name if you give it, and your phone number if you sign up by phone in the app. If you sign in with another provider such as Google or Apple, we receive basic details from them, such as your name and email.</li><li><b>Membership details:</b> your membership status and dates, gift codes, and purchase records such as the amount and date.</li><li><b>Your choices:</b> when you accepted our terms and whether you opted in to marketing emails.</li><li><b>Messages:</b> what you send when you contact us or report a problem.</li><li><b>Restaurant applications:</b> contact and business details submitted on our partner form.</li><li><b>Technical data:</b> our service providers may log information such as your IP address, browser and device when you connect.</li></ul>'],
+    ['What we don’t collect', '<p><b>Card details:</b> Stripe collects and handles them, and we never see or store your full card number. <b>Visits:</b> we do not track which restaurants you visit or when you use your pass.</p>'],
+    ['Your location', '<p>If you allow it, your device’s location is used to show restaurants near you. We do not save it to your account. You can turn off location access at any time in your browser or phone settings, and you can still search by name or cuisine.</p>'],
+    ['How we use information', '<ul><li>To create your account, sign you in and show your pass</li><li>To process payments and send receipts and renewal reminders</li><li>To answer questions and follow up on problem reports</li><li>To send restaurant news and member offers if you opted in</li><li>To keep the service secure, prevent misuse and meet legal obligations</li></ul>'],
+    ['Who we share it with', '<p>We use service providers to run GrubScout: Supabase for our database and sign-in, Stripe for payments, and companies that host the website and deliver email and text messages. Your browser or device also connects directly to Google Fonts, OpenStreetMap and a code library provider to load fonts, maps and website code, and those services can see your IP address. If you report a problem, we may share the relevant details with the restaurant involved. We may also share information if the law requires it, to protect people or our rights, or as part of a sale or transfer of the business.</p><p><b>We do not sell your personal information or share it for targeted advertising.</b></p>'],
+    ['Cookies and local storage', '<p>We use your browser’s local storage to keep you signed in and remember your settings. We do not use advertising cookies or analytics trackers.</p>'],
+    ['Marketing emails', '<p>We send marketing emails only if you opt in, and you can unsubscribe at any time using the link in the email. We will still send messages about your account, such as receipts and renewal reminders.</p>'],
+    ['How long we keep it', '<p>We keep your information while your account is open. When you delete your account, we remove your account, pass and unused gift codes. We and our payment provider may keep records for as long as the law requires or as needed for tax, fraud prevention and disputes.</p>'],
+    ['Your choices and rights', '<p>You can ask us to access, correct, delete or send you a copy of your personal information, and you can delete your account yourself from your My Pass page. Depending on where you live, you may have additional rights, including the right to appeal if we decline a request. To make a request, email us. We will not treat you differently for using these rights.</p>'],
+    ['Security', '<p>We use access controls and encrypted connections to protect your information, but no service can guarantee complete security.</p>'],
+    ['Children', '<p>GrubScout is for adults and is not directed to children under 13. We do not knowingly collect their information. If you believe a child has given us information, contact us and we will delete it.</p>'],
+    ['Where we operate', '<p>GrubScout operates in the United States, and your information is processed by our providers there or wherever they run their services.</p>'],
+    ['Changes to this policy', '<p>We may update this policy and will change the date at the top when we do. If a change is significant, we will tell you by email or in the service.</p>'],
+    ['Contact us', `<p>Email ${LEGAL_EMAIL} with any privacy question or request.</p>`],
+  ]);
 }
 
 // ---------- Admin panel (#admin): review restaurant applications and add restaurants to the map ----------
@@ -1279,7 +1327,7 @@ function openDrawer(id) {
 function closeDrawer() { $('#drawerRoot').innerHTML = ''; }
 
 // ---------- Router ----------
-const VIEWS = { home: vHome, how: vHow, restaurants: vRestaurants, join: vJoin, pass: vPass, partners: vPartners, faq: vFaq, conduct: vConduct, admin: vAdmin };
+const VIEWS = { home: vHome, how: vHow, restaurants: vRestaurants, join: vJoin, pass: vPass, partners: vPartners, faq: vFaq, conduct: vConduct, terms: vTerms, privacy: vPrivacy, admin: vAdmin };
 let view = 'home', clockTimer = null;
 function go(name, anchor) {
   view = VIEWS[name] ? name : 'home';
