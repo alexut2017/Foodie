@@ -3,15 +3,15 @@ import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Small } from '../../src/ui';
-import { C } from '../../src/theme';
+import { C } from '../../src/theme'; import { Logo } from '../../src/Logo';
 
 // Step 0: brand welcome. Like inKind, one button starts phone sign-up for new and returning members alike.
 export default function Welcome() {
   return (
     <SafeAreaView style={s.wrap}>
       <View style={s.top}>
-        <View style={s.mark}><Text style={s.markFork}>{'\u{1F374}'}</Text></View>
-        <Text style={s.brand}>Foodie<Text style={{ color: C.mustard }}>Pass</Text></Text>
+        <Logo size={72} />
+        <Text style={s.brand}>Grub<Text style={{ color: C.chili }}>Scout</Text></Text>
         <Text style={s.h1}>One $30 pass.{'\n'}<Text style={{ color: C.mustard }}>Every great local table in Houston.</Text></Text>
         <Text style={s.lede}>Show your pass, save on the check. Pays for itself in about five dinners.</Text>
       </View>
