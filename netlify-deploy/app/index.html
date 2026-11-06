@@ -8,309 +8,524 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GrubScout">
-<title>GrubScout app (preview)</title>
+<title>GrubScout</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=DM+Sans:wght@400..700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <style>
-:root { --linen:#F6F4EF; --sand:#EDE8DE; --card:#FFFDF8; --bayou:#172A2A; --chili:#E2552B; --mustard:#F2B134; --brick:#B5401C; --ink2:#4A5857; --muted:#5C6968; --line:#E2DDD2; --mint:#BFD3CF; --ok:#2F6B4C; --okbg:#DDEFE3; --okfg:#1F4D35; --display:'Bricolage Grotesque', 'Arial Black', Arial, sans-serif; color-scheme: light; }
+:root { --linen:#F6F4EF; --sand:#EDE8DE; --card:#FFFDF8; --bayou:#172A2A; --chili:#E2552B; --mustard:#F2B134; --brick:#B5401C; --ink2:#4A5857; --muted:#5C6968; --line:#E2DDD2; --mint:#BFD3CF; --ok:#2F6B4C; --okbg:#DDEFE3; --okfg:#1F4D35; --errbg:#FBE3DA; --errfg:#8A2E12; --display:'Bricolage Grotesque', 'Arial Black', Arial, sans-serif; color-scheme: light; }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: #0f1d1d; }
 body { font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif; color: var(--bayou); -webkit-tap-highlight-color: transparent; }
 #phone { position: relative; width: 100%; max-width: 430px; height: 100dvh; margin: 0 auto; background: var(--linen); display: flex; flex-direction: column; overflow: hidden; }
 @media (min-width: 600px) { body { display: flex; align-items: center; } #phone { height: min(900px, 96dvh); border-radius: 36px; box-shadow: 0 30px 80px rgba(0,0,0,.5); } }
-.screen { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; padding: calc(16px + env(safe-area-inset-top)) 24px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; }
+.screen { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 20px; padding: calc(16px + env(safe-area-inset-top)) 24px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; }
 .dark { background: var(--bayou); color: var(--linen); }
 .stack { display: flex; flex-direction: column; gap: 14px; }
 h1 { margin: 0; font-family: var(--display); font-size: 34px; line-height: 1.08; font-weight: 800; letter-spacing: -0.5px; }
+h2 { margin: 0; font-size: 20px; font-weight: 800; }
 p { margin: 0; }
+a { color: var(--brick); }
 .lede { color: var(--ink2); font-size: 17px; line-height: 1.4; }
 .small { color: var(--muted); font-size: 14px; line-height: 1.4; }
 .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--brick); }
-.btn { display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 999px; border: 2px solid var(--chili); background: var(--chili); color: var(--bayou); font: inherit; font-size: 17px; font-weight: 700; cursor: pointer; width: 100%; text-decoration: none; padding: 0 20px; }
-.btn.ghost { background: transparent; border-color: var(--bayou); }
+.btn { display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 999px; border: 2px solid var(--chili); background: var(--chili); color: var(--bayou); font: inherit; font-size: 17px; font-weight: 700; cursor: pointer; width: 100%; text-decoration: none; padding: 0 20px; text-align: center; }
+.btn.ghost { background: transparent; border-color: var(--bayou); color: var(--bayou); }
 .btn.ghost-light { background: transparent; border-color: var(--mint); color: var(--linen); }
+.btn.link { background: transparent; border-color: transparent; color: var(--brick); min-height: 44px; }
 .btn:disabled { opacity: .5; cursor: default; }
 .back { align-self: flex-start; width: 44px; height: 44px; border: 0; background: transparent; font-size: 28px; color: var(--bayou); cursor: pointer; padding: 0; }
 label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 15px; }
 .in { min-height: 54px; border: 1.5px solid #CFC7B8; border-radius: 14px; padding: 0 16px; font: inherit; font-size: 18px; color: var(--bayou); background: var(--card); width: 100%; }
+textarea.in { padding: 12px 16px; min-height: 96px; resize: vertical; font-size: 16px; }
 .in.search { border: 2px solid var(--bayou); border-radius: 999px; }
+.check { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; color: var(--ink2); line-height: 1.4; min-height: 44px; }
+.check input { width: 22px; height: 22px; flex-shrink: 0; accent-color: var(--chili); margin: 1px 0 0; }
 :focus-visible { outline: 3px solid var(--chili); outline-offset: 2px; }
-.boxes { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
-.box { aspect-ratio: .85; border-radius: 14px; background: var(--card); border: 1.5px solid #CFC7B8; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; }
-.box.on { border: 2.5px solid var(--chili); }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
 .main { flex: 1; min-height: 0; overflow-y: auto; padding: calc(16px + env(safe-area-inset-top)) 16px 24px; display: flex; flex-direction: column; gap: 12px; }
 .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
 .chip { flex-shrink: 0; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); color: var(--bayou); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .chip.on { background: var(--bayou); border-color: var(--bayou); color: var(--linen); }
-.row { text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px; display: flex; align-items: center; gap: 12px; width: 100%; font: inherit; color: var(--bayou); cursor: pointer; }
+.chip.soon { color: var(--muted); border-style: dashed; }
+.row { text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px; display: flex; align-items: center; gap: 12px; width: 100%; font: inherit; color: var(--bayou); cursor: pointer; }
 .row .name { font-size: 19px; font-weight: 800; letter-spacing: -0.3px; }
 .row .meta { font-size: 14px; color: var(--muted); }
 .row .offer { font-size: 15px; font-weight: 700; }
+.thumb { width: 64px; height: 64px; border-radius: 14px; object-fit: cover; flex-shrink: 0; background: var(--sand); display: flex; align-items: center; justify-content: center; }
+.hero { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: 20px; background: var(--sand); }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.badge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--sand); color: var(--ink2); }
+.badge.new { background: var(--mustard); color: var(--bayou); }
+.badge.founding { background: var(--bayou); color: var(--linen); }
+.badge.featured { background: var(--chili); color: var(--bayou); }
 .pill { flex-shrink: 0; min-height: 44px; border-radius: 999px; border: 0; background: var(--chili); color: var(--bayou); font: inherit; font-weight: 800; padding: 0 16px; cursor: pointer; }
 .tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--card); border-top: 1px solid var(--line); padding: 6px 0 calc(8px + env(safe-area-inset-bottom)); }
 .tab { border: 0; background: transparent; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; color: var(--muted); font: inherit; font-size: 12px; font-weight: 700; }
 .tab[aria-current="page"] { color: var(--brick); }
 .pass { background: var(--linen); border: 1px solid var(--line); border-radius: 28px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 12px 30px rgba(0,0,0,.18); }
 .pass.done { background: var(--okbg); box-shadow: none; border: 0; }
-.pass .who { font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
+.pass .who { font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -0.5px; overflow-wrap: anywhere; }
 .clock { font-family: var(--display); font-size: 40px; font-weight: 800; text-align: center; background: var(--sand); border-radius: 16px; padding: 8px 0; font-variant-numeric: tabular-nums; }
-.split { display: flex; justify-content: space-between; border-top: 2px dashed #D9D2C4; padding-top: 14px; }
+.split { display: flex; justify-content: space-between; gap: 12px; border-top: 2px dashed #D9D2C4; padding-top: 14px; }
 .split .k { font-size: 13px; color: var(--muted); } .split .v { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kv { display: flex; justify-content: space-between; gap: 12px; } .kv .v { font-weight: 600; text-align: right; overflow-wrap: anywhere; }
 .track { position: relative; height: 64px; border-radius: 999px; background: var(--bayou); overflow: hidden; }
 .track span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--linen); font-weight: 700; font-size: 16px; padding-left: 40px; pointer-events: none; }
 .range { -webkit-appearance: none; appearance: none; width: 100%; height: 64px; margin: 0; background: transparent; position: relative; z-index: 1; touch-action: none; }
 .range::-webkit-slider-runnable-track { height: 64px; background: transparent; }
 .range::-webkit-slider-thumb { -webkit-appearance: none; width: 56px; height: 56px; margin-top: 4px; border-radius: 50%; background: var(--mustard); border: 0; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
 .range::-moz-range-thumb { width: 56px; height: 56px; border-radius: 50%; background: var(--mustard); border: 0; }
-.banner { background: var(--mustard); color: var(--bayou); font-size: 12px; font-weight: 700; text-align: center; padding: 6px 12px calc(6px); }
+.note { border-radius: 14px; padding: 12px 14px; font-size: 15px; line-height: 1.4; background: var(--sand); color: var(--ink2); }
+.note.ok { background: var(--okbg); color: var(--okfg); }
+.note.err { background: var(--errbg); color: var(--errfg); }
 .sr { position: absolute; left: -9999px; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.center { flex: 1; display: flex; align-items: center; justify-content: center; }
 </style>
 </head>
 <body>
 <div id="phone">
-  <div class="banner" role="note">Preview app: sample restaurants, no texts sent, no payments taken.</div>
   <div id="app" style="flex: 1; min-height: 0; display: flex; flex-direction: column;"></div>
 </div>
 <script>
 'use strict';
-// GrubScout phone app preview. Mirrors GrubScout-app/ (Expo). Everything stays on this device.
-var D = { rice: 'Rice Village / West U', montrose: 'Montrose', heights: 'The Heights', downtown: 'Midtown · Downtown · EaDo', tmc: 'Medical Center / Museum District', bellaire: 'Bellaire Blvd / Chinatown' };
-var O = { ten: '10% off food · Sun–Thu', fifteen: '15% off food · Mon–Thu', app: 'Free appetizer with 2 entrées · Sun–Thu', dessert: 'Free dessert with 2 entrées · Daily', drink: 'Free drink or pastry with purchase · Daily' };
-var R = [
-  ['Juniper Table','rice','Mediterranean','Mezze plates, wood-grilled kebabs and big shared salads.','ten',2],
-  ['Kiko Ramen House','rice','Japanese','Rich tonkotsu and miso bowls, gyoza and rice plates.','fifteen',2],
-  ['Bluebonnet Bakeshop','rice','Bakery & café','Morning pastries, kolaches and pour-over coffee.','drink',1],
-  ['Rio Verde Cantina','rice','Tex-Mex','Fajitas, queso and enchiladas on a shaded patio.','app',2],
-  ['Marigold Thai Kitchen','montrose','Thai','Curries, khao soi and wok-fired noodles.','ten',2],
-  ['The Copper Pot','montrose','American','Neighborhood bistro: burgers, roast chicken, seasonal sides.','fifteen',3],
-  ['Little Lagos','montrose','West African','Jollof, suya and slow-cooked stews.','app',2],
-  ['Westheimer Noodle Co.','montrose','Vietnamese','Pho, vermicelli bowls and crispy egg rolls.','ten',1],
-  ['Studio Smokehouse','heights','BBQ','Post-oak brisket, ribs and scratch sides.','ten',2],
-  ['Ivy & Oak Trattoria','heights','Italian','Hand-rolled pasta, wood-fired pizza and antipasti.','app',3],
-  ['Porch Light Coffee','heights','Bakery & café','Espresso, breakfast tacos and laptop-friendly tables.','drink',1],
-  ['Bayou Biscuit Co.','heights','Southern','Brunch all day: biscuits, gravy and fried chicken.','fifteen',2],
-  ['Main Street Dumpling Bar','downtown','Chinese','Soup dumplings, scallion pancakes and noodles.','ten',2],
-  ['Eastwood Taqueria','downtown','Mexican','Al pastor, barbacoa and handmade tortillas.','fifteen',1],
-  ['Market Square Pizza Co.','downtown','Pizza','New York–style slices and whole pies.','ten',1],
-  ['Gulf & Grain','downtown','Seafood','Gulf oysters, redfish and grain bowls.','app',3],
-  ['Museum Mile Kitchen','tmc','Healthy','Grain bowls, wraps and fresh juices near the museums.','fifteen',1],
-  ['Almeda Curry House','tmc','Indian','Biryani, tikka and weekday lunch thalis.','ten',2],
-  ['Fannin Street Deli','tmc','Deli','Stacked sandwiches and soups for the after-shift crowd.','drink',1],
-  ['Third Ward Wing Shop','tmc','Wings','Lemon-pepper, honey-hot and dry-rub wings.','ten',1],
-  ['Lotus Lane Dim Sum','bellaire','Chinese','Cart-style dim sum and Cantonese roast meats.','app',2],
-  ['Spoon & Seoul','bellaire','Korean','Tableside barbecue, stews and banchan.','dessert',3],
-  ['Bayou Banh Mi','bellaire','Vietnamese','Banh mi, rice plates and Vietnamese coffee.','drink',1],
-  ['Kesar Grill','bellaire','Pakistani','Charcoal kebabs, karahi and fresh naan.','fifteen',2]
-];
-var LIST = R.map(function (r, i) { return { id: 'r' + i, name: r[0], district: r[1], cuisine: r[2], desc: r[3], offer: O[r[4]], price: r[5] }; });
-var find = function (id) { for (var i = 0; i < LIST.length; i++) if (LIST[i].id === id) return LIST[i]; return null; };
-var PASS_MS = 15 * 60000;
-var KEY = 'fp-app-preview';
+// GrubScout phone app (installable web app). Same Supabase project, data and rules as the website.
+// Only the project URL and publishable key belong here. Secrets stay in Supabase.
+var CFG = {
+  url: 'https://mroiimqqklitidpzaqnk.supabase.co',
+  key: 'sb_publishable_1YSf5nmBBotBnOULa3g7vQ_nj0Fd1RH',
+  site: '../',
+  termsVersion: '2026-11-04',
+  resendSeconds: 60,
+  passMinutes: 15,
+  version: '0.2.0'
+};
+var sb = null;
+try {
+  sb = window.supabase.createClient(CFG.url, CFG.key, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
+} catch (e) { sb = null; }
 
-function fresh() { return { screen: 'welcome', signin: false, phone: '', code: '', first: '', last: '', email: '', marketing: false, tab: 'explore', detail: null, q: '', district: null, passQ: '', paid: false, visit: null, resendAt: 0 }; }
-var S = (function () { try { return Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { return fresh(); } })();
+var PASS_MS = CFG.passMinutes * 60000;
+var KEY = 'gs-app';
+var DAY = 86400000;
+
+// UI state that survives a reload (no account data).
+function fresh() { return { tab: 'explore', q: '', district: null, passQ: '', visit: null, mode: 'join', email: '', name: '' }; }
+var S = (function () { try { var v = JSON.parse(localStorage.getItem(KEY)); return Object.assign(fresh(), v && typeof v === 'object' ? v : {}); } catch (e) { return fresh(); } })();
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private mode */ } }
-function set(patch, keepFocus) { Object.assign(S, patch); save(); render(keepFocus); }
+
+// Runtime state.
+var R = { screen: 'loading', detail: null, sentAt: 0, busy: false, msg: null, user: null, member: null, status: { active: false }, isAdmin: false, payOpen: false,
+  districts: [], list: [], dirState: 'loading', partner: null, partnerOpen: false };
+
+function set(patch, keepFocus) { Object.keys(patch).forEach(function (k) { if (k in S) S[k] = patch[k]; else R[k] = patch[k]; }); save(); render(keepFocus); }
 
 var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-var fmt = function (d) { return d.length < 4 ? d : d.length < 7 ? '(' + d.slice(0, 3) + ') ' + d.slice(3) : '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6); };
-var phoneOk = function () { return S.phone.length === 10 && /^[2-9]/.test(S.phone); };
-var emailOk = function () { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(S.email.trim()); };
-var profileOk = function () { return !!S.first.trim() && !!S.last.trim() && emailOk(); };
-var match = function (r, q) { return !q || (r.name + ' ' + r.cuisine + ' ' + D[r.district]).toLowerCase().indexOf(q.toLowerCase()) >= 0; };
-var fullName = function () { return (S.first.trim() + ' ' + S.last.trim()).trim() || 'Member'; };
-var LOGO = '<svg width="SIZE" height="SIZE" viewBox="240 148 840 840" role="img" aria-label="GrubScout"><path d="M552 795 A239 98 0 1 0 770 795 L751 821 A177 58 0 1 1 570 821 Z" fill="#E34C19"/><path d="M660 157 C515 157 398 275 398 420 C398 470 410 515 430 555 C480 660 590 800 653 881 Q660 888 667 881 C730 800 840 660 890 547 C910 505 920 470 920 420 C920 275 805 157 660 157 Z" fill="#E34C19"/><path d="M567 283 A21 21 0 0 1 609 283 V407 A16 16 0 0 0 641 407 V283 A21.5 21.5 0 0 1 684 283 V407 A16 16 0 0 0 716 407 V283 A21 21 0 0 1 758 283 L764 435 C764 478 735 506 702 507 C697 507 694 510 694 516 V550 L698 670 C698 692 682 708 662 708 C642 708 626 692 626 670 L630 550 V516 C630 510 627 507 622 507 C589 506 561 478 561 435 Z" fill="#FFFFFF"/></svg>'; var ICON = {
+var emailOk = function (e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || '').trim()); };
+var safeUrl = function (u) { return /^https?:\/\//i.test(String(u || '')) ? String(u) : ''; };
+var fmtDate = function (d) { return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); };
+var LOGO = '<svg width="SIZE" height="SIZE" viewBox="240 148 840 840" role="img" aria-label="GrubScout"><path d="M552 795 A239 98 0 1 0 770 795 L751 821 A177 58 0 1 1 570 821 Z" fill="#E34C19"/><path d="M660 157 C515 157 398 275 398 420 C398 470 410 515 430 555 C480 660 590 800 653 881 Q660 888 667 881 C730 800 840 660 890 547 C910 505 920 470 920 420 C920 275 805 157 660 157 Z" fill="#E34C19"/><path d="M567 283 A21 21 0 0 1 609 283 V407 A16 16 0 0 0 641 407 V283 A21.5 21.5 0 0 1 684 283 V407 A16 16 0 0 0 716 407 V283 A21 21 0 0 1 758 283 L764 435 C764 478 735 506 702 507 C697 507 694 510 694 516 V550 L698 670 C698 692 682 708 662 708 C642 708 626 692 626 670 L630 550 V516 C630 510 627 507 622 507 C589 506 561 478 561 435 Z" fill="#FFFFFF"/></svg>';
+var logo = function (n) { return LOGO.replace(/SIZE/g, String(n)); };
+var ICON = {
   fork: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 2-2 6 0 8v10"/></svg>',
   card: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7h18v10H3zM3 11h18M7 15h4"/></svg>',
   user: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"/></svg>'
 };
+var msgHtml = function () { return R.msg ? '<p class="note ' + (R.msg.kind || '') + '" role="' + (R.msg.kind === 'err' ? 'alert' : 'status') + '">' + esc(R.msg.text) + '</p>' : ''; };
+
+// ---------- Data (same queries as the website) ----------
+function restaurantFromRow(r) {
+  var now = Date.now();
+  return {
+    id: String(r.id), name: r.name || 'Restaurant', desc: r.description || '', cuisine: r.cuisine || '', district: r.district_id || '',
+    address: r.address || '', hours: r.hours || '', phone: r.phone || '', website: safeUrl(r.website_url),
+    price: Math.max(1, Math.min(4, Number(r.price_level) || 2)), dineIn: r.dine_in !== false, pickup: !!r.pickup,
+    offer: r.offer_text || 'Member offer coming soon', featured: !!r.featured, photo: safeUrl(r.photo_url),
+    isNew: !!r.listed_at && now - new Date(r.listed_at).getTime() < 30 * DAY,
+    founding: !!r.founding_until && new Date(r.founding_until).getTime() > now
+  };
+}
+function districtName(id) { for (var i = 0; i < R.districts.length; i++) if (R.districts[i].id === id) return R.districts[i].name; return ''; }
+function find(id) { for (var i = 0; i < R.list.length; i++) if (R.list[i].id === id) return R.list[i]; return null; }
+
+async function loadDirectory() {
+  if (!sb) { R.dirState = 'error'; return render(); }
+  try {
+    var d = await sb.from('districts').select('id, name, lat, lng, live').order('sort_order');
+    var r = await sb.from('restaurants').select('id, name, description, cuisine, district_id, address, hours, phone, website_url, lat, lng, price_level, dine_in, pickup, offer_text, founding_until, listed_at, featured, photo_url').eq('status', 'active').order('name');
+    if (d.error || r.error) throw d.error || r.error;
+    R.districts = d.data || [];
+    R.list = (r.data || []).map(restaurantFromRow).sort(function (a, b) { return (b.featured - a.featured) || a.name.localeCompare(b.name); });
+    R.dirState = 'ready';
+  } catch (e) { R.dirState = 'error'; }
+  render();
+}
+async function loadPayOpen() {
+  if (!sb) return;
+  try { var o = await sb.from('offerings').select('id, active').eq('id', 'membership_annual').maybeSingle(); R.payOpen = !!(o.data && o.data.active); } catch (e) { R.payOpen = false; }
+}
+function memberFromUser(u) {
+  var m = u.user_metadata || {};
+  var name = String(m.full_name || m.name || (u.email || '').split('@')[0] || 'Member').trim();
+  return { id: u.id, name: name, email: u.email || '', ref: 'GS-' + String(u.id).replace(/-/g, '').slice(0, 6).toUpperCase(), since: u.created_at };
+}
+async function statusFromEntitlements(uid) {
+  try {
+    var q = await sb.from('entitlements').select('source, access_expires_at, grace_expires_at').eq('user_id', uid).eq('feature', 'membership');
+    if (q.error) throw q.error;
+    var now = Date.now(), best = null;
+    (q.data || []).forEach(function (e) {
+      var until = e.source === 'admin' ? now + 365 * DAY : Math.max(new Date(e.access_expires_at).getTime() || 0, new Date(e.grace_expires_at || 0).getTime() || 0);
+      if (until > now && (!best || until > best.until)) best = { active: true, until: until, source: e.source, grace: new Date(e.access_expires_at).getTime() <= now };
+    });
+    return best || { active: false };
+  } catch (e) { return { active: false, error: true }; }
+}
+async function checkAdmin(uid) {
+  try { var a = await sb.from('platform_admins').select('user_id').eq('user_id', uid).maybeSingle(); return !!(a.data); } catch (e) { return false; }
+}
+async function onSession(session) {
+  if (!session || !session.user) { R.user = null; R.member = null; R.status = { active: false }; R.isAdmin = false; if (R.screen === 'loading' || R.screen === 'app') R.screen = 'welcome'; return render(); }
+  R.user = session.user; R.member = memberFromUser(session.user);
+  R.screen = 'app'; R.msg = null; render();
+  var st = await statusFromEntitlements(session.user.id);
+  var adm = await checkAdmin(session.user.id);
+  R.status = st; R.isAdmin = adm;
+  if (!st.active && S.visit) S.visit = null;
+  save(); render();
+}
+
+// ---------- Auth (email link, same settings as the website) ----------
+async function sendLink(isResend) {
+  var email = S.email.trim().toLowerCase();
+  if (!sb) return set({ msg: { kind: 'err', text: 'GrubScout could not load. Check your connection and reload.' } });
+  var opts = { emailRedirectTo: location.origin + location.pathname };
+  if (S.mode === 'join') {
+    opts.shouldCreateUser = true;
+    opts.data = { full_name: S.name.trim(), terms_version: CFG.termsVersion, terms_accepted_at: new Date().toISOString(), marketing_opt_in: !!R.marketing };
+  } else opts.shouldCreateUser = false;
+  set({ busy: true, msg: null });
+  var res; try { res = await sb.auth.signInWithOtp({ email: email, options: opts }); } catch (e) { res = { error: { message: 'network' } }; }
+  var err = res && res.error, text = err ? String(err.message || '') + ' ' + String(err.code || '') : '';
+  if (err && S.mode === 'signin' && /otp_disabled|signups? not allowed|user not found/i.test(text)) err = null; // don't reveal whether an account exists
+  if (err) {
+    var m = /rate|too many|429|seconds/i.test(text + ' ' + (err.status || '')) ? 'Too many tries. Wait a minute, then try again.' : 'We couldn’t send the link just now. Check your connection and the address, then try again.';
+    return set({ busy: false, msg: { kind: 'err', text: m } });
+  }
+  set({ busy: false, screen: 'sent', sentAt: Date.now(), msg: isResend ? { kind: 'ok', text: 'Sent again. Check your inbox and spam folder.' } : null });
+}
+async function signOut(all) {
+  set({ busy: true });
+  try { await sb.auth.signOut({ scope: all ? 'global' : 'local' }); } catch (e) { /* still clear locally */ }
+  S.visit = null; save();
+  set({ busy: false, screen: 'welcome', user: null, member: null, status: { active: false }, isAdmin: false, msg: { kind: 'ok', text: all ? 'Signed out on all devices.' : 'Signed out.' } });
+}
 
 // ---------- Screens ----------
+function vLoading() { return '<div class="screen dark"><div class="center">' + logo(72) + '</div></div>'; }
 function vWelcome() {
-  return '<div class="screen dark"><div class="stack" style="gap:18px; margin-top:32px">' +
-    LOGO.replace('SIZE', '72').replace('SIZE', '72') +
+  return '<div class="screen dark"><div class="stack" style="gap:18px; margin-top:32px">' + logo(72) +
     '<p style="font-family:var(--display);font-size:28px;font-weight:800;letter-spacing:-.5px">Grub<span style="color:var(--chili)">Scout</span></p>' +
     '<h1 style="font-size:40px;color:var(--linen)">One $30 pass. <span style="color:var(--mustard)">Every great local table in Houston.</span></h1>' +
-    '<p style="color:var(--mint);font-size:19px;line-height:1.4">Show your pass, save on the check. Pays for itself in about five dinners.</p></div>' +
+    '<p style="color:var(--mint);font-size:19px;line-height:1.4">Show your pass, save on the check. Pays for itself in about five dinners.</p>' + msgHtml() + '</div>' +
     '<div class="stack" style="gap:12px"><button class="btn" data-act="join">Get started</button><button class="btn ghost-light" data-act="signin">I already have an account</button>' +
+    '<button class="btn link" style="color:var(--mustard)" data-act="browse">Browse restaurants first</button>' +
     '<p style="color:var(--mint);font-size:14px;text-align:center">Restaurants join free. Members pay $30 a year.</p></div></div>';
 }
-function vPhone() {
+function vEmail() {
+  var join = S.mode === 'join';
+  var ok = emailOk(S.email) && (!join || (S.name.trim() && R.agree));
   return '<div class="screen"><div class="stack"><button class="back" data-act="toWelcome" aria-label="Back">←</button>' +
-    '<h1>' + (S.signin ? 'Welcome back' : 'What’s your number?') + '</h1>' +
-    '<p class="lede">We’ll text you a 6-digit code. No password, no card. Message and data rates may apply.</p>' +
-    '<label class="f">Mobile number<span style="display:flex;gap:10px"><span style="border:1.5px solid #CFC7B8;border-radius:14px;padding:0 14px;display:flex;align-items:center;background:var(--card);font-size:18px;font-weight:600">+1</span>' +
-    '<input id="phoneIn" class="in" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(713) 555-0123" value="' + esc(fmt(S.phone)) + '" style="font-size:22px"></span></label></div>' +
-    '<div class="stack" style="gap:12px"><button class="btn" data-act="sendCode"' + (phoneOk() ? '' : ' disabled') + '>Send code</button>' +
-    '<p class="small" style="text-align:center">By continuing you agree to the GrubScout Terms and Privacy Policy.</p>' +
-    '<p class="small" style="text-align:center;font-size:13px">Preview: no text is sent. Any 6 digits work on the next screen.</p></div></div>';
+    '<h1>' + (join ? 'Create your account' : 'Welcome back') + '</h1>' +
+    '<p class="lede">' + (join ? 'No password. We’ll email you a sign-in link. Your name goes on your member pass.' : 'Enter your email and we’ll send you a sign-in link.') + '</p>' +
+    (join ? '<label class="f">Full name<input id="nameIn" class="in" autocomplete="name" value="' + esc(S.name) + '"></label>' : '') +
+    '<label class="f">Email<input id="emailIn" class="in" type="email" inputmode="email" autocomplete="email" autocapitalize="off" value="' + esc(S.email) + '"></label>' +
+    (join ? '<label class="check"><input id="agreeIn" type="checkbox"' + (R.agree ? ' checked' : '') + '> <span>I agree to the <a href="' + CFG.site + '#terms" target="_blank" rel="noopener">Terms</a> and <a href="' + CFG.site + '#privacy" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>' +
+      '<label class="check"><input id="mktIn" type="checkbox"' + (R.marketing ? ' checked' : '') + '> <span>Email me new restaurants and member offers (optional).</span></label>' : '') +
+    msgHtml() + '</div>' +
+    '<div class="stack" style="gap:12px"><button class="btn" id="sendBtn" data-act="send"' + (ok && !R.busy ? '' : ' disabled') + '>' + (R.busy ? 'Sending…' : 'Email me a link') + '</button>' +
+    '<button class="btn link" data-act="' + (join ? 'signin' : 'join') + '">' + (join ? 'I already have an account' : 'New here? Create an account') + '</button></div></div>';
 }
-function vCode() {
-  var boxes = ''; for (var i = 0; i < 6; i++) boxes += '<div class="box' + (i === S.code.length ? ' on' : '') + '">' + esc(S.code[i] || '') + '</div>';
-  var wait = Math.max(0, Math.ceil((S.resendAt - Date.now()) / 1000));
-  return '<div class="screen"><div class="stack"><button class="back" data-act="toPhone" aria-label="Back">←</button><h1>Enter the code</h1>' +
-    '<p class="lede">Sent to ' + esc(fmt(S.phone)) + '. It expires in 10 minutes.</p>' +
-    '<div class="boxes" aria-hidden="true">' + boxes + '</div>' +
-    '<label class="f">6-digit code<input id="codeIn" class="in" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" value="' + esc(S.code) + '" style="letter-spacing:8px;font-size:22px"></label></div>' +
-    '<div class="stack" style="gap:12px"><button class="btn" data-act="verify"' + (S.code.length === 6 ? '' : ' disabled') + '>Verify</button>' +
-    '<button class="btn ghost" id="resendBtn" data-act="resend"' + (wait > 0 ? ' disabled' : '') + '>' + (wait > 0 ? 'Resend code in ' + wait + 's' : 'Resend code') + '</button></div></div>';
+function vSent() {
+  var wait = Math.max(0, Math.ceil((R.sentAt + CFG.resendSeconds * 1000 - Date.now()) / 1000));
+  return '<div class="screen"><div class="stack"><button class="back" data-act="toEmail" aria-label="Back">←</button>' +
+    '<h1>Check your email</h1><p class="lede">' + (S.mode === 'join' ? 'We sent a link to ' : 'If there’s an account for ') + '<strong>' + esc(S.email.trim()) + '</strong>' + (S.mode === 'join' ? '.' : ', a sign-in link is on its way.') + ' Open it on this phone to finish signing in.</p>' +
+    '<div class="card"><p class="small">The link expires in an hour. Check spam if you don’t see it.</p><p class="small">On iPhone, if you added GrubScout to your home screen, the link opens in Safari. Sign in there, or open this app in Safari and use it from the browser.</p></div>' + msgHtml() + '</div>' +
+    '<div class="stack" style="gap:12px"><button class="btn ghost" id="resendBtn" data-act="resend"' + (wait > 0 || R.busy ? ' disabled' : '') + '>' + (wait > 0 ? 'Resend in ' + wait + 's' : 'Resend link') + '</button>' +
+    '<button class="btn link" data-act="toEmail">Use a different email</button></div></div>';
 }
-function vProfile() {
-  return '<div class="screen"><div class="stack" style="margin-top:24px"><h1>A little about you</h1>' +
-    '<p class="lede">Your name goes on your member pass. We send receipts and renewal reminders to your email.</p>' +
-    '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">' +
-    '<label class="f">First name<input id="firstIn" class="in" autocomplete="given-name" value="' + esc(S.first) + '"></label>' +
-    '<label class="f">Last name<input id="lastIn" class="in" autocomplete="family-name" value="' + esc(S.last) + '"></label></div>' +
-    '<label class="f">Email<input id="emailIn" class="in" type="email" autocomplete="email" value="' + esc(S.email) + '"></label>' +
-    '<label style="display:flex;gap:12px;align-items:center;font-size:16px;color:var(--ink2);min-height:44px"><input id="mktIn" type="checkbox"' + (S.marketing ? ' checked' : '') + ' style="width:22px;height:22px;accent-color:var(--chili)"> Send me new restaurants and member offers (optional)</label></div>' +
-    '<button class="btn" data-act="saveProfile" id="profileBtn"' + (profileOk() ? '' : ' disabled') + '>Continue</button></div>';
+function badgesHtml(r) {
+  var b = [];
+  if (r.featured) b.push('<span class="badge featured">Featured</span>');
+  if (r.isNew) b.push('<span class="badge new">New</span>');
+  if (r.founding) b.push('<span class="badge founding">Founding partner</span>');
+  if (r.dineIn) b.push('<span class="badge">Dine-in</span>');
+  if (r.pickup) b.push('<span class="badge">Pickup</span>');
+  return b.length ? '<span class="badges">' + b.join('') + '</span>' : '';
 }
-function vLocation() {
-  return '<div class="screen"><div class="stack" style="gap:16px;margin-top:48px">' +
-    '<div style="width:76px;height:76px;border-radius:38px;background:var(--sand);display:flex;align-items:center;justify-content:center"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#B5401C" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></div>' +
-    '<h1>Find great spots near you</h1><p class="lede">Allow location to sort partner restaurants by distance. We only use it while you have the app open.</p></div>' +
-    '<div class="stack" style="gap:12px"><button class="btn" data-act="allowLoc">Allow location</button><button class="btn ghost" data-act="finish">Not now</button></div></div>';
+function thumbHtml(r) { return r.photo ? '<img class="thumb" src="' + esc(r.photo) + '" alt="" loading="lazy">' : '<span class="thumb" aria-hidden="true">' + logo(36) + '</span>'; }
+function rowHtml(r) {
+  return '<button class="row" data-act="detail" data-id="' + esc(r.id) + '">' + thumbHtml(r) + '<span style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0"><span class="name">' + esc(r.name) + '</span>' +
+    '<span class="meta">' + esc([r.cuisine, districtName(r.district), '$'.repeat(r.price)].filter(Boolean).join(' · ')) + '</span><span class="offer">' + esc(r.offer) + '</span>' + badgesHtml(r) + '</span></button>';
 }
-function rowHtml(r, act) {
-  return '<button class="row" data-act="' + act + '" data-id="' + r.id + '"><span style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0"><span class="name">' + esc(r.name) + '</span>' +
-    '<span class="meta">' + esc(r.cuisine + ' · ' + D[r.district] + ' · ' + '$'.repeat(r.price)) + '</span><span class="offer">' + esc(r.offer) + '</span></span><span aria-hidden="true" style="font-size:26px;color:var(--muted)">›</span></button>';
+var match = function (r, q) { return !q || [r.name, r.cuisine, districtName(r.district), r.desc, r.offer].join(' ').toLowerCase().indexOf(q.toLowerCase()) >= 0; };
+function exploreItems() { return R.list.filter(function (r) { return (!S.district || r.district === S.district) && match(r, S.q); }); }
+function listHtml() {
+  if (R.dirState === 'loading') return '<p class="small">Loading restaurants…</p>';
+  if (R.dirState === 'error') return '<div class="card"><p class="lede">We couldn’t load restaurants. Check your connection.</p><button class="btn ghost" data-act="reloadDir">Try again</button></div>';
+  var items = exploreItems();
+  if (!items.length) {
+    var d = S.district && R.districts.filter(function (x) { return x.id === S.district; })[0];
+    return '<div class="card"><p class="lede">' + (d && !d.live ? esc(d.name) + ' is coming soon. Know a spot that should join? Tell them about GrubScout.' : 'No partners match yet. New restaurants join every week.') + '</p></div>';
+  }
+  return items.map(rowHtml).join('');
 }
-function exploreItems() { return LIST.filter(function (r) { return (!S.district || r.district === S.district) && match(r, S.q); }); }
 function vExplore() {
   var chips = '<button class="chip' + (!S.district ? ' on' : '') + '" data-act="district" data-id="" aria-pressed="' + !S.district + '">All</button>' +
-    Object.keys(D).map(function (k) { return '<button class="chip' + (S.district === k ? ' on' : '') + '" data-act="district" data-id="' + k + '" aria-pressed="' + (S.district === k) + '">' + esc(D[k]) + '</button>'; }).join('');
-  return '<div class="main"><p class="eyebrow">Hi, ' + esc(S.first.trim() || 'there') + '</p><h1 style="font-size:30px">Where are we eating?</h1>' +
-    '<label class="sr" for="qIn">Search restaurants</label><input id="qIn" class="in search" placeholder="Search restaurants or cuisines" value="' + esc(S.q) + '">' +
-    '<div class="chips">' + chips + '</div><div id="exploreList" class="stack" style="gap:12px">' + exploreItems().map(function (r) { return rowHtml(r, 'detail'); }).join('') + '</div>' +
-    '<p class="small" style="text-align:center;font-size:12px">Sample listings. Real partners will be announced before launch.</p></div>';
+    R.districts.slice().sort(function (a, b) { return (b.live ? 1 : 0) - (a.live ? 1 : 0); }).map(function (d) {
+      var on = S.district === d.id;
+      return '<button class="chip' + (on ? ' on' : '') + (d.live ? '' : ' soon') + '" data-act="district" data-id="' + esc(d.id) + '" aria-pressed="' + on + '">' + esc(d.name) + (d.live ? '' : ' · soon') + '</button>';
+    }).join('');
+  var hi = R.member ? 'Hi, ' + esc(R.member.name.split(' ')[0]) : 'Houston partners';
+  return '<div class="main"><div style="display:flex;align-items:center;gap:10px">' + logo(32) + '<p class="eyebrow">' + hi + '</p></div><h1 style="font-size:30px">Where are we eating?</h1>' +
+    '<label class="sr" for="qIn">Search restaurants</label><input id="qIn" class="in search" type="search" placeholder="Search restaurants or cuisines" value="' + esc(S.q) + '">' +
+    '<div class="chips">' + chips + '</div><div id="exploreList" class="stack" style="gap:12px">' + listHtml() + '</div>' +
+    (R.member ? '' : '<button class="btn" data-act="join">Join GrubScout · $30 a year</button>') + '</div>';
 }
 function vDetail() {
-  var r = find(S.detail);
-  return '<div class="main" style="padding-left:22px;padding-right:22px"><button data-act="closeDetail" aria-label="Close" style="align-self:flex-end;width:44px;height:44px;border-radius:22px;border:0;background:var(--sand);font-size:22px;cursor:pointer;color:var(--bayou)">×</button>' +
-    '<p class="eyebrow">' + esc(r.cuisine + ' · ' + '$'.repeat(r.price)) + '</p><h1>' + esc(r.name) + '</h1><p class="small">' + esc(D[r.district]) + '</p><p class="lede">' + esc(r.desc) + '</p>' +
-    '<div class="card"><p class="eyebrow">Member offer</p><p style="font-family:var(--display);font-size:26px;font-weight:800;line-height:1.15">' + esc(r.offer) + '</p><p class="small">Show your live pass before you pay. Alcohol excluded. Not combined with other offers.</p></div>' +
-    '<button class="btn" data-act="' + (S.paid ? 'openPass' : 'toPassTab') + '" data-id="' + r.id + '">' + (S.paid ? 'I’m here: open my pass' : 'Join to use this offer') + '</button>' +
-    '<a class="btn ghost" href="https://maps.google.com/?q=' + encodeURIComponent(r.name + ' Houston TX') + '" target="_blank" rel="noopener">Directions</a>' +
-    '<p class="small" style="font-size:13px">Sample listing. Real partners, addresses and hours will be announced before launch.</p></div>';
+  var r = find(R.detail); if (!r) return vExplore();
+  var cta;
+  if (!R.member) cta = '<button class="btn" data-act="join">Join to use this offer</button>';
+  else if (R.status.active) cta = '<button class="btn" data-act="openPass" data-id="' + esc(r.id) + '">I’m here: show my pass</button>';
+  else cta = '<button class="btn" data-act="toPassTab">Activate my pass</button>';
+  var info = [];
+  if (r.address) info.push('<div class="kv"><span class="small">Address</span><a class="v" href="https://maps.google.com/?q=' + encodeURIComponent(r.address) + '" target="_blank" rel="noopener">' + esc(r.address) + '</a></div>');
+  if (r.hours) info.push('<div class="kv"><span class="small">Hours</span><span class="v">' + esc(r.hours) + '</span></div>');
+  if (r.phone) info.push('<div class="kv"><span class="small">Phone</span><a class="v" href="tel:' + esc(r.phone.replace(/[^\d+]/g, '')) + '">' + esc(r.phone) + '</a></div>');
+  if (r.website) info.push('<div class="kv"><span class="small">Website</span><a class="v" href="' + esc(r.website) + '" target="_blank" rel="noopener">' + esc(r.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')) + '</a></div>');
+  return '<div class="main" style="padding-left:20px;padding-right:20px"><button data-act="closeDetail" aria-label="Close" style="align-self:flex-end;width:44px;height:44px;border-radius:22px;border:0;background:var(--sand);font-size:22px;cursor:pointer;color:var(--bayou)">×</button>' +
+    (r.photo ? '<img class="hero" src="' + esc(r.photo) + '" alt="' + esc(r.name) + '">' : '') +
+    '<p class="eyebrow">' + esc([r.cuisine, '$'.repeat(r.price)].filter(Boolean).join(' · ')) + '</p><h1>' + esc(r.name) + '</h1>' + badgesHtml(r) +
+    (districtName(r.district) ? '<p class="small">' + esc(districtName(r.district)) + '</p>' : '') + (r.desc ? '<p class="lede">' + esc(r.desc) + '</p>' : '') +
+    '<div class="card"><p class="eyebrow">Member offer</p><p style="font-family:var(--display);font-size:26px;font-weight:800;line-height:1.15">' + esc(r.offer) + '</p><p class="small">Show your live pass before you pay. Alcohol, tax and tip excluded. Not combined with other offers.</p></div>' +
+    cta + (info.length ? '<div class="card">' + info.join('') + '</div>' : '') +
+    (r.address ? '<a class="btn ghost" href="https://maps.google.com/?q=' + encodeURIComponent(r.address) + '" target="_blank" rel="noopener">Directions</a>' : '') + '</div>';
+}
+function vPassSignedOut() {
+  return '<div class="main" style="padding-left:20px;padding-right:20px;gap:14px"><p class="eyebrow">My pass</p><h1 style="font-size:32px">Sign in to see your pass</h1>' +
+    '<p class="lede">Your member pass lives in your account. It appears once your $30 yearly membership is active.</p>' +
+    '<button class="btn" data-act="join">Create an account</button><button class="btn ghost" data-act="signin">Sign in</button></div>';
 }
 function vPassUnpaid() {
-  return '<div class="main" style="padding-left:20px;padding-right:20px;gap:14px"><p class="eyebrow">My pass</p><h1 style="font-size:32px">Your pass unlocks with membership</h1>' +
-    '<p class="lede">Your member pass appears here once your $30 yearly membership is active.</p>' +
-    '<div class="card"><p style="font-size:20px;font-weight:800">How the pass works</p><p class="lede" style="font-size:16px">1. At the restaurant, open My pass and tap where you’re eating.</p><p class="lede" style="font-size:16px">2. Show the screen before you pay.</p><p class="lede" style="font-size:16px">3. Staff swipe to confirm and apply the offer. The pass closes for that visit.</p></div>' +
-    '<button class="btn" data-act="pay">Join for $30 a year</button><p class="small" style="text-align:center;font-size:13px">Preview: this skips payment and marks you as a member.</p></div>';
+  return '<div class="main" style="padding-left:20px;padding-right:20px;gap:14px"><p class="eyebrow">My pass</p><h1 style="font-size:32px">Your account is verified</h1>' +
+    '<p class="lede">Your member pass appears here once your $30 membership is active.</p>' +
+    '<div class="card"><h2>How the pass works</h2><p class="lede" style="font-size:16px">1. At the restaurant, open My pass and tap where you’re eating.</p><p class="lede" style="font-size:16px">2. Show the screen before you pay.</p><p class="lede" style="font-size:16px">3. Staff swipe to confirm and apply the offer. The pass closes for that visit.</p></div>' +
+    (R.payOpen ? '<a class="btn" href="' + CFG.site + '#join" target="_blank" rel="noopener">Activate membership · $30/yr</a>'
+      : '<button class="btn" disabled>Activate membership · $30/yr</button><p class="note">Online payment opens at launch. We’ll email you the moment it does.</p>') +
+    (R.status.error ? '<p class="note err">We couldn’t check your membership just now. <button class="btn link" style="display:inline;min-height:0;padding:0;width:auto" data-act="refreshStatus">Try again</button></p>' : '') + '</div>';
 }
-function passItems() { return LIST.filter(function (r) { return match(r, S.passQ); }).sort(function (a, b) { return a.name.localeCompare(b.name); }); }
+function passItems() { return R.list.filter(function (r) { return match(r, S.passQ); }).sort(function (a, b) { return a.name.localeCompare(b.name); }); }
 function passRow(r) {
-  return '<div class="row" style="cursor:default"><span style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0"><span class="name" style="font-size:18px">' + esc(r.name) + '</span><span class="meta">' + esc(r.offer) + '</span></span><button class="pill" data-act="openPass" data-id="' + r.id + '">I’m here</button></div>';
+  return '<div class="row" style="cursor:default"><span style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0"><span class="name" style="font-size:18px">' + esc(r.name) + '</span><span class="meta">' + esc(r.offer) + '</span></span><button class="pill" data-act="openPass" data-id="' + esc(r.id) + '">I’m here</button></div>';
 }
 function vPassPicker() {
-  return '<div class="main"><p class="eyebrow">My pass</p><h1 style="font-size:30px">Where are you eating?</h1>' +
-    '<p class="lede" style="font-size:16px">Tap the restaurant when you’re ready to pay. Your pass opens for 15 minutes and closes once staff confirm it.</p><p class="small">Member through November 2027</p>' +
-    '<label class="sr" for="passQIn">Search restaurants</label><input id="passQIn" class="in search" placeholder="Search by name, cuisine or neighborhood" value="' + esc(S.passQ) + '">' +
-    '<div id="passList" class="stack" style="gap:12px">' + passItems().map(passRow).join('') + '</div></div>';
+  var m = R.member, st = R.status;
+  return '<div class="main"><p class="eyebrow">My pass</p>' +
+    '<div class="pass" style="box-shadow:none"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">Member</span><span style="color:var(--ok);font-weight:700;font-size:14px">● Active</span></div>' +
+    '<p class="who">' + esc(m.name) + '</p><p class="clock" id="clock" aria-label="Live clock">' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) + '</p>' +
+    '<p class="small" style="text-align:center">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</p>' +
+    '<div class="split"><div><p class="k">Annual dues</p><p class="v">Paid</p></div><div style="text-align:right"><p class="k">Member through</p><p class="v">' + esc(fmtDate(st.until)) + '</p></div></div></div>' +
+    '<h1 style="font-size:26px;margin-top:8px">Where are you eating?</h1><p class="lede" style="font-size:16px">Tap the restaurant when you’re ready to pay. Show this before you pay. Your pass opens for ' + CFG.passMinutes + ' minutes and closes once staff confirm it.</p>' +
+    '<label class="sr" for="passQIn">Search restaurants</label><input id="passQIn" class="in search" type="search" placeholder="Search by name, cuisine or neighborhood" value="' + esc(S.passQ) + '">' +
+    '<div id="passList" class="stack" style="gap:12px">' + (R.dirState === 'ready' ? passItems().map(passRow).join('') : listHtml()) + '</div>' +
+    '<button class="btn ghost" data-act="tab" data-id="explore">See restaurants and offers</button>' +
+    msgHtml() + '<button class="btn link" data-act="report">Report a problem</button></div>';
 }
 function vVisit() {
-  var v = S.visit, r = find(v.rid), left = PASS_MS - (Date.now() - v.openedAt), secs = Math.max(0, Math.ceil(left / 1000));
-  var head = '<div class="stack" style="gap:6px"><p class="eyebrow">Member pass · ' + esc(D[r.district]) + '</p><h1 style="font-size:32px">' + esc(r.name) + '</h1></div>';
+  var v = S.visit, r = find(v.rid) || { name: v.name, offer: v.offer, district: '' }, left = PASS_MS - (Date.now() - v.openedAt), secs = Math.max(0, Math.ceil(left / 1000));
+  var head = '<div class="stack" style="gap:6px"><p class="eyebrow">Member pass' + (districtName(r.district) ? ' · ' + esc(districtName(r.district)) : '') + '</p><h1 style="font-size:32px">' + esc(r.name) + '</h1></div>';
   var body;
   if (v.confirmedAt) {
     body = '<div class="pass done" role="status"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow" style="color:var(--okfg)">Confirmed by staff</span><span style="color:var(--okfg);font-weight:700;font-size:14px">✓ Used</span></div>' +
-      '<p class="who">' + esc(fullName()) + '</p><p style="font-size:20px;font-weight:700">Apply: ' + esc(r.offer) + '</p>' +
+      '<p class="who">' + esc(R.member.name) + '</p><p style="font-size:20px;font-weight:700">Apply: ' + esc(r.offer) + '</p>' +
       '<div class="split" style="border-top-color:#A9CDB6"><div><p class="k" style="color:var(--okfg)">Confirmed at</p><p class="v">' + new Date(v.confirmedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) + '</p></div><div style="text-align:right"><p class="k" style="color:var(--okfg)">Visit code</p><p class="v">' + esc(v.code) + '</p></div></div>' +
       '<p style="color:var(--okfg);font-size:14px">This pass has been used for this visit. Enjoy your meal.</p></div>';
   } else if (left <= 0) {
-    body = '<div class="card"><p style="font-size:22px;font-weight:800">This pass timed out</p><p class="lede" style="font-size:16px">A pass stays open for 15 minutes. Open it again when you’re ready to pay.</p><button class="btn" data-act="openPass" data-id="' + r.id + '">Open pass again</button></div>';
+    body = '<div class="card"><h2>This pass timed out</h2><p class="lede" style="font-size:16px">A pass stays open for ' + CFG.passMinutes + ' minutes. Open it again when you’re ready to pay.</p><button class="btn" data-act="openPass" data-id="' + esc(v.rid) + '">Open pass again</button></div>';
   } else {
     body = '<div class="pass"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">Member pass</span><span style="color:var(--ok);font-weight:700;font-size:14px">● Live</span></div>' +
-      '<p class="who">' + esc(fullName()) + '</p><p style="font-size:20px;font-weight:700">' + esc(r.offer) + '</p>' +
+      '<p class="who">' + esc(R.member.name) + '</p><p style="font-size:20px;font-weight:700">' + esc(r.offer) + '</p>' +
       '<p class="clock" id="clock" aria-label="Live clock">' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) + '</p>' +
-      '<div class="split"><div><p class="k">Member through</p><p class="v">Nov 2027</p></div><div style="text-align:right"><p class="k">Pass closes in</p><p class="v" id="countdown">' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0') + '</p></div></div>' +
+      '<div class="split"><div><p class="k">Member through</p><p class="v">' + esc(new Date(R.status.until).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })) + '</p></div><div style="text-align:right"><p class="k">Pass closes in</p><p class="v" id="countdown">' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0') + '</p></div></div>' +
       '<div class="track"><span>Staff: swipe to confirm →</span><input id="swipe" class="range" type="range" min="0" max="100" step="1" value="0" aria-label="Staff: slide right to confirm this pass"></div>' +
       '<p class="small" style="font-size:13px">For restaurant staff. Swiping confirms the member showed this pass, and closes it.</p></div>';
   }
   return '<div class="main" style="padding-left:20px;padding-right:20px;gap:18px">' + head + body +
-    '<button class="btn ghost" data-act="endVisit">' + (v.confirmedAt ? 'Done' : 'Choose a different restaurant') + '</button></div>';
+    '<button class="btn ghost" data-act="endVisit">' + (v.confirmedAt ? 'Done' : 'Choose a different restaurant') + '</button>' + msgHtml() + '<button class="btn link" data-act="report">Report a problem</button></div>';
+}
+function partnerFormHtml() {
+  var p = R.partner || {};
+  if (p.done) return '<div class="card"><h2>Thanks! Application received</h2><p class="lede" style="font-size:16px">We’ll reach out within a few business days.</p></div>';
+  if (!R.partnerOpen) return '<div class="card"><h2>Own or manage a restaurant?</h2><p class="lede" style="font-size:16px">Restaurants join free. Bring in new regulars with one simple member offer.</p><button class="btn ghost" data-act="partnerOpen">Apply to be a partner</button></div>';
+  var f = function (id, label, attrs) { return '<label class="f">' + label + '<input id="' + id + '" class="in pf" ' + (attrs || '') + ' value="' + esc(p[id] || '') + '"></label>'; };
+  return '<form class="card" id="partnerForm" novalidate><h2>Partner application</h2><p class="small">Restaurants join free. Fields marked * are required.</p>' +
+    f('pName', 'Restaurant name *', 'autocomplete="organization"') +
+    '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">' + f('pFirst', 'First name *', 'autocomplete="given-name"') + f('pLast', 'Last name *', 'autocomplete="family-name"') + '</div>' +
+    f('pPhone', 'Phone *', 'type="tel" autocomplete="tel"') + f('pEmail', 'Email *', 'type="email" autocomplete="email" autocapitalize="off"') +
+    f('pAddress1', 'Street address *', 'autocomplete="address-line1"') + f('pAddress2', 'Suite / unit', 'autocomplete="address-line2"') +
+    '<div style="display:grid;grid-template-columns:2fr 1fr 1.3fr;gap:10px">' + f('pCity', 'City *', 'autocomplete="address-level2"') + f('pState', 'State *', 'autocomplete="address-level1" maxlength="2"') + f('pZip', 'ZIP *', 'inputmode="numeric" autocomplete="postal-code" maxlength="10"') + '</div>' +
+    f('pCuisine', 'Cuisine *') +
+    '<label class="f">Tell us about your restaurant *<textarea id="pDesc" class="in pf">' + esc(p.pDesc || '') + '</textarea></label>' +
+    '<label class="f">Proposed member offer<input id="pOffer" class="in pf" placeholder="e.g. 15% off food, Mon–Thu" value="' + esc(p.pOffer || '') + '"></label>' +
+    '<div class="hp" aria-hidden="true"><label>Leave this empty<input id="pHp" class="pf" tabindex="-1" autocomplete="off"></label></div>' +
+    (p.err ? '<p class="note err" role="alert">' + esc(p.err) + '</p>' : '') +
+    '<button class="btn" type="submit"' + (p.busy ? ' disabled' : '') + '>' + (p.busy ? 'Sending…' : 'Submit application') + '</button>' +
+    '<button class="btn link" type="button" data-act="partnerClose">Cancel</button></form>';
+}
+function vAccountSignedOut() {
+  return '<div class="main" style="padding-left:20px;padding-right:20px;gap:14px"><p class="eyebrow">Account</p><h1 style="font-size:32px">You’re browsing as a guest</h1>' +
+    msgHtml() + '<button class="btn" data-act="join">Create an account</button><button class="btn ghost" data-act="signin">Sign in</button>' + partnerFormHtml() + linksHtml() + '</div>';
+}
+function linksHtml() {
+  return '<div class="card" style="gap:4px"><a class="btn link" href="' + CFG.site + '#how" target="_blank" rel="noopener">How it works</a><a class="btn link" href="' + CFG.site + '#faq" target="_blank" rel="noopener">FAQ</a><a class="btn link" href="' + CFG.site + '#conduct" target="_blank" rel="noopener">Member code of conduct</a>' +
+    '<a class="btn link" href="' + CFG.site + '#terms" target="_blank" rel="noopener">Terms</a><a class="btn link" href="' + CFG.site + '#privacy" target="_blank" rel="noopener">Privacy</a></div>' +
+    '<p class="small" style="text-align:center;font-size:13px">GrubScout app v' + CFG.version + '</p>';
 }
 function vAccount() {
-  return '<div class="main" style="padding-left:20px;padding-right:20px;gap:14px"><p class="eyebrow">Account</p><h1 style="font-size:32px">' + esc(fullName()) + '</h1>' +
-    '<div class="card" style="gap:10px"><div style="display:flex;justify-content:space-between;gap:12px"><span class="small">Phone</span><span style="font-weight:600">' + esc(fmt(S.phone)) + '</span></div>' +
-    '<div style="display:flex;justify-content:space-between;gap:12px"><span class="small">Email</span><span style="font-weight:600;overflow-wrap:anywhere;text-align:right">' + esc(S.email) + '</span></div></div>' +
-    '<div class="card"><p style="font-size:20px;font-weight:800">Membership</p><p style="border-radius:14px;padding:14px;font-size:15px;background:' + (S.paid ? 'var(--okbg);color:var(--okfg)' : 'var(--sand);color:var(--ink2)') + '">' +
-    (S.paid ? 'Active through November 2027. Renews automatically; we remind you 30 days before.' : 'No active membership yet. Activate it from My pass.') + '</p></div>' +
-    '<button class="btn ghost" data-act="signOut">Sign out</button><button class="btn" data-act="startOver">Start over from the beginning</button>' +
-    '<p class="small" style="text-align:center;font-size:13px">GrubScout app v0.1.0 · preview</p></div>';
+  var m = R.member, st = R.status;
+  var memb = st.active ? 'Active through ' + fmtDate(st.until) + (st.grace ? ' (payment grace period)' : '') + '.' : 'No active membership yet. Activate it from My pass.';
+  return '<div class="main" style="padding-left:20px;padding-right:20px;gap:14px"><p class="eyebrow">Account</p><h1 style="font-size:32px;overflow-wrap:anywhere">' + esc(m.name) + '</h1>' + msgHtml() +
+    '<div class="card"><div class="kv"><span class="small">Email</span><span class="v">' + esc(m.email) + '</span></div>' +
+    (m.since ? '<div class="kv"><span class="small">Member since</span><span class="v">' + esc(fmtDate(m.since)) + '</span></div>' : '') + '</div>' +
+    '<div class="card"><h2>Membership</h2><p class="note' + (st.active ? ' ok' : '') + '">' + esc(memb) + '</p></div>' +
+    '<div class="card"><h2>Invite friends</h2><p class="small">Your referral code</p><p style="font-family:var(--display);font-size:24px;font-weight:800">' + esc(m.ref) + '</p><button class="btn ghost" data-act="copyRef">Copy my referral link</button></div>' +
+    partnerFormHtml() +
+    (R.isAdmin ? '<a class="btn ghost" href="' + CFG.site + '#admin" target="_blank" rel="noopener">Open admin dashboard</a>' : '') +
+    '<button class="btn ghost" data-act="signOut"' + (R.busy ? ' disabled' : '') + '>Sign out</button><button class="btn link" data-act="signOutAll"' + (R.busy ? ' disabled' : '') + '>Sign out on all devices</button>' +
+    linksHtml() + '</div>';
 }
 function tabsHtml() {
   return '<nav class="tabs" aria-label="Main">' + [['explore', 'Explore', ICON.fork], ['pass', 'My pass', ICON.card], ['account', 'Account', ICON.user]].map(function (t) {
-    return '<button class="tab" data-act="tab" data-id="' + t[0] + '"' + (S.tab === t[0] && !S.detail ? ' aria-current="page"' : '') + '>' + t[2] + '<span>' + t[1] + '</span></button>';
+    return '<button class="tab" data-act="tab" data-id="' + t[0] + '"' + (S.tab === t[0] && !R.detail ? ' aria-current="page"' : '') + '>' + t[2] + '<span>' + t[1] + '</span></button>';
   }).join('') + '</nav>';
 }
-
+function vPass() {
+  if (!R.member) return vPassSignedOut();
+  if (!R.status.active) return vPassUnpaid();
+  return S.visit ? vVisit() : vPassPicker();
+}
 function render(keepFocusId) {
   var html;
-  if (S.screen === 'welcome') html = vWelcome();
-  else if (S.screen === 'phone') html = vPhone();
-  else if (S.screen === 'code') html = vCode();
-  else if (S.screen === 'profile') html = vProfile();
-  else if (S.screen === 'location') html = vLocation();
-  else {
-    var inner = S.detail ? vDetail() : S.tab === 'explore' ? vExplore() : S.tab === 'account' ? vAccount() : !S.paid ? vPassUnpaid() : S.visit && find(S.visit.rid) ? vVisit() : vPassPicker();
-    html = inner + tabsHtml();
-  }
+  if (R.screen === 'loading') html = vLoading();
+  else if (R.screen === 'welcome') html = vWelcome();
+  else if (R.screen === 'email') html = vEmail();
+  else if (R.screen === 'sent') html = vSent();
+  else html = (R.detail ? vDetail() : S.tab === 'explore' ? vExplore() : S.tab === 'account' ? (R.member ? vAccount() : vAccountSignedOut()) : vPass()) + tabsHtml();
   document.getElementById('app').innerHTML = html;
   if (keepFocusId) { var el = document.getElementById(keepFocusId); if (el) { el.focus(); var n = el.value.length; try { el.setSelectionRange(n, n); } catch (e) { /* not a text field */ } } }
 }
 
-// ---------- Events ----------
-function openPass(id) { set({ tab: 'pass', detail: null, visit: { rid: id, openedAt: Date.now(), confirmedAt: null, code: null } }); }
-function confirmVisit() {
+// ---------- Visits ----------
+function openPass(id) {
+  if (!R.member || !R.status.active) return set({ tab: 'pass', detail: null });
+  var r = find(id);
+  set({ tab: 'pass', detail: null, visit: { rid: id, name: r ? r.name : '', offer: r ? r.offer : '', openedAt: Date.now(), confirmedAt: null, code: null } });
+}
+async function confirmVisit() {
   if (!S.visit || S.visit.confirmedAt) return;
   var a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', c = '', b = crypto.getRandomValues(new Uint8Array(6));
   for (var i = 0; i < 6; i++) c += a[b[i] % a.length];
   if (navigator.vibrate) navigator.vibrate(60);
-  set({ visit: Object.assign({}, S.visit, { confirmedAt: Date.now(), code: c }) });
+  var v = Object.assign({}, S.visit, { confirmedAt: Date.now(), code: c });
+  set({ visit: v });
+  try {
+    var res = await sb.from('redemptions').insert({ restaurant_id: v.rid, restaurant_name: v.name || null, offer: v.offer || null, code: v.code, opened_at: new Date(v.openedAt).toISOString(), confirmed_at: new Date(v.confirmedAt).toISOString() });
+    if (res.error) console.warn('GrubScout: visit not recorded', res.error.message);
+  } catch (e) { console.warn('GrubScout: visit not recorded'); }
 }
+
+// ---------- Partner application (same RPC as the website) ----------
+async function submitPartner() {
+  var p = R.partner = R.partner || {};
+  document.querySelectorAll('.pf').forEach(function (el) { p[el.id] = el.value; });
+  var t = function (k) { return String(p[k] || '').trim(); };
+  var req = ['pName', 'pFirst', 'pLast', 'pPhone', 'pEmail', 'pAddress1', 'pCity', 'pState', 'pZip', 'pCuisine', 'pDesc'];
+  var missing = req.filter(function (k) { return !t(k); });
+  if (missing.length) { p.err = 'Please fill in every field marked *.'; render(); var el = document.getElementById(missing[0]); if (el) el.focus(); return; }
+  if (!emailOk(t('pEmail'))) { p.err = 'Check the email address.'; render(); document.getElementById('pEmail').focus(); return; }
+  if (t('pPhone').replace(/\D/g, '').length < 10) { p.err = 'Check the phone number.'; render(); document.getElementById('pPhone').focus(); return; }
+  p.err = null; p.busy = true; render();
+  var address = [t('pAddress1'), t('pAddress2'), t('pCity') + ', ' + t('pState').toUpperCase() + ' ' + t('pZip')].filter(Boolean).join(', ');
+  var res;
+  try {
+    res = await sb.rpc('submit_partner_application', {
+      p_restaurant_name: t('pName'), p_contact_name: t('pFirst') + ' ' + t('pLast'), p_contact_reach: 'Phone: ' + t('pPhone') + ' | Email: ' + t('pEmail'),
+      p_description: t('pDesc'), p_address: address, p_district: t('pCity'), p_cuisine: t('pCuisine'), p_proposed_offer: t('pOffer') || null, p_hp: t('pHp')
+    });
+  } catch (e) { res = { error: { message: 'network' } }; }
+  p.busy = false;
+  if (res.error) { p.err = /rate_limited/i.test(String(res.error.message || '')) ? 'We’ve received several applications from you recently. Please try again later.' : 'We couldn’t send your application. Check your connection and try again.'; return render(); }
+  R.partner = { done: true }; render();
+}
+
+// ---------- Events ----------
 document.addEventListener('click', function (e) {
   var t = e.target.closest('[data-act]'); if (!t || t.disabled) return;
   var id = t.getAttribute('data-id');
   switch (t.getAttribute('data-act')) {
-    case 'join': return set({ screen: 'phone', signin: false });
-    case 'signin': return set({ screen: 'phone', signin: true });
-    case 'toWelcome': return set({ screen: 'welcome' });
-    case 'toPhone': return set({ screen: 'phone', code: '' });
-    case 'sendCode': return phoneOk() && set({ screen: 'code', code: '', resendAt: Date.now() + 60000 }, 'codeIn');
-    case 'verify': return S.code.length === 6 && set({ screen: S.signin && S.first ? 'app' : 'profile' });
-    case 'resend': return set({ resendAt: Date.now() + 60000 });
-    case 'saveProfile': return profileOk() && set({ screen: 'location' });
-    case 'allowLoc': if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function () {}, function () {}, { timeout: 5000 }); return set({ screen: 'app', tab: 'explore' });
-    case 'finish': return set({ screen: 'app', tab: 'explore' });
+    case 'join': return set({ screen: 'email', mode: 'join', detail: null, msg: null }, S.name ? 'emailIn' : 'nameIn');
+    case 'signin': return set({ screen: 'email', mode: 'signin', detail: null, msg: null }, 'emailIn');
+    case 'browse': return set({ screen: 'app', tab: 'explore', msg: null });
+    case 'toWelcome': return set({ screen: R.user ? 'app' : 'welcome', msg: null });
+    case 'toEmail': return set({ screen: 'email', msg: null }, 'emailIn');
+    case 'send': return sendLink(false);
+    case 'resend': return sendLink(true);
     case 'district': return set({ district: id || null });
     case 'detail': return set({ detail: id });
     case 'closeDetail': return set({ detail: null });
     case 'toPassTab': return set({ detail: null, tab: 'pass' });
     case 'openPass': return openPass(id);
-    case 'pay': return set({ paid: true });
     case 'endVisit': return set({ visit: null });
-    case 'tab': return set({ tab: id, detail: null });
-    case 'signOut': return set({ screen: 'welcome', tab: 'explore', detail: null, visit: null, code: '', signin: true });
-    case 'startOver': S = fresh(); save(); return render();
+    case 'tab': return set({ tab: id, detail: null, msg: null });
+    case 'reloadDir': R.dirState = 'loading'; render(); return loadDirectory();
+    case 'refreshStatus': return R.user && statusFromEntitlements(R.user.id).then(function (st) { set({ status: st }); });
+    case 'copyRef':
+      var link = new URL(CFG.site, location.href).href + '?ref=' + encodeURIComponent(R.member.ref);
+      var done = function () { set({ msg: { kind: 'ok', text: 'Referral link copied.' } }); };
+      if (navigator.share) return navigator.share({ title: 'GrubScout', text: 'Join me on GrubScout: one $30 pass for great local Houston restaurants.', url: link }).catch(function () {});
+      if (navigator.clipboard) return navigator.clipboard.writeText(link).then(done, function () { set({ msg: { kind: 'ok', text: link } }); });
+      return set({ msg: { kind: 'ok', text: link } });
+    case 'report': return set({ msg: { kind: 'ok', text: 'Thanks. A short report form opens at launch, and we follow up with the restaurant.' } });
+    case 'partnerOpen': return set({ partnerOpen: true }, 'pName');
+    case 'partnerClose': return set({ partnerOpen: false });
+    case 'signOut': return signOut(false);
+    case 'signOutAll': return signOut(true);
   }
 });
+document.addEventListener('submit', function (e) { if (e.target.id === 'partnerForm') { e.preventDefault(); submitPartner(); } });
+function syncSend() { var b = document.getElementById('sendBtn'); if (b) b.disabled = R.busy || !(emailOk(S.email) && (S.mode !== 'join' || (S.name.trim() && R.agree))); }
 document.addEventListener('input', function (e) {
   var el = e.target;
-  if (el.id === 'phoneIn') { S.phone = el.value.replace(/\D/g, '').replace(/^1(?=\d{10})/, '').slice(0, 10); save(); el.value = fmt(S.phone); var b = document.querySelector('[data-act="sendCode"]'); if (b) b.disabled = !phoneOk(); }
-  else if (el.id === 'codeIn') { S.code = el.value.replace(/\D/g, '').slice(0, 6); save(); render('codeIn'); if (S.code.length === 6) setTimeout(function () { set({ screen: S.signin && S.first ? 'app' : 'profile' }); }, 250); }
-  else if (el.id === 'firstIn' || el.id === 'lastIn' || el.id === 'emailIn') { S[{ firstIn: 'first', lastIn: 'last', emailIn: 'email' }[el.id]] = el.value; save(); document.getElementById('profileBtn').disabled = !profileOk(); }
-  else if (el.id === 'qIn') { S.q = el.value; save(); document.getElementById('exploreList').innerHTML = exploreItems().map(function (r) { return rowHtml(r, 'detail'); }).join(''); }
+  if (el.id === 'emailIn') { S.email = el.value; save(); syncSend(); }
+  else if (el.id === 'nameIn') { S.name = el.value; save(); syncSend(); }
+  else if (el.id === 'qIn') { S.q = el.value; save(); document.getElementById('exploreList').innerHTML = listHtml(); }
   else if (el.id === 'passQIn') { S.passQ = el.value; save(); document.getElementById('passList').innerHTML = passItems().map(passRow).join(''); }
   else if (el.id === 'swipe') { if (Number(el.value) >= 92) confirmVisit(); }
+  else if (el.classList.contains('pf')) { R.partner = R.partner || {}; R.partner[el.id] = el.value; }
 });
-document.addEventListener('change', function (e) { if (e.target.id === 'mktIn') { S.marketing = e.target.checked; save(); } });
+document.addEventListener('change', function (e) {
+  if (e.target.id === 'agreeIn') { R.agree = e.target.checked; syncSend(); }
+  else if (e.target.id === 'mktIn') { R.marketing = e.target.checked; }
+});
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && (e.target.id === 'emailIn' || e.target.id === 'nameIn')) { var b = document.getElementById('sendBtn'); if (b && !b.disabled) sendLink(false); }
+  if (e.target.id === 'swipe' && e.key === 'Enter') confirmVisit();
+});
 ['pointerup', 'touchend', 'mouseup'].forEach(function (ev) { document.addEventListener(ev, function (e) { if (e.target.id === 'swipe' && S.visit && !S.visit.confirmedAt) e.target.value = 0; }); });
-document.addEventListener('keydown', function (e) { if (e.target.id === 'swipe' && e.key === 'Enter') confirmVisit(); });
 
 // Live clock, countdown and resend timer.
 setInterval(function () {
@@ -318,10 +533,26 @@ setInterval(function () {
   var cd = document.getElementById('countdown');
   if (cd && S.visit && !S.visit.confirmedAt) { var left = PASS_MS - (Date.now() - S.visit.openedAt); if (left <= 0) return render(); var s = Math.ceil(left / 1000); cd.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
   var rb = document.getElementById('resendBtn');
-  if (rb) { var w = Math.max(0, Math.ceil((S.resendAt - Date.now()) / 1000)); rb.disabled = w > 0; rb.textContent = w > 0 ? 'Resend code in ' + w + 's' : 'Resend code'; }
+  if (rb) { var w = Math.max(0, Math.ceil((R.sentAt + CFG.resendSeconds * 1000 - Date.now()) / 1000)); rb.disabled = w > 0 || R.busy; rb.textContent = w > 0 ? 'Resend in ' + w + 's' : 'Resend link'; }
 }, 1000);
 
-render();
+// ---------- Start ----------
+(async function start() {
+  render();
+  var qs = new URLSearchParams(location.search + '&' + location.hash.replace(/^#/, ''));
+  var linkErr = qs.get('error_description');
+  loadDirectory(); loadPayOpen();
+  if (!sb) { R.screen = 'welcome'; R.msg = { kind: 'err', text: 'GrubScout could not load. Check your connection and reload.' }; return render(); }
+  var s = null;
+  try { s = (await sb.auth.getSession()).data.session; } catch (e) { s = null; }
+  if (location.search || /access_token|error/.test(location.hash)) history.replaceState(null, '', location.pathname);
+  if (!s && linkErr) R.msg = { kind: 'err', text: 'That sign-in link didn’t work (' + linkErr.replace(/\+/g, ' ') + '). Links expire and work once. Request a new one.' };
+  await onSession(s);
+  sb.auth.onAuthStateChange(function (evt, session) {
+    if (evt === 'SIGNED_IN' && (!R.user || R.user.id !== session.user.id)) onSession(session);
+    else if (evt === 'SIGNED_OUT') onSession(null);
+  });
+})();
 </script>
 </body>
 </html>
