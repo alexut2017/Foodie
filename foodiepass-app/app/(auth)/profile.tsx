@@ -32,7 +32,7 @@ export default function Profile() {
     const { error } = await supabase.auth.updateUser(attrs);
     if (error) {
       setBusy(false);
-      setErr(/already|registered|exists/i.test(error.message) ? 'That email is already on another FoodiePass account. Sign in with that account, or use a different email.' : 'We couldn’t save your details. Check your connection and try again.');
+      setErr(/already|registered|exists/i.test(error.message) ? 'That email is already on another GrubScout account. Sign in with that account, or use a different email.' : 'We couldn’t save your details. Check your connection and try again.');
       return;
     }
     // Marketing consent is recorded separately from the terms (spec section 2).
