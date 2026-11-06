@@ -360,13 +360,13 @@ const directory = { loaded: false, error: false };
 const NEW_DAYS = 30;
 function restaurantFromRow(r, i) {
   const listed = Date.parse(r.listed_at || '') || 0;
-  return { id: r.id, name: r.name, place: [r.city, r.state].filter(Boolean).join(', '), cuisine: r.cuisine, desc: r.description, offer: r.offer_text, dineIn: r.dine_in, pickup: r.pickup, isNew: Date.now() - listed < NEW_DAYS * 86400000, founding: !!r.founding_until && Date.parse(r.founding_until) > Date.now(), price: r.price_level, lat: r.lat, lng: r.lng, address: r.address, hours: r.hours, phone: r.phone, website: r.website_url, featured: r.featured, photo: /^https?:\/\//i.test(r.photo_url || '') ? r.photo_url : null, order: i };
+  return { id: r.id, name: r.name, place: [r.city, r.state].filter(Boolean).join(', '), cuisine: r.cuisine, desc: r.description, offer: r.offer_text, dineIn: r.dine_in, pickup: r.pickup, isNew: Date.now() - listed < NEW_DAYS * 86400000, founding: !!r.founding_until && Date.parse(r.founding_until) > Date.now(), lat: r.lat, lng: r.lng, address: r.address, hours: r.hours, phone: r.phone, website: r.website_url, featured: r.featured, photo: /^https?:\/\//i.test(r.photo_url || '') ? r.photo_url : null, order: i };
 }
 async function loadDirectory() {
   directory.error = false;
   if (sb) {
     try {
-      const r = await sb.from('restaurants').select('id, name, description, cuisine, city, state, address, hours, phone, website_url, lat, lng, price_level, dine_in, pickup, offer_text, founding_until, listed_at, featured, photo_url').eq('status', 'active').order('name');
+      const r = await sb.from('restaurants').select('id, name, description, cuisine, city, state, address, hours, phone, website_url, lat, lng, dine_in, pickup, offer_text, founding_until, listed_at, featured, photo_url').eq('status', 'active').order('name');
       if (r.error) throw r.error;
       RESTAURANTS = r.data.map(restaurantFromRow);
       CUISINES = [...new Set(RESTAURANTS.map((x) => x.cuisine).filter(Boolean))].sort();
@@ -732,7 +732,7 @@ function restaurantCard(r, compact) {
   const flags = r.isNew || r.founding ? `<div class="badges">${r.isNew ? `<span class="badge new">${I.star}New</span>` : ''}${r.founding ? `<span class="badge fp">${I.star}Founding partner</span>` : ''}</div>` : '';
   return `<article class="rc${ui.hl === r.id ? ' hl' : ''}" data-rid="${r.id}">
     ${compact ? `<div class="rc-photo">${r.photo ? `<img src="${esc(r.photo)}" alt="${esc(r.name)}" loading="lazy">` : I.fork}</div>` : ''}
-    <div class="rc-top"><div class="rc-name"><h3>${esc(r.name)}</h3>${compact ? '' : flags}</div>${compact ? `<span class="muted small">${'$'.repeat(r.price)}</span>` : ''}</div>
+    <div class="rc-top"><div class="rc-name"><h3>${esc(r.name)}</h3>${compact ? '' : flags}</div></div>
     <div class="meta">${r.cuisine ? `<span>${I.fork}${esc(r.cuisine)}</span>` : ''}${r.place ? `<span>${I.pin}${esc(r.place)}</span>` : ''}</div>
     ${compact ? '' : `<p style="color: var(--ink-2)">${esc(r.desc)}</p>`}
     ${compact ? flags : ''}
@@ -973,9 +973,9 @@ function vPartners() {
           <label class="f" style="min-width: 0">First Name<input id="pFirst" required maxlength="59" autocomplete="given-name" style="width: 100%; min-width: 0"></label>
           <label class="f" style="min-width: 0">Last Name<input id="pLast" required maxlength="60" autocomplete="family-name" style="width: 100%; min-width: 0"></label>
         </div>
-        <label class="f">Business Phone<input id="pPhone" type="tel" required maxlength="40" autocomplete="tel"><span class="small muted" style="font-weight:400">For GrubScout to reach you. Not shown on the site.</span></label>
+        <label class="f">Business Phone<input id="pPhone" type="tel" required maxlength="20" autocomplete="tel" data-phone placeholder="555-555-5555"><span class="small muted" style="font-weight:400">For GrubScout to reach you. Not shown on the site.</span></label>
         <label class="f">Email<input id="pEmail" type="email" required maxlength="140" autocomplete="email"></label>
-        <label class="f">Public Phone<input id="pPublicPhone" type="tel" maxlength="40"><span class="small muted" style="font-weight:400">Shown on your listing for guests to call.</span></label>
+        <label class="f">Public Phone<input id="pPublicPhone" type="tel" maxlength="20" data-phone placeholder="555-555-5555"><span class="small muted" style="font-weight:400">Shown on your listing for guests to call.</span></label>
         <label class="f">Address Line 1<input id="pAddress1" required maxlength="120" autocomplete="address-line1"></label>
         <label class="f">Address Line 2<input id="pAddress2" maxlength="80" autocomplete="address-line2"></label>
         <label class="f">City<input id="pCity" required maxlength="80" autocomplete="address-level2"></label>
@@ -1082,7 +1082,7 @@ function vPrivacy() {
 const adminState = { checkedFor: null, loaded: false, isAdmin: false, failed: false, tab: 'overview', apps: [], restaurants: [], contacts: {}, contactsReady: false, customers: null, customersError: false, q: '', status: 'all', draft: null, msg: null };
 const isAdminNow = () => !!(member && adminState.isAdmin && adminState.checkedFor === member.id);
 let adminMap = null, adminPin = null;
-const blankDraft = () => ({ id: null, appId: null, name: '', description: '', cuisine: '', address: '', address_line1: '', address_line2: '', city: '', state: '', zip: '', hours: '', hours_json: null, phone: '', website_url: '', lat: null, lng: null, price_level: 2, dine_in: true, pickup: false, offer_text: '', founding_until: null, featured: false, photo_url: null, status: 'draft', contact_first: '', contact_last: '', contact_phone: '', contact_email: '' });
+const blankDraft = () => ({ id: null, appId: null, name: '', description: '', cuisine: '', address: '', address_line1: '', address_line2: '', city: '', state: '', zip: '', hours: '', hours_json: null, phone: '', website_url: '', lat: null, lng: null, dine_in: true, pickup: false, offer_text: '', founding_until: null, featured: false, photo_url: null, status: 'draft', contact_first: '', contact_last: '', contact_phone: '', contact_email: '' });
 // A restaurant ready for the form: private contact attached, and an older one-line address put in Line 1 to tidy up.
 function restaurantDraft(r) {
   const c = adminState.contacts[r.id] || {};
@@ -1270,7 +1270,7 @@ function adminApps() {
   return adminState.apps.map((a) => `<div class="card" style="gap:8px">
     <div class="rc-top"><h3>${esc(a.restaurant_name)}</h3><span class="badge">${esc(a.status)}</span></div>
     <p class="small muted">Received ${esc(fmtDate(a.created_at))}</p>
-    ${row('Contact', a.first_name ? `${a.first_name} ${a.last_name || ''}`.trim() : a.contact_name)}${a.phone || a.email ? row('Business phone', a.phone) + row('Email', a.email) : row('Reach them at', a.contact_reach)}${row('Public phone', a.public_phone)}${row('Hours', a.hours)}${row('Address', a.address)}${row('Cuisine', a.cuisine)}${a.website_url ? `<p><b>Website:</b> <a href="${esc(websiteUrl(a.website_url))}" target="_blank" rel="noopener noreferrer">${esc(a.website_url)}</a></p>` : ''}${row('Description', a.description)}${row('Offer they suggested', a.proposed_offer)}${row('Slowest nights', a.slow_nights)}
+    ${row('Contact', a.first_name ? `${a.first_name} ${a.last_name || ''}`.trim() : a.contact_name)}${a.phone || a.email ? row('Business phone', formatPhone(a.phone) || a.phone) + row('Email', a.email) : row('Reach them at', a.contact_reach)}${row('Public phone', formatPhone(a.public_phone) || a.public_phone)}${row('Hours', a.hours)}${row('Address', a.address)}${row('Cuisine', a.cuisine)}${a.website_url ? `<p><b>Website:</b> <a href="${esc(websiteUrl(a.website_url))}" target="_blank" rel="noopener noreferrer">${esc(a.website_url)}</a></p>` : ''}${row('Description', a.description)}${row('Offer they suggested', a.proposed_offer)}${row('Slowest nights', a.slow_nights)}
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px">
       ${a.status === 'added' ? '' : `<button class="btn sm pri" data-act="adminFromApp" data-id="${esc(a.id)}">Create listing</button>`}
       ${a.status === 'new' ? `<button class="btn sm" data-act="adminAppStatus" data-id="${esc(a.id)}" data-status="contacted">Mark contacted</button>` : ''}
@@ -1310,9 +1310,9 @@ function adminForm() {
         <label class="f" style="min-width:0">First Name<input id="aFirst" maxlength="60" autocomplete="off" value="${esc(r.contact_first)}" style="width:100%; min-width:0"></label>
         <label class="f" style="min-width:0">Last Name<input id="aLast" maxlength="60" autocomplete="off" value="${esc(r.contact_last)}" style="width:100%; min-width:0"></label>
       </div>
-      <label class="f">Business Phone<input id="aContactPhone" type="tel" maxlength="40" autocomplete="off" value="${esc(r.contact_phone)}"></label>
+      <label class="f">Business Phone<input id="aContactPhone" type="tel" maxlength="20" autocomplete="off" data-phone placeholder="555-555-5555" value="${esc(formatPhone(r.contact_phone) || r.contact_phone)}"></label>
       <label class="f">Email<input id="aContactEmail" type="email" maxlength="140" autocomplete="off" value="${esc(r.contact_email)}"></label>
-      <label class="f">Public Phone<input id="aPhone" type="tel" maxlength="40" autocomplete="off" value="${esc(r.phone)}"><span class="small muted" style="font-weight:400">Shown on the listing.</span></label>
+      <label class="f">Public Phone<input id="aPhone" type="tel" maxlength="20" autocomplete="off" data-phone placeholder="555-555-5555" value="${esc(formatPhone(r.phone) || r.phone)}"><span class="small muted" style="font-weight:400">Shown on the listing.</span></label>
       <label class="f">Address Line 1<input id="aLine1" maxlength="120" autocomplete="off" value="${esc(r.address_line1)}"></label>
       <label class="f">Address Line 2<input id="aLine2" maxlength="80" autocomplete="off" value="${esc(r.address_line2)}"></label>
       <label class="f">City<input id="aCity" maxlength="80" autocomplete="off" value="${esc(r.city)}"></label>
@@ -1334,7 +1334,6 @@ function adminForm() {
         <label class="f">Latitude<input id="aLat" type="number" step="any" value="${esc(r.lat)}"></label>
         <label class="f">Longitude<input id="aLng" type="number" step="any" value="${esc(r.lng)}"></label>
       </div>
-      <label class="f">Price<select id="aPrice">${[1, 2, 3].map((n) => opt(n, '$'.repeat(n), r.price_level)).join('')}</select></label>
       <label style="display:flex; gap:10px; align-items:center"><input type="checkbox" id="aDine" style="width:20px; height:20px"${r.dine_in ? ' checked' : ''}> Dine-in</label>
       <label style="display:flex; gap:10px; align-items:center"><input type="checkbox" id="aPickup" style="width:20px; height:20px"${r.pickup ? ' checked' : ''}> Pickup</label>
       <label style="display:flex; gap:10px; align-items:center"><input type="checkbox" id="aFeatured" style="width:20px; height:20px"${r.featured ? ' checked' : ''}> Featured on the home page</label>
@@ -1399,22 +1398,25 @@ async function adminSave() {
   const v = (id) => $('#' + id).value.trim();
   const num = (id) => (v(id) === '' ? null : Number(v(id)));
   const orNull = (id) => v(id) || null;
+  const phone = (id) => { const f = formatPhone(v(id)); return f === null ? v(id) : f || null; }; // 555-555-5555, or as typed if it can't be
   const row = {
     name: v('aName'), description: v('aDesc'), offer_text: v('aOffer'), cuisine: v('aCuisine'),
     address_line1: orNull('aLine1'), address_line2: orNull('aLine2'), city: orNull('aCity'), state: orNull('aState'), zip: orNull('aZip'),
     address: joinAddress(v('aLine1'), v('aLine2'), v('aCity'), v('aState'), v('aZip')) || null,
-    hours: null, hours_json: null, phone: orNull('aPhone'), website_url: websiteUrl(v('aWebsite')) || null,
-    lat: num('aLat'), lng: num('aLng'), price_level: Number(v('aPrice')), dine_in: $('#aDine').checked, pickup: $('#aPickup').checked,
+    hours: null, hours_json: null, phone: phone('aPhone'), website_url: websiteUrl(v('aWebsite')) || null,
+    lat: num('aLat'), lng: num('aLng'), dine_in: $('#aDine').checked, pickup: $('#aPickup').checked,
     founding_until: v('aFounding') ? new Date(v('aFounding') + 'T12:00:00').toISOString() : null, status: v('aStatus'),
     featured: $('#aFeatured').checked, photo_url: adminState.draft.photo_url,
   };
-  const contact = { first_name: orNull('aFirst'), last_name: orNull('aLast'), phone: orNull('aContactPhone'), email: orNull('aContactEmail') };
+  const contact = { first_name: orNull('aFirst'), last_name: orNull('aLast'), phone: phone('aContactPhone'), email: orNull('aContactEmail') };
   // Hours: the picker wins; with the picker left empty, hours typed before the picker existed are kept.
   const hours = readHours('a'), old = adminState.draft;
   if (hours.length) { row.hours_json = hours; row.hours = hoursText(hours); }
   else if (old.hours && !(old.hours_json && old.hours_json.length)) row.hours = old.hours;
   const keep = { ...row, hours_json: readHours('a', true), contact_first: v('aFirst'), contact_last: v('aLast'), contact_phone: v('aContactPhone'), contact_email: v('aContactEmail') }; // what's typed, if we come back to the form
   const problem = !row.name ? 'Enter the restaurant name.'
+    : formatPhone(v('aContactPhone')) === null ? 'Enter the business phone as a 10-digit number, like 555-555-5555.'
+    : formatPhone(v('aPhone')) === null ? 'Enter the public phone as a 10-digit number, like 555-555-5555.'
     : hours.length && hoursProblem(hours) ? hoursProblem(hours)
     : contact.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email) ? 'Check the contact email address.'
     : row.zip && !/^\d{5}(-\d{4})?$/.test(row.zip) ? 'Enter a 5-digit zip code.'
@@ -1498,12 +1500,10 @@ function adminFromApp(id) {
 // Stored as [{ days: ['mon', 'tue'], open: '11:00', close: '21:00' }], shown as "Mon–Fri 11 AM – 9 PM".
 const WEEK = [['mon', 'Mon'], ['tue', 'Tue'], ['wed', 'Wed'], ['thu', 'Thu'], ['fri', 'Fri'], ['sat', 'Sat'], ['sun', 'Sun']];
 const TIMES = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`);
+// "10:00 AM", used in the dropdowns and on listings.
 function fmtTime(t) {
   const [h, m] = t.split(':').map(Number);
-  if (!m && h === 0) return 'Midnight';
-  if (!m && h === 12) return 'Noon';
-  const hr = h % 12 || 12, ap = h < 12 ? 'AM' : 'PM';
-  return m ? `${hr}:${String(m).padStart(2, '0')} ${ap}` : `${hr} ${ap}`;
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
 }
 function hoursText(blocks) {
   return (blocks || []).filter((b) => b.days.length && b.open && b.close).map((b) => {
@@ -1554,6 +1554,19 @@ function redrawHours(prefix, blocks) {
   root.outerHTML = hoursEditor(prefix, blocks);
 }
 
+// US phone numbers as 555-555-5555. Returns '' for blank and null when it isn't 10 digits (an optional leading 1 is dropped).
+function formatPhone(s) {
+  if (!String(s || '').trim()) return '';
+  let d = String(s).replace(/\D/g, '');
+  if (d.length === 11 && d[0] === '1') d = d.slice(1);
+  return d.length === 10 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : null;
+}
+// Tidy a phone field when the person moves on from it; anything that isn't a full number is left for them to fix.
+document.addEventListener('focusout', (e) => {
+  if (!e.target.matches || !e.target.matches('input[data-phone]')) return;
+  const f = formatPhone(e.target.value); if (f) e.target.value = f;
+});
+
 // "123 Main St, Suite 4, Houston, TX 77005" from the separate address fields.
 function joinAddress(line1, line2, city, state, zip) {
   const tail = [state, zip].filter(Boolean).join(' ');
@@ -1563,6 +1576,12 @@ function websiteUrl(s) { s = String(s || '').trim(); return s && !/^https?:\/\//
 async function submitPartner() {
   if (!sb) return toast('The sign-up form isn’t connected yet.');
   const v = (id) => $('#' + id).value.trim();
+  // Phones go out as 555-555-5555.
+  for (const [id, label] of [['pPhone', 'business phone'], ['pPublicPhone', 'public phone']]) {
+    const el = $('#' + id), f = formatPhone(el.value);
+    if (f === null) { el.focus(); return toast(`Enter the ${label} as a 10-digit number, like 555-555-5555.`); }
+    el.value = f;
+  }
   const hours = readHours('p');
   const hoursIssue = hours.length ? hoursProblem(hours) : null;
   if (hoursIssue) return toast(hoursIssue);
@@ -1662,12 +1681,12 @@ function openDrawer(id) {
   const r = RESTAURANTS.find((x) => x.id === id); if (!r) return;
   $('#drawerRoot').innerHTML = `<div class="scrim" data-act="closeDrawer"><div class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
     <button class="x" data-act="closeDrawer" aria-label="Close">\u00D7</button>
-    <p class="eyebrow">${esc(r.cuisine)} \u00B7 ${'$'.repeat(r.price)}</p>
+    ${r.cuisine ? `<p class="eyebrow">${esc(r.cuisine)}</p>` : ''}
     <h2 id="dTitle">${esc(r.name)}</h2>
     ${r.address || r.place ? `<p class="muted" style="display:flex; gap:6px; align-items:center">${I.pin}${esc(r.address || r.place)}</p>` : ''}
     <p style="font-size:19px; color: var(--ink-2)">${esc(r.desc)}</p>
-    ${r.hours ? `<p class="small muted">${esc(r.hours)}</p>` : ''}
-    ${r.phone || /^https?:\/\//i.test(r.website || '') ? `<p class="small">${r.phone ? `<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>` : ''}${r.phone && r.website ? ' · ' : ''}${/^https?:\/\//i.test(r.website || '') ? `<a href="${esc(r.website)}" target="_blank" rel="noopener noreferrer">Website</a>` : ''}</p>` : ''}
+    ${r.hours ? `<div class="small muted" aria-label="Hours">${r.hours.split(' · ').map((line) => `<p>${esc(line)}</p>`).join('')}</div>` : ''}
+    ${r.phone || /^https?:\/\//i.test(r.website || '') ? `<p class="small">${r.phone ? `<a href="tel:${esc(r.phone.replace(/[^\d+]/g, ''))}">${esc(formatPhone(r.phone) || r.phone)}</a>` : ''}${r.phone && r.website ? ' · ' : ''}${/^https?:\/\//i.test(r.website || '') ? `<a href="${esc(r.website)}" target="_blank" rel="noopener noreferrer">Website</a>` : ''}</p>` : ''}
     <div class="card" style="gap:8px"><p class="eyebrow">Member offer</p><p style="font-family: var(--f-display); font-weight:800; font-size:30px; line-height:1.1">${esc(r.offer)}</p><p class="small muted">Show your live pass before you pay. Alcohol excluded. Not combined with other offers.</p></div>
     <div class="badges">${r.isNew ? `<span class="badge new">${I.star}New</span>` : ''}${r.founding ? `<span class="badge fp">${I.star}Founding partner</span>` : ''}${r.dineIn ? `<span class="badge">${I.dine}Dine-in</span>` : ''}${r.pickup ? `<span class="badge">${I.pickup}Pickup</span>` : ''}</div>
     <div style="display:flex; gap:10px; flex-wrap:wrap">${!member ? '<a class="btn pri" href="#join" data-go="join">Join to use this offer</a>' : isPaid() ? '<a class="btn pri" href="#pass" data-go="pass">Show my pass</a>' : '<a class="btn pri" href="#pass" data-go="pass">Activate my pass</a>'}<button class="btn" data-act="closeDrawer">Back to results</button></div>
