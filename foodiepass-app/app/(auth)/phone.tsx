@@ -87,7 +87,7 @@ export default function Phone() {
               onPress={apple}
             />
           ) : null}
-          <Small style={{ textAlign: 'center' }}>By continuing you agree to the FoodiePass Terms and Privacy Policy.</Small>
+          <Small style={{ textAlign: 'center' }}>By continuing you agree to the GrubScout Terms and Privacy Policy.</Small>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

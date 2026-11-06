@@ -2,9 +2,9 @@ import * as Crypto from 'expo-crypto';
 import { supabase } from './supabase';
 import { CONFIG, FN_URL } from './config';
 
-// Calls the same Supabase Edge Functions the website uses (see foodiepass-backend/).
+// Calls the same Supabase Edge Functions the website uses (see GrubScout-backend/).
 export type ApiError = { code: string; message: string };
-const NET: ApiError = { code: 'network', message: 'We couldn’t reach FoodiePass. Check your connection and try again.' };
+const NET: ApiError = { code: 'network', message: 'We couldn’t reach GrubScout. Check your connection and try again.' };
 
 async function api<T>(path: string, init: { method?: string; body?: unknown; auth?: boolean } = {}): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json', apikey: CONFIG.supabaseKey };

@@ -1,6 +1,6 @@
-# FoodiePass mobile app (iOS + Android)
+# GrubScout mobile app (iOS + Android)
 
-One React Native codebase (Expo) for both stores. It uses the same Supabase project, data and server functions as the website.
+Formerly FoodiePass. One React Native codebase (Expo) for both stores. It uses the same Supabase project, data and server functions as the website.
 
 ## What it does
 
@@ -41,7 +41,7 @@ If `expo` reports version mismatches, run `npx expo install --fix`. The project 
 
 ## Optional: Sign in with Apple
 
-Set up the Apple provider in Supabase with the bundle ID `com.foodiepass.app`, then set `"appleSignIn": true` in `app.json`. Apple requires this button if you add other third-party sign-ins (Google, Facebook) later.
+Set up the Apple provider in Supabase with the bundle ID `com.grubscout.app`, then set `"appleSignIn": true` in `app.json`. Apple requires this button if you add other third-party sign-ins (Google, Facebook) later.
 
 ## Build for the stores
 
@@ -53,4 +53,4 @@ Set up the Apple provider in Supabase with the bundle ID `com.foodiepass.app`, t
 
 ## Payments in the app
 
-Membership checkout opens Stripe's hosted page in the in-app browser, and the server grants access. FoodiePass sells a real-world dining service, which Apple generally allows outside in-app purchase (App Review Guideline 3.1.3(e)), but confirm with App Review at submission. Payments show "opens at launch" until Stripe and the server functions are live.
+Membership checkout opens Stripe's hosted page in the in-app browser, and the server grants access. GrubScout sells a real-world dining service, which Apple generally allows outside in-app purchase (App Review Guideline 3.1.3(e)), but confirm with App Review at submission. Payments show "opens at launch" until Stripe and the server functions are live.

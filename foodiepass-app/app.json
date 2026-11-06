@@ -1,23 +1,23 @@
 {
   "expo": {
-    "name": "FoodiePass",
-    "slug": "foodiepass",
+    "name": "GrubScout",
+    "slug": "grubscout",
     "version": "0.1.0",
-    "scheme": "foodiepass",
+    "scheme": "grubscout",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "backgroundColor": "#F6F4EF",
     "ios": {
-      "bundleIdentifier": "com.foodiepass.app",
+      "bundleIdentifier": "com.grubscout.app",
       "supportsTablet": false,
       "usesAppleSignIn": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "FoodiePass uses your location to show partner restaurants near you.",
+        "NSLocationWhenInUseUsageDescription": "GrubScout uses your location to show partner restaurants near you.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.foodiepass.app",
+      "package": "com.grubscout.app",
       "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
       "adaptiveIcon": { "backgroundColor": "#E2552B" }
     },
@@ -27,7 +27,7 @@
       "expo-apple-authentication",
       [
         "expo-location",
-        { "locationWhenInUsePermission": "FoodiePass uses your location to show partner restaurants near you." }
+        { "locationWhenInUsePermission": "GrubScout uses your location to show partner restaurants near you." }
       ]
     ],
     "experiments": { "typedRoutes": false },
