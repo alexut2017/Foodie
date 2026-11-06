@@ -102,7 +102,7 @@ var CFG = {
   termsVersion: '2026-11-04',
   resendSeconds: 60,
   passMinutes: 15,
-  version: '0.2.0'
+  version: '0.3.0'
 };
 var sb = null;
 try {
@@ -114,12 +114,12 @@ var KEY = 'gs-app';
 var DAY = 86400000;
 
 // UI state that survives a reload (no account data).
-function fresh() { return { tab: 'explore', q: '', district: null, passQ: '', visit: null, mode: 'join', email: '', name: '' }; }
+function fresh() { return { tab: 'explore', q: '', district: null, passQ: '', visit: null, mode: 'join', method: 'phone', phone: '', email: '', name: '' }; }
 var S = (function () { try { var v = JSON.parse(localStorage.getItem(KEY)); return Object.assign(fresh(), v && typeof v === 'object' ? v : {}); } catch (e) { return fresh(); } })();
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private mode */ } }
 
 // Runtime state.
-var R = { screen: 'loading', detail: null, sentAt: 0, busy: false, msg: null, user: null, member: null, status: { active: false }, isAdmin: false, payOpen: false,
+var R = { screen: 'loading', detail: null, sentAt: 0, code: '', agree: false, marketing: false, busy: false, msg: null, user: null, member: null, status: { active: false }, isAdmin: false, payOpen: false,
   districts: [], list: [], dirState: 'loading', partner: null, partnerOpen: false };
 
 function set(patch, keepFocus) { Object.keys(patch).forEach(function (k) { if (k in S) S[k] = patch[k]; else R[k] = patch[k]; }); save(); render(keepFocus); }
@@ -171,7 +171,8 @@ async function loadPayOpen() {
 function memberFromUser(u) {
   var m = u.user_metadata || {};
   var name = String(m.full_name || m.name || (u.email || '').split('@')[0] || 'Member').trim();
-  return { id: u.id, name: name, email: u.email || '', ref: 'GS-' + String(u.id).replace(/-/g, '').slice(0, 6).toUpperCase(), since: u.created_at };
+  var ph = String(u.phone || '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+  return { id: u.id, name: name, email: u.email || '', phone: ph ? fmtPhone(ph) : '', ref: 'GS-' + String(u.id).replace(/-/g, '').slice(0, 6).toUpperCase(), since: u.created_at };
 }
 async function statusFromEntitlements(uid) {
   try {
@@ -199,24 +200,49 @@ async function onSession(session) {
   save(); render();
 }
 
-// ---------- Auth (email link, same settings as the website) ----------
-async function sendLink(isResend) {
-  var email = S.email.trim().toLowerCase();
+// ---------- Auth: phone + text code, or email + code (the email also carries a sign-in link) ----------
+var fmtPhone = function (d) { return d.length < 4 ? d : d.length < 7 ? '(' + d.slice(0, 3) + ') ' + d.slice(3) : '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6); };
+var phoneOk = function () { return S.phone.length === 10 && /^[2-9]/.test(S.phone); };
+var e164 = function () { return '+1' + S.phone; };
+function loginOk() {
+  var id = S.method === 'phone' ? phoneOk() : emailOk(S.email);
+  return id && (S.mode !== 'join' || (S.name.trim() && R.agree));
+}
+function authErrText(err) { return (String(err.message || '') + ' ' + String(err.code || '') + ' ' + String(err.status || '')).toLowerCase(); }
+async function sendCode(isResend) {
   if (!sb) return set({ msg: { kind: 'err', text: 'GrubScout could not load. Check your connection and reload.' } });
-  var opts = { emailRedirectTo: location.origin + location.pathname };
-  if (S.mode === 'join') {
-    opts.shouldCreateUser = true;
-    opts.data = { full_name: S.name.trim(), terms_version: CFG.termsVersion, terms_accepted_at: new Date().toISOString(), marketing_opt_in: !!R.marketing };
-  } else opts.shouldCreateUser = false;
+  var phone = S.method === 'phone';
+  var opts = { shouldCreateUser: S.mode === 'join' };
+  if (S.mode === 'join') opts.data = { full_name: S.name.trim(), terms_version: CFG.termsVersion, terms_accepted_at: new Date().toISOString(), marketing_opt_in: !!R.marketing };
+  if (!phone) opts.emailRedirectTo = location.origin + location.pathname;
+  var args = phone ? { phone: e164(), options: opts } : { email: S.email.trim().toLowerCase(), options: opts };
   set({ busy: true, msg: null });
-  var res; try { res = await sb.auth.signInWithOtp({ email: email, options: opts }); } catch (e) { res = { error: { message: 'network' } }; }
-  var err = res && res.error, text = err ? String(err.message || '') + ' ' + String(err.code || '') : '';
-  if (err && S.mode === 'signin' && /otp_disabled|signups? not allowed|user not found/i.test(text)) err = null; // don't reveal whether an account exists
+  var res; try { res = await sb.auth.signInWithOtp(args); } catch (e) { res = { error: { message: 'network' } }; }
+  var err = res && res.error, t = err ? authErrText(err) : '';
+  if (err && S.mode === 'signin' && /otp_disabled|signups? not allowed|user not found/.test(t)) err = null; // don't reveal whether an account exists
   if (err) {
-    var m = /rate|too many|429|seconds/i.test(text + ' ' + (err.status || '')) ? 'Too many tries. Wait a minute, then try again.' : 'We couldn’t send the link just now. Check your connection and the address, then try again.';
-    return set({ busy: false, msg: { kind: 'err', text: m } });
+    var m;
+    if (phone && /provider|phone.*(disabled|not enabled)|unsupported|sms/.test(t)) m = 'Text sign-in isn’t switched on yet. Use email for now.';
+    else if (/rate|too many|429|seconds/.test(t)) m = 'Too many tries. Wait a minute, then try again.';
+    else if (phone && /invalid.*phone|phone.*invalid/.test(t)) m = 'Check the mobile number. We can only text US numbers right now.';
+    else m = phone ? 'We couldn’t text a code just now. Check the number, or use email.' : 'We couldn’t send the email just now. Check the address and your connection, then try again.';
+    return set({ busy: false, msg: { kind: 'err', text: m, toEmail: phone } });
   }
-  set({ busy: false, screen: 'sent', sentAt: Date.now(), msg: isResend ? { kind: 'ok', text: 'Sent again. Check your inbox and spam folder.' } : null });
+  set({ busy: false, screen: 'code', code: '', sentAt: Date.now(), msg: isResend ? { kind: 'ok', text: phone ? 'New code sent.' : 'Sent again. Check your inbox and spam folder.' } : null }, 'codeIn');
+}
+async function verifyCode() {
+  if (R.busy || R.code.length < 6) return;
+  var phone = S.method === 'phone';
+  var args = phone ? { phone: e164(), token: R.code, type: 'sms' } : { email: S.email.trim().toLowerCase(), token: R.code, type: 'email' };
+  set({ busy: true, msg: null });
+  var res; try { res = await sb.auth.verifyOtp(args); } catch (e) { res = { error: { message: 'network' } }; }
+  if (res.error || !res.data || !res.data.session) {
+    var t = res.error ? authErrText(res.error) : '';
+    var m = /expired|invalid|token/.test(t) ? 'That code didn’t work. It may have expired. Check it or send a new one.' : /rate|too many|429/.test(t) ? 'Too many tries. Wait a minute, then try again.' : 'We couldn’t check the code. Check your connection and try again.';
+    return set({ busy: false, code: '', msg: { kind: 'err', text: m } }, 'codeIn');
+  }
+  R.busy = false; R.code = '';
+  await onSession(res.data.session);
 }
 async function signOut(all) {
   set({ busy: true });
@@ -236,27 +262,35 @@ function vWelcome() {
     '<button class="btn link" style="color:var(--mustard)" data-act="browse">Browse restaurants first</button>' +
     '<p style="color:var(--mint);font-size:14px;text-align:center">Restaurants join free. Members pay $30 a year.</p></div></div>';
 }
-function vEmail() {
-  var join = S.mode === 'join';
-  var ok = emailOk(S.email) && (!join || (S.name.trim() && R.agree));
+function vLogin() {
+  var join = S.mode === 'join', phone = S.method === 'phone';
+  var seg = function (m, label) { return '<button class="chip' + (S.method === m ? ' on' : '') + '" style="flex:1" data-act="method" data-id="' + m + '" aria-pressed="' + (S.method === m) + '">' + label + '</button>'; };
   return '<div class="screen"><div class="stack"><button class="back" data-act="toWelcome" aria-label="Back">←</button>' +
     '<h1>' + (join ? 'Create your account' : 'Welcome back') + '</h1>' +
-    '<p class="lede">' + (join ? 'No password. We’ll email you a sign-in link. Your name goes on your member pass.' : 'Enter your email and we’ll send you a sign-in link.') + '</p>' +
+    '<p class="lede">' + (phone ? 'No password. We’ll text you a 6-digit code.' : 'No password. We’ll email you a 6-digit code.') + (join ? ' Your name goes on your member pass.' : '') + '</p>' +
+    '<div style="display:flex;gap:8px" role="group" aria-label="Sign in with">' + seg('phone', 'Phone') + seg('email', 'Email') + '</div>' +
     (join ? '<label class="f">Full name<input id="nameIn" class="in" autocomplete="name" value="' + esc(S.name) + '"></label>' : '') +
-    '<label class="f">Email<input id="emailIn" class="in" type="email" inputmode="email" autocomplete="email" autocapitalize="off" value="' + esc(S.email) + '"></label>' +
+    (phone
+      ? '<label class="f">Mobile number<span style="display:flex;gap:10px"><span style="border:1.5px solid #CFC7B8;border-radius:14px;padding:0 14px;display:flex;align-items:center;background:var(--card);font-size:18px;font-weight:600">+1</span><input id="phoneIn" class="in" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="(713) 555-0123" value="' + esc(fmtPhone(S.phone)) + '"></span></label>'
+      : '<label class="f">Email<input id="emailIn" class="in" type="email" inputmode="email" autocomplete="email" autocapitalize="off" value="' + esc(S.email) + '"></label>') +
     (join ? '<label class="check"><input id="agreeIn" type="checkbox"' + (R.agree ? ' checked' : '') + '> <span>I agree to the <a href="' + CFG.site + '#terms" target="_blank" rel="noopener">Terms</a> and <a href="' + CFG.site + '#privacy" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>' +
       '<label class="check"><input id="mktIn" type="checkbox"' + (R.marketing ? ' checked' : '') + '> <span>Email me new restaurants and member offers (optional).</span></label>' : '') +
-    msgHtml() + '</div>' +
-    '<div class="stack" style="gap:12px"><button class="btn" id="sendBtn" data-act="send"' + (ok && !R.busy ? '' : ' disabled') + '>' + (R.busy ? 'Sending…' : 'Email me a link') + '</button>' +
+    msgHtml() + (R.msg && R.msg.toEmail ? '<button class="btn ghost" data-act="method" data-id="email">Use email instead</button>' : '') + '</div>' +
+    '<div class="stack" style="gap:12px"><button class="btn" id="sendBtn" data-act="send"' + (loginOk() && !R.busy ? '' : ' disabled') + '>' + (R.busy ? 'Sending…' : phone ? 'Text me a code' : 'Email me a code') + '</button>' +
+    (phone ? '<p class="small" style="text-align:center;font-size:13px">Message and data rates may apply. We only text sign-in codes.</p>' : '') +
     '<button class="btn link" data-act="' + (join ? 'signin' : 'join') + '">' + (join ? 'I already have an account' : 'New here? Create an account') + '</button></div></div>';
 }
-function vSent() {
+function vCode() {
+  var phone = S.method === 'phone';
   var wait = Math.max(0, Math.ceil((R.sentAt + CFG.resendSeconds * 1000 - Date.now()) / 1000));
-  return '<div class="screen"><div class="stack"><button class="back" data-act="toEmail" aria-label="Back">←</button>' +
-    '<h1>Check your email</h1><p class="lede">' + (S.mode === 'join' ? 'We sent a link to ' : 'If there’s an account for ') + '<strong>' + esc(S.email.trim()) + '</strong>' + (S.mode === 'join' ? '.' : ', a sign-in link is on its way.') + ' Open it on this phone to finish signing in.</p>' +
-    '<div class="card"><p class="small">The link expires in an hour. Check spam if you don’t see it.</p><p class="small">On iPhone, if you added GrubScout to your home screen, the link opens in Safari. Sign in there, or open this app in Safari and use it from the browser.</p></div>' + msgHtml() + '</div>' +
-    '<div class="stack" style="gap:12px"><button class="btn ghost" id="resendBtn" data-act="resend"' + (wait > 0 || R.busy ? ' disabled' : '') + '>' + (wait > 0 ? 'Resend in ' + wait + 's' : 'Resend link') + '</button>' +
-    '<button class="btn link" data-act="toEmail">Use a different email</button></div></div>';
+  var to = phone ? fmtPhone(S.phone) : S.email.trim();
+  return '<div class="screen"><div class="stack"><button class="back" data-act="toLogin" aria-label="Back">←</button>' +
+    '<h1>Enter the code</h1><p class="lede">' + (S.mode === 'signin' && !phone ? 'If there’s an account for ' : 'We sent a code to ') + '<strong>' + esc(to) + '</strong>' + (S.mode === 'signin' && !phone ? ', a code is on its way.' : '.') + '</p>' +
+    '<label class="f">' + (phone ? 'Code from the text' : 'Code from the email') + '<input id="codeIn" class="in" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456" value="' + esc(R.code) + '" style="letter-spacing:8px;font-size:24px;text-align:center"></label>' +
+    (phone ? '' : '<p class="small">Or tap the sign-in link in the email on this phone. Check spam if you don’t see it.</p>') + msgHtml() + '</div>' +
+    '<div class="stack" style="gap:12px"><button class="btn" id="verifyBtn" data-act="verify"' + (R.code.length >= 6 && !R.busy ? '' : ' disabled') + '>' + (R.busy ? 'Checking…' : 'Verify') + '</button>' +
+    '<button class="btn ghost" id="resendBtn" data-act="resend"' + (wait > 0 || R.busy ? ' disabled' : '') + '>' + (wait > 0 ? 'Resend in ' + wait + 's' : 'Resend code') + '</button>' +
+    '<button class="btn link" data-act="method" data-id="' + (phone ? 'email' : 'phone') + '">' + (phone ? 'Use email instead' : 'Use phone instead') + '</button></div></div>';
 }
 function badgesHtml(r) {
   var b = [];
@@ -399,7 +433,8 @@ function vAccount() {
   var m = R.member, st = R.status;
   var memb = st.active ? 'Active through ' + fmtDate(st.until) + (st.grace ? ' (payment grace period)' : '') + '.' : 'No active membership yet. Activate it from My pass.';
   return '<div class="main" style="padding-left:20px;padding-right:20px;gap:14px"><p class="eyebrow">Account</p><h1 style="font-size:32px;overflow-wrap:anywhere">' + esc(m.name) + '</h1>' + msgHtml() +
-    '<div class="card"><div class="kv"><span class="small">Email</span><span class="v">' + esc(m.email) + '</span></div>' +
+    '<div class="card">' + (m.phone ? '<div class="kv"><span class="small">Mobile</span><span class="v">' + esc(m.phone) + '</span></div>' : '') +
+    (m.email ? '<div class="kv"><span class="small">Email</span><span class="v">' + esc(m.email) + '</span></div>' : '') +
     (m.since ? '<div class="kv"><span class="small">Member since</span><span class="v">' + esc(fmtDate(m.since)) + '</span></div>' : '') + '</div>' +
     '<div class="card"><h2>Membership</h2><p class="note' + (st.active ? ' ok' : '') + '">' + esc(memb) + '</p></div>' +
     '<div class="card"><h2>Invite friends</h2><p class="small">Your referral code</p><p style="font-family:var(--display);font-size:24px;font-weight:800">' + esc(m.ref) + '</p><button class="btn ghost" data-act="copyRef">Copy my referral link</button></div>' +
@@ -422,8 +457,8 @@ function render(keepFocusId) {
   var html;
   if (R.screen === 'loading') html = vLoading();
   else if (R.screen === 'welcome') html = vWelcome();
-  else if (R.screen === 'email') html = vEmail();
-  else if (R.screen === 'sent') html = vSent();
+  else if (R.screen === 'login') html = vLogin();
+  else if (R.screen === 'code') html = vCode();
   else html = (R.detail ? vDetail() : S.tab === 'explore' ? vExplore() : S.tab === 'account' ? (R.member ? vAccount() : vAccountSignedOut()) : vPass()) + tabsHtml();
   document.getElementById('app').innerHTML = html;
   if (keepFocusId) { var el = document.getElementById(keepFocusId); if (el) { el.focus(); var n = el.value.length; try { el.setSelectionRange(n, n); } catch (e) { /* not a text field */ } } }
@@ -477,13 +512,15 @@ document.addEventListener('click', function (e) {
   var t = e.target.closest('[data-act]'); if (!t || t.disabled) return;
   var id = t.getAttribute('data-id');
   switch (t.getAttribute('data-act')) {
-    case 'join': return set({ screen: 'email', mode: 'join', detail: null, msg: null }, S.name ? 'emailIn' : 'nameIn');
-    case 'signin': return set({ screen: 'email', mode: 'signin', detail: null, msg: null }, 'emailIn');
+    case 'join': return set({ screen: 'login', mode: 'join', detail: null, msg: null }, S.name ? idField() : 'nameIn');
+    case 'signin': return set({ screen: 'login', mode: 'signin', detail: null, msg: null }, idField());
+    case 'method': S.method = id; return set({ screen: 'login', code: '', msg: null }, idField());
     case 'browse': return set({ screen: 'app', tab: 'explore', msg: null });
     case 'toWelcome': return set({ screen: R.user ? 'app' : 'welcome', msg: null });
-    case 'toEmail': return set({ screen: 'email', msg: null }, 'emailIn');
-    case 'send': return sendLink(false);
-    case 'resend': return sendLink(true);
+    case 'toLogin': return set({ screen: 'login', code: '', msg: null }, idField());
+    case 'send': return sendCode(false);
+    case 'resend': return sendCode(true);
+    case 'verify': return verifyCode();
     case 'district': return set({ district: id || null });
     case 'detail': return set({ detail: id });
     case 'closeDetail': return set({ detail: null });
@@ -507,10 +544,13 @@ document.addEventListener('click', function (e) {
   }
 });
 document.addEventListener('submit', function (e) { if (e.target.id === 'partnerForm') { e.preventDefault(); submitPartner(); } });
-function syncSend() { var b = document.getElementById('sendBtn'); if (b) b.disabled = R.busy || !(emailOk(S.email) && (S.mode !== 'join' || (S.name.trim() && R.agree))); }
+function idField() { return S.method === 'phone' ? 'phoneIn' : 'emailIn'; }
+function syncSend() { var b = document.getElementById('sendBtn'); if (b) b.disabled = R.busy || !loginOk(); }
 document.addEventListener('input', function (e) {
   var el = e.target;
   if (el.id === 'emailIn') { S.email = el.value; save(); syncSend(); }
+  else if (el.id === 'phoneIn') { S.phone = el.value.replace(/\D/g, '').replace(/^1(?=\d{10})/, '').slice(0, 10); save(); el.value = fmtPhone(S.phone); syncSend(); }
+  else if (el.id === 'codeIn') { R.code = el.value.replace(/\D/g, '').slice(0, 8); el.value = R.code; var vb = document.getElementById('verifyBtn'); if (vb) vb.disabled = R.busy || R.code.length < 6; if (R.code.length === 6 && e.inputType !== 'insertText') verifyCode(); }
   else if (el.id === 'nameIn') { S.name = el.value; save(); syncSend(); }
   else if (el.id === 'qIn') { S.q = el.value; save(); document.getElementById('exploreList').innerHTML = listHtml(); }
   else if (el.id === 'passQIn') { S.passQ = el.value; save(); document.getElementById('passList').innerHTML = passItems().map(passRow).join(''); }
@@ -522,7 +562,8 @@ document.addEventListener('change', function (e) {
   else if (e.target.id === 'mktIn') { R.marketing = e.target.checked; }
 });
 document.addEventListener('keydown', function (e) {
-  if (e.key === 'Enter' && (e.target.id === 'emailIn' || e.target.id === 'nameIn')) { var b = document.getElementById('sendBtn'); if (b && !b.disabled) sendLink(false); }
+  if (e.key === 'Enter' && (e.target.id === 'emailIn' || e.target.id === 'nameIn' || e.target.id === 'phoneIn')) { var b = document.getElementById('sendBtn'); if (b && !b.disabled) sendCode(false); }
+  if (e.key === 'Enter' && e.target.id === 'codeIn') verifyCode();
   if (e.target.id === 'swipe' && e.key === 'Enter') confirmVisit();
 });
 ['pointerup', 'touchend', 'mouseup'].forEach(function (ev) { document.addEventListener(ev, function (e) { if (e.target.id === 'swipe' && S.visit && !S.visit.confirmedAt) e.target.value = 0; }); });
@@ -533,7 +574,7 @@ setInterval(function () {
   var cd = document.getElementById('countdown');
   if (cd && S.visit && !S.visit.confirmedAt) { var left = PASS_MS - (Date.now() - S.visit.openedAt); if (left <= 0) return render(); var s = Math.ceil(left / 1000); cd.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
   var rb = document.getElementById('resendBtn');
-  if (rb) { var w = Math.max(0, Math.ceil((R.sentAt + CFG.resendSeconds * 1000 - Date.now()) / 1000)); rb.disabled = w > 0 || R.busy; rb.textContent = w > 0 ? 'Resend in ' + w + 's' : 'Resend link'; }
+  if (rb) { var w = Math.max(0, Math.ceil((R.sentAt + CFG.resendSeconds * 1000 - Date.now()) / 1000)); rb.disabled = w > 0 || R.busy; rb.textContent = w > 0 ? 'Resend in ' + w + 's' : 'Resend code'; }
 }, 1000);
 
 // ---------- Start ----------
