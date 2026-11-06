@@ -1,6 +1,6 @@
 {
-  "name": "FoodiePass (preview)",
-  "short_name": "FoodiePass",
+  "name": "GrubScout (preview)",
+  "short_name": "GrubScout",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
