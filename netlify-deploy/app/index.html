@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#172A2A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FoodiePass">
+<title>FoodiePass app (preview)</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=DM+Sans:wght@400..700&display=swap">
+<style>
+:root { --linen:#F6F4EF; --sand:#EDE8DE; --card:#FFFDF8; --bayou:#172A2A; --chili:#E2552B; --mustard:#F2B134; --brick:#B5401C; --ink2:#4A5857; --muted:#5C6968; --line:#E2DDD2; --mint:#BFD3CF; --ok:#2F6B4C; --okbg:#DDEFE3; --okfg:#1F4D35; --display:'Bricolage Grotesque', 'Arial Black', Arial, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #0f1d1d; }
+body { font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif; color: var(--bayou); -webkit-tap-highlight-color: transparent; }
+#phone { position: relative; width: 100%; max-width: 430px; height: 100dvh; margin: 0 auto; background: var(--linen); display: flex; flex-direction: column; overflow: hidden; }
+@media (min-width: 600px) { body { display: flex; align-items: center; } #phone { height: min(900px, 96dvh); border-radius: 36px; box-shadow: 0 30px 80px rgba(0,0,0,.5); } }
+.screen { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; padding: calc(16px + env(safe-area-inset-top)) 24px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; }
+.dark { background: var(--bayou); color: var(--linen); }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+h1 { margin: 0; font-family: var(--display); font-size: 34px; line-height: 1.08; font-weight: 800; letter-spacing: -0.5px; }
+p { margin: 0; }
+.lede { color: var(--ink2); font-size: 17px; line-height: 1.4; }
+.small { color: var(--muted); font-size: 14px; line-height: 1.4; }
+.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--brick); }
+.btn { display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 999px; border: 2px solid var(--chili); background: var(--chili); color: var(--bayou); font: inherit; font-size: 17px; font-weight: 700; cursor: pointer; width: 100%; text-decoration: none; padding: 0 20px; }
+.btn.ghost { background: transparent; border-color: var(--bayou); }
+.btn.ghost-light { background: transparent; border-color: var(--mint); color: var(--linen); }
+.btn:disabled { opacity: .5; cursor: default; }
+.back { align-self: flex-start; width: 44px; height: 44px; border: 0; background: transparent; font-size: 28px; color: var(--bayou); cursor: pointer; padding: 0; }
+label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 15px; }
+.in { min-height: 54px; border: 1.5px solid #CFC7B8; border-radius: 14px; padding: 0 16px; font: inherit; font-size: 18px; color: var(--bayou); background: var(--card); width: 100%; }
+.in.search { border: 2px solid var(--bayou); border-radius: 999px; }
+:focus-visible { outline: 3px solid var(--chili); outline-offset: 2px; }
+.boxes { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.box { aspect-ratio: .85; border-radius: 14px; background: var(--card); border: 1.5px solid #CFC7B8; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; }
+.box.on { border: 2.5px solid var(--chili); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+.main { flex: 1; min-height: 0; overflow-y: auto; padding: calc(16px + env(safe-area-inset-top)) 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.chip { flex-shrink: 0; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); color: var(--bayou); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.chip.on { background: var(--bayou); border-color: var(--bayou); color: var(--linen); }
+.row { text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px; display: flex; align-items: center; gap: 12px; width: 100%; font: inherit; color: var(--bayou); cursor: pointer; }
+.row .name { font-size: 19px; font-weight: 800; letter-spacing: -0.3px; }
+.row .meta { font-size: 14px; color: var(--muted); }
+.row .offer { font-size: 15px; font-weight: 700; }
+.pill { flex-shrink: 0; min-height: 44px; border-radius: 999px; border: 0; background: var(--chili); color: var(--bayou); font: inherit; font-weight: 800; padding: 0 16px; cursor: pointer; }
+.tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--card); border-top: 1px solid var(--line); padding: 6px 0 calc(8px + env(safe-area-inset-bottom)); }
+.tab { border: 0; background: transparent; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; color: var(--muted); font: inherit; font-size: 12px; font-weight: 700; }
+.tab[aria-current="page"] { color: var(--brick); }
+.pass { background: var(--linen); border: 1px solid var(--line); border-radius: 28px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 12px 30px rgba(0,0,0,.18); }
+.pass.done { background: var(--okbg); box-shadow: none; border: 0; }
+.pass .who { font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
+.clock { font-family: var(--display); font-size: 40px; font-weight: 800; text-align: center; background: var(--sand); border-radius: 16px; padding: 8px 0; font-variant-numeric: tabular-nums; }
+.split { display: flex; justify-content: space-between; border-top: 2px dashed #D9D2C4; padding-top: 14px; }
+.split .k { font-size: 13px; color: var(--muted); } .split .v { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.track { position: relative; height: 64px; border-radius: 999px; background: var(--bayou); overflow: hidden; }
+.track span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--linen); font-weight: 700; font-size: 16px; padding-left: 40px; pointer-events: none; }
+.range { -webkit-appearance: none; appearance: none; width: 100%; height: 64px; margin: 0; background: transparent; position: relative; z-index: 1; touch-action: none; }
+.range::-webkit-slider-runnable-track { height: 64px; background: transparent; }
+.range::-webkit-slider-thumb { -webkit-appearance: none; width: 56px; height: 56px; margin-top: 4px; border-radius: 50%; background: var(--mustard); border: 0; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+.range::-moz-range-thumb { width: 56px; height: 56px; border-radius: 50%; background: var(--mustard); border: 0; }
+.banner { background: var(--mustard); color: var(--bayou); font-size: 12px; font-weight: 700; text-align: center; padding: 6px 12px calc(6px); }
+.sr { position: absolute; left: -9999px; }
+</style>
+</head>
+<body>
+<div id="phone">
+  <div class="banner" role="note">Preview app: sample restaurants, no texts sent, no payments taken.</div>
+  <div id="app" style="flex: 1; min-height: 0; display: flex; flex-direction: column;"></div>
+</div>
+<script>
+'use strict';
+// FoodiePass phone app preview. Mirrors foodiepass-app/ (Expo). Everything stays on this device.
+var D = { rice: 'Rice Village / West U', montrose: 'Montrose', heights: 'The Heights', downtown: 'Midtown · Downtown · EaDo', tmc: 'Medical Center / Museum District', bellaire: 'Bellaire Blvd / Chinatown' };
+var O = { ten: '10% off food · Sun–Thu', fifteen: '15% off food · Mon–Thu', app: 'Free appetizer with 2 entrées · Sun–Thu', dessert: 'Free dessert with 2 entrées · Daily', drink: 'Free drink or pastry with purchase · Daily' };
+var R = [
+  ['Juniper Table','rice','Mediterranean','Mezze plates, wood-grilled kebabs and big shared salads.','ten',2],
+  ['Kiko Ramen House','rice','Japanese','Rich tonkotsu and miso bowls, gyoza and rice plates.','fifteen',2],
+  ['Bluebonnet Bakeshop','rice','Bakery & café','Morning pastries, kolaches and pour-over coffee.','drink',1],
+  ['Rio Verde Cantina','rice','Tex-Mex','Fajitas, queso and enchiladas on a shaded patio.','app',2],
+  ['Marigold Thai Kitchen','montrose','Thai','Curries, khao soi and wok-fired noodles.','ten',2],
+  ['The Copper Pot','montrose','American','Neighborhood bistro: burgers, roast chicken, seasonal sides.','fifteen',3],
+  ['Little Lagos','montrose','West African','Jollof, suya and slow-cooked stews.','app',2],
+  ['Westheimer Noodle Co.','montrose','Vietnamese','Pho, vermicelli bowls and crispy egg rolls.','ten',1],
+  ['Studio Smokehouse','heights','BBQ','Post-oak brisket, ribs and scratch sides.','ten',2],
+  ['Ivy & Oak Trattoria','heights','Italian','Hand-rolled pasta, wood-fired pizza and antipasti.','app',3],
+  ['Porch Light Coffee','heights','Bakery & café','Espresso, breakfast tacos and laptop-friendly tables.','drink',1],
+  ['Bayou Biscuit Co.','heights','Southern','Brunch all day: biscuits, gravy and fried chicken.','fifteen',2],
+  ['Main Street Dumpling Bar','downtown','Chinese','Soup dumplings, scallion pancakes and noodles.','ten',2],
+  ['Eastwood Taqueria','downtown','Mexican','Al pastor, barbacoa and handmade tortillas.','fifteen',1],
+  ['Market Square Pizza Co.','downtown','Pizza','New York–style slices and whole pies.','ten',1],
+  ['Gulf & Grain','downtown','Seafood','Gulf oysters, redfish and grain bowls.','app',3],
+  ['Museum Mile Kitchen','tmc','Healthy','Grain bowls, wraps and fresh juices near the museums.','fifteen',1],
+  ['Almeda Curry House','tmc','Indian','Biryani, tikka and weekday lunch thalis.','ten',2],
+  ['Fannin Street Deli','tmc','Deli','Stacked sandwiches and soups for the after-shift crowd.','drink',1],
+  ['Third Ward Wing Shop','tmc','Wings','Lemon-pepper, honey-hot and dry-rub wings.','ten',1],
+  ['Lotus Lane Dim Sum','bellaire','Chinese','Cart-style dim sum and Cantonese roast meats.','app',2],
+  ['Spoon & Seoul','bellaire','Korean','Tableside barbecue, stews and banchan.','dessert',3],
+  ['Bayou Banh Mi','bellaire','Vietnamese','Banh mi, rice plates and Vietnamese coffee.','drink',1],
+  ['Kesar Grill','bellaire','Pakistani','Charcoal kebabs, karahi and fresh naan.','fifteen',2]
+];
+var LIST = R.map(function (r, i) { return { id: 'r' + i, name: r[0], district: r[1], cuisine: r[2], desc: r[3], offer: O[r[4]], price: r[5] }; });
+var find = function (id) { for (var i = 0; i < LIST.length; i++) if (LIST[i].id === id) return LIST[i]; return null; };
+var PASS_MS = 15 * 60000;
+var KEY = 'fp-app-preview';
+
+function fresh() { return { screen: 'welcome', signin: false, phone: '', code: '', first: '', last: '', email: '', marketing: false, tab: 'explore', detail: null, q: '', district: null, passQ: '', paid: false, visit: null, resendAt: 0 }; }
+var S = (function () { try { return Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { return fresh(); } })();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private mode */ } }
+function set(patch, keepFocus) { Object.assign(S, patch); save(); render(keepFocus); }
+
+var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+var fmt = function (d) { return d.length < 4 ? d : d.length < 7 ? '(' + d.slice(0, 3) + ') ' + d.slice(3) : '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6); };
+var phoneOk = function () { return S.phone.length === 10 && /^[2-9]/.test(S.phone); };
+var emailOk = function () { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(S.email.trim()); };
+var profileOk = function () { return !!S.first.trim() && !!S.last.trim() && emailOk(); };
+var match = function (r, q) { return !q || (r.name + ' ' + r.cuisine + ' ' + D[r.district]).toLowerCase().indexOf(q.toLowerCase()) >= 0; };
+var fullName = function () { return (S.first.trim() + ' ' + S.last.trim()).trim() || 'Member'; };
+var ICON = {
+  fork: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 2-2 6 0 8v10"/></svg>',
+  card: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7h18v10H3zM3 11h18M7 15h4"/></svg>',
+  user: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"/></svg>'
+};
+
+// ---------- Screens ----------
+function vWelcome() {
+  return '<div class="screen dark"><div class="stack" style="gap:18px; margin-top:32px">' +
+    '<div style="width:64px;height:64px;border-radius:18px;background:var(--chili);display:flex;align-items:center;justify-content:center;color:var(--linen)">' + ICON.fork.replace('width="24" height="24"', 'width="34" height="34"') + '</div>' +
+    '<p style="font-family:var(--display);font-size:28px;font-weight:800;letter-spacing:-.5px">Foodie<span style="color:var(--mustard)">Pass</span></p>' +
+    '<h1 style="font-size:40px;color:var(--linen)">One $30 pass. <span style="color:var(--mustard)">Every great local table in Houston.</span></h1>' +
+    '<p style="color:var(--mint);font-size:19px;line-height:1.4">Show your pass, save on the check. Pays for itself in about five dinners.</p></div>' +
+    '<div class="stack" style="gap:12px"><button class="btn" data-act="join">Get started</button><button class="btn ghost-light" data-act="signin">I already have an account</button>' +
+    '<p style="color:var(--mint);font-size:14px;text-align:center">Restaurants join free. Members pay $30 a year.</p></div></div>';
+}
+function vPhone() {
+  return '<div class="screen"><div class="stack"><button class="back" data-act="toWelcome" aria-label="Back">←</button>' +
+    '<h1>' + (S.signin ? 'Welcome back' : 'What’s your number?') + '</h1>' +
+    '<p class="lede">We’ll text you a 6-digit code. No password, no card. Message and data rates may apply.</p>' +
+    '<label class="f">Mobile number<span style="display:flex;gap:10px"><span style="border:1.5px solid #CFC7B8;border-radius:14px;padding:0 14px;display:flex;align-items:center;background:var(--card);font-size:18px;font-weight:600">+1</span>' +
+    '<input id="phoneIn" class="in" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(713) 555-0123" value="' + esc(fmt(S.phone)) + '" style="font-size:22px"></span></label></div>' +
+    '<div class="stack" style="gap:12px"><button class="btn" data-act="sendCode"' + (phoneOk() ? '' : ' disabled') + '>Send code</button>' +
+    '<p class="small" style="text-align:center">By continuing you agree to the FoodiePass Terms and Privacy Policy.</p>' +
+    '<p class="small" style="text-align:center;font-size:13px">Preview: no text is sent. Any 6 digits work on the next screen.</p></div></div>';
+}
+function vCode() {
+  var boxes = ''; for (var i = 0; i < 6; i++) boxes += '<div class="box' + (i === S.code.length ? ' on' : '') + '">' + esc(S.code[i] || '') + '</div>';
+  var wait = Math.max(0, Math.ceil((S.resendAt - Date.now()) / 1000));
+  return '<div class="screen"><div class="stack"><button class="back" data-act="toPhone" aria-label="Back">←</button><h1>Enter the code</h1>' +
+    '<p class="lede">Sent to ' + esc(fmt(S.phone)) + '. It expires in 10 minutes.</p>' +
+    '<div class="boxes" aria-hidden="true">' + boxes + '</div>' +
+    '<label class="f">6-digit code<input id="codeIn" class="in" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" value="' + esc(S.code) + '" style="letter-spacing:8px;font-size:22px"></label></div>' +
+    '<div class="stack" style="gap:12px"><button class="btn" data-act="verify"' + (S.code.length === 6 ? '' : ' disabled') + '>Verify</button>' +
+    '<button class="btn ghost" id="resendBtn" data-act="resend"' + (wait > 0 ? ' disabled' : '') + '>' + (wait > 0 ? 'Resend code in ' + wait + 's' : 'Resend code') + '</button></div></div>';
+}
+function vProfile() {
+  return '<div class="screen"><div class="stack" style="margin-top:24px"><h1>A little about you</h1>' +
+    '<p class="lede">Your name goes on your member pass. We send receipts and renewal reminders to your email.</p>' +
+    '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">' +
+    '<label class="f">First name<input id="firstIn" class="in" autocomplete="given-name" value="' + esc(S.first) + '"></label>' +
+    '<label class="f">Last name<input id="lastIn" class="in" autocomplete="family-name" value="' + esc(S.last) + '"></label></div>' +
+    '<label class="f">Email<input id="emailIn" class="in" type="email" autocomplete="email" value="' + esc(S.email) + '"></label>' +
+    '<label style="display:flex;gap:12px;align-items:center;font-size:16px;color:var(--ink2);min-height:44px"><input id="mktIn" type="checkbox"' + (S.marketing ? ' checked' : '') + ' style="width:22px;height:22px;accent-color:var(--chili)"> Send me new restaurants and member offers (optional)</label></div>' +
+    '<button class="btn" data-act="saveProfile" id="profileBtn"' + (profileOk() ? '' : ' disabled') + '>Continue</button></div>';
+}
+function vLocation() {
+  return '<div class="screen"><div class="stack" style="gap:16px;margin-top:48px">' +
+    '<div style="width:76px;height:76px;border-radius:38px;background:var(--sand);display:flex;align-items:center;justify-content:center"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#B5401C" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></div>' +
+    '<h1>Find great spots near you</h1><p class="lede">Allow location to sort partner restaurants by distance. We only use it while you have the app open.</p></div>' +
+    '<div class="stack" style="gap:12px"><button class="btn" data-act="allowLoc">Allow location</button><button class="btn ghost" data-act="finish">Not now</button></div></div>';
+}
+function rowHtml(r, act) {
+  return '<button class="row" data-act="' + act + '" data-id="' + r.id + '"><span style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0"><span class="name">' + esc(r.name) + '</span>' +
+    '<span class="meta">' + esc(r.cuisine + ' · ' + D[r.district] + ' · ' + '$'.repeat(r.price)) + '</span><span class="offer">' + esc(r.offer) + '</span></span><span aria-hidden="true" style="font-size:26px;color:var(--muted)">›</span></button>';
+}
+function exploreItems() { return LIST.filter(function (r) { return (!S.district || r.district === S.district) && match(r, S.q); }); }
+function vExplore() {
+  var chips = '<button class="chip' + (!S.district ? ' on' : '') + '" data-act="district" data-id="" aria-pressed="' + !S.district + '">All</button>' +
+    Object.keys(D).map(function (k) { return '<button class="chip' + (S.district === k ? ' on' : '') + '" data-act="district" data-id="' + k + '" aria-pressed="' + (S.district === k) + '">' + esc(D[k]) + '</button>'; }).join('');
+  return '<div class="main"><p class="eyebrow">Hi, ' + esc(S.first.trim() || 'there') + '</p><h1 style="font-size:30px">Where are we eating?</h1>' +
+    '<label class="sr" for="qIn">Search restaurants</label><input id="qIn" class="in search" placeholder="Search restaurants or cuisines" value="' + esc(S.q) + '">' +
+    '<div class="chips">' + chips + '</div><div id="exploreList" class="stack" style="gap:12px">' + exploreItems().map(function (r) { return rowHtml(r, 'detail'); }).join('') + '</div>' +
+    '<p class="small" style="text-align:center;font-size:12px">Sample listings. Real partners will be announced before launch.</p></div>';
+}
+function vDetail() {
+  var r = find(S.detail);
+  return '<div class="main" style="padding-left:22px;padding-right:22px"><button data-act="closeDetail" aria-label="Close" style="align-self:flex-end;width:44px;height:44px;border-radius:22px;border:0;background:var(--sand);font-size:22px;cursor:pointer;color:var(--bayou)">×</button>' +
+    '<p class="eyebrow">' + esc(r.cuisine + ' · ' + '$'.repeat(r.price)) + '</p><h1>' + esc(r.name) + '</h1><p class="small">' + esc(D[r.district]) + '</p><p class="lede">' + esc(r.desc) + '</p>' +
+    '<div class="card"><p class="eyebrow">Member offer</p><p style="font-family:var(--display);font-size:26px;font-weight:800;line-height:1.15">' + esc(r.offer) + '</p><p class="small">Show your live pass before you pay. Alcohol excluded. Not combined with other offers.</p></div>' +
+    '<button class="btn" data-act="' + (S.paid ? 'openPass' : 'toPassTab') + '" data-id="' + r.id + '">' + (S.paid ? 'I’m here: open my pass' : 'Join to use this offer') + '</button>' +
+    '<a class="btn ghost" href="https://maps.google.com/?q=' + encodeURIComponent(r.name + ' Houston TX') + '" target="_blank" rel="noopener">Directions</a>' +
+    '<p class="small" style="font-size:13px">Sample listing. Real partners, addresses and hours will be announced before launch.</p></div>';
+}
+function vPassUnpaid() {
+  return '<div class="main" style="padding-left:20px;padding-right:20px;gap:14px"><p class="eyebrow">My pass</p><h1 style="font-size:32px">Your pass unlocks with membership</h1>' +
+    '<p class="lede">Your member pass appears here once your $30 yearly membership is active.</p>' +
+    '<div class="card"><p style="font-size:20px;font-weight:800">How the pass works</p><p class="lede" style="font-size:16px">1. At the restaurant, open My pass and tap where you’re eating.</p><p class="lede" style="font-size:16px">2. Show the screen before you pay.</p><p class="lede" style="font-size:16px">3. Staff swipe to confirm and apply the offer. The pass closes for that visit.</p></div>' +
+    '<button class="btn" data-act="pay">Join for $30 a year</button><p class="small" style="text-align:center;font-size:13px">Preview: this skips payment and marks you as a member.</p></div>';
+}
+function passItems() { return LIST.filter(function (r) { return match(r, S.passQ); }).sort(function (a, b) { return a.name.localeCompare(b.name); }); }
+function passRow(r) {
+  return '<div class="row" style="cursor:default"><span style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0"><span class="name" style="font-size:18px">' + esc(r.name) + '</span><span class="meta">' + esc(r.offer) + '</span></span><button class="pill" data-act="openPass" data-id="' + r.id + '">I’m here</button></div>';
+}
+function vPassPicker() {
+  return '<div class="main"><p class="eyebrow">My pass</p><h1 style="font-size:30px">Where are you eating?</h1>' +
+    '<p class="lede" style="font-size:16px">Tap the restaurant when you’re ready to pay. Your pass opens for 15 minutes and closes once staff confirm it.</p><p class="small">Member through November 2027</p>' +
+    '<label class="sr" for="passQIn">Search restaurants</label><input id="passQIn" class="in search" placeholder="Search by name, cuisine or neighborhood" value="' + esc(S.passQ) + '">' +
+    '<div id="passList" class="stack" style="gap:12px">' + passItems().map(passRow).join('') + '</div></div>';
+}
+function vVisit() {
+  var v = S.visit, r = find(v.rid), left = PASS_MS - (Date.now() - v.openedAt), secs = Math.max(0, Math.ceil(left / 1000));
+  var head = '<div class="stack" style="gap:6px"><p class="eyebrow">Member pass · ' + esc(D[r.district]) + '</p><h1 style="font-size:32px">' + esc(r.name) + '</h1></div>';
+  var body;
+  if (v.confirmedAt) {
+    body = '<div class="pass done" role="status"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow" style="color:var(--okfg)">Confirmed by staff</span><span style="color:var(--okfg);font-weight:700;font-size:14px">✓ Used</span></div>' +
+      '<p class="who">' + esc(fullName()) + '</p><p style="font-size:20px;font-weight:700">Apply: ' + esc(r.offer) + '</p>' +
+      '<div class="split" style="border-top-color:#A9CDB6"><div><p class="k" style="color:var(--okfg)">Confirmed at</p><p class="v">' + new Date(v.confirmedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) + '</p></div><div style="text-align:right"><p class="k" style="color:var(--okfg)">Visit code</p><p class="v">' + esc(v.code) + '</p></div></div>' +
+      '<p style="color:var(--okfg);font-size:14px">This pass has been used for this visit. Enjoy your meal.</p></div>';
+  } else if (left <= 0) {
+    body = '<div class="card"><p style="font-size:22px;font-weight:800">This pass timed out</p><p class="lede" style="font-size:16px">A pass stays open for 15 minutes. Open it again when you’re ready to pay.</p><button class="btn" data-act="openPass" data-id="' + r.id + '">Open pass again</button></div>';
+  } else {
+    body = '<div class="pass"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">Member pass</span><span style="color:var(--ok);font-weight:700;font-size:14px">● Live</span></div>' +
+      '<p class="who">' + esc(fullName()) + '</p><p style="font-size:20px;font-weight:700">' + esc(r.offer) + '</p>' +
+      '<p class="clock" id="clock" aria-label="Live clock">' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) + '</p>' +
+      '<div class="split"><div><p class="k">Member through</p><p class="v">Nov 2027</p></div><div style="text-align:right"><p class="k">Pass closes in</p><p class="v" id="countdown">' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0') + '</p></div></div>' +
+      '<div class="track"><span>Staff: swipe to confirm →</span><input id="swipe" class="range" type="range" min="0" max="100" step="1" value="0" aria-label="Staff: slide right to confirm this pass"></div>' +
+      '<p class="small" style="font-size:13px">For restaurant staff. Swiping confirms the member showed this pass, and closes it.</p></div>';
+  }
+  return '<div class="main" style="padding-left:20px;padding-right:20px;gap:18px">' + head + body +
+    '<button class="btn ghost" data-act="endVisit">' + (v.confirmedAt ? 'Done' : 'Choose a different restaurant') + '</button></div>';
+}
+function vAccount() {
+  return '<div class="main" style="padding-left:20px;padding-right:20px;gap:14px"><p class="eyebrow">Account</p><h1 style="font-size:32px">' + esc(fullName()) + '</h1>' +
+    '<div class="card" style="gap:10px"><div style="display:flex;justify-content:space-between;gap:12px"><span class="small">Phone</span><span style="font-weight:600">' + esc(fmt(S.phone)) + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between;gap:12px"><span class="small">Email</span><span style="font-weight:600;overflow-wrap:anywhere;text-align:right">' + esc(S.email) + '</span></div></div>' +
+    '<div class="card"><p style="font-size:20px;font-weight:800">Membership</p><p style="border-radius:14px;padding:14px;font-size:15px;background:' + (S.paid ? 'var(--okbg);color:var(--okfg)' : 'var(--sand);color:var(--ink2)') + '">' +
+    (S.paid ? 'Active through November 2027. Renews automatically; we remind you 30 days before.' : 'No active membership yet. Activate it from My pass.') + '</p></div>' +
+    '<button class="btn ghost" data-act="signOut">Sign out</button><button class="btn" data-act="startOver">Start over from the beginning</button>' +
+    '<p class="small" style="text-align:center;font-size:13px">FoodiePass app v0.1.0 · preview</p></div>';
+}
+function tabsHtml() {
+  return '<nav class="tabs" aria-label="Main">' + [['explore', 'Explore', ICON.fork], ['pass', 'My pass', ICON.card], ['account', 'Account', ICON.user]].map(function (t) {
+    return '<button class="tab" data-act="tab" data-id="' + t[0] + '"' + (S.tab === t[0] && !S.detail ? ' aria-current="page"' : '') + '>' + t[2] + '<span>' + t[1] + '</span></button>';
+  }).join('') + '</nav>';
+}
+
+function render(keepFocusId) {
+  var html;
+  if (S.screen === 'welcome') html = vWelcome();
+  else if (S.screen === 'phone') html = vPhone();
+  else if (S.screen === 'code') html = vCode();
+  else if (S.screen === 'profile') html = vProfile();
+  else if (S.screen === 'location') html = vLocation();
+  else {
+    var inner = S.detail ? vDetail() : S.tab === 'explore' ? vExplore() : S.tab === 'account' ? vAccount() : !S.paid ? vPassUnpaid() : S.visit && find(S.visit.rid) ? vVisit() : vPassPicker();
+    html = inner + tabsHtml();
+  }
+  document.getElementById('app').innerHTML = html;
+  if (keepFocusId) { var el = document.getElementById(keepFocusId); if (el) { el.focus(); var n = el.value.length; try { el.setSelectionRange(n, n); } catch (e) { /* not a text field */ } } }
+}
+
+// ---------- Events ----------
+function openPass(id) { set({ tab: 'pass', detail: null, visit: { rid: id, openedAt: Date.now(), confirmedAt: null, code: null } }); }
+function confirmVisit() {
+  if (!S.visit || S.visit.confirmedAt) return;
+  var a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', c = '', b = crypto.getRandomValues(new Uint8Array(6));
+  for (var i = 0; i < 6; i++) c += a[b[i] % a.length];
+  if (navigator.vibrate) navigator.vibrate(60);
+  set({ visit: Object.assign({}, S.visit, { confirmedAt: Date.now(), code: c }) });
+}
+document.addEventListener('click', function (e) {
+  var t = e.target.closest('[data-act]'); if (!t || t.disabled) return;
+  var id = t.getAttribute('data-id');
+  switch (t.getAttribute('data-act')) {
+    case 'join': return set({ screen: 'phone', signin: false });
+    case 'signin': return set({ screen: 'phone', signin: true });
+    case 'toWelcome': return set({ screen: 'welcome' });
+    case 'toPhone': return set({ screen: 'phone', code: '' });
+    case 'sendCode': return phoneOk() && set({ screen: 'code', code: '', resendAt: Date.now() + 60000 }, 'codeIn');
+    case 'verify': return S.code.length === 6 && set({ screen: S.signin && S.first ? 'app' : 'profile' });
+    case 'resend': return set({ resendAt: Date.now() + 60000 });
+    case 'saveProfile': return profileOk() && set({ screen: 'location' });
+    case 'allowLoc': if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function () {}, function () {}, { timeout: 5000 }); return set({ screen: 'app', tab: 'explore' });
+    case 'finish': return set({ screen: 'app', tab: 'explore' });
+    case 'district': return set({ district: id || null });
+    case 'detail': return set({ detail: id });
+    case 'closeDetail': return set({ detail: null });
+    case 'toPassTab': return set({ detail: null, tab: 'pass' });
+    case 'openPass': return openPass(id);
+    case 'pay': return set({ paid: true });
+    case 'endVisit': return set({ visit: null });
+    case 'tab': return set({ tab: id, detail: null });
+    case 'signOut': return set({ screen: 'welcome', tab: 'explore', detail: null, visit: null, code: '', signin: true });
+    case 'startOver': S = fresh(); save(); return render();
+  }
+});
+document.addEventListener('input', function (e) {
+  var el = e.target;
+  if (el.id === 'phoneIn') { S.phone = el.value.replace(/\D/g, '').replace(/^1(?=\d{10})/, '').slice(0, 10); save(); el.value = fmt(S.phone); var b = document.querySelector('[data-act="sendCode"]'); if (b) b.disabled = !phoneOk(); }
+  else if (el.id === 'codeIn') { S.code = el.value.replace(/\D/g, '').slice(0, 6); save(); render('codeIn'); if (S.code.length === 6) setTimeout(function () { set({ screen: S.signin && S.first ? 'app' : 'profile' }); }, 250); }
+  else if (el.id === 'firstIn' || el.id === 'lastIn' || el.id === 'emailIn') { S[{ firstIn: 'first', lastIn: 'last', emailIn: 'email' }[el.id]] = el.value; save(); document.getElementById('profileBtn').disabled = !profileOk(); }
+  else if (el.id === 'qIn') { S.q = el.value; save(); document.getElementById('exploreList').innerHTML = exploreItems().map(function (r) { return rowHtml(r, 'detail'); }).join(''); }
+  else if (el.id === 'passQIn') { S.passQ = el.value; save(); document.getElementById('passList').innerHTML = passItems().map(passRow).join(''); }
+  else if (el.id === 'swipe') { if (Number(el.value) >= 92) confirmVisit(); }
+});
+document.addEventListener('change', function (e) { if (e.target.id === 'mktIn') { S.marketing = e.target.checked; save(); } });
+['pointerup', 'touchend', 'mouseup'].forEach(function (ev) { document.addEventListener(ev, function (e) { if (e.target.id === 'swipe' && S.visit && !S.visit.confirmedAt) e.target.value = 0; }); });
+document.addEventListener('keydown', function (e) { if (e.target.id === 'swipe' && e.key === 'Enter') confirmVisit(); });
+
+// Live clock, countdown and resend timer.
+setInterval(function () {
+  var c = document.getElementById('clock'); if (c) c.textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+  var cd = document.getElementById('countdown');
+  if (cd && S.visit && !S.visit.confirmedAt) { var left = PASS_MS - (Date.now() - S.visit.openedAt); if (left <= 0) return render(); var s = Math.ceil(left / 1000); cd.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  var rb = document.getElementById('resendBtn');
+  if (rb) { var w = Math.max(0, Math.ceil((S.resendAt - Date.now()) / 1000)); rb.disabled = w > 0; rb.textContent = w > 0 ? 'Resend code in ' + w + 's' : 'Resend code'; }
+}, 1000);
+
+render();
+</script>
+</body>
+</html>

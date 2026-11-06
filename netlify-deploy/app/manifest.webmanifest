@@ -1,0 +1,13 @@
+{
+  "name": "FoodiePass (preview)",
+  "short_name": "FoodiePass",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#172A2A",
+  "theme_color": "#172A2A",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
