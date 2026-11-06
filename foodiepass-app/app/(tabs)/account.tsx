@@ -62,7 +62,7 @@ export default function Account() {
           <Button title="Sign out on all devices" kind="ghost" onPress={() => leave(true)} />
           <Button title="Delete account" kind="ghost" onPress={confirmDelete} style={{ borderColor: C.brick }} />
         </View>
-        <Small style={{ textAlign: 'center' }}>FoodiePass app v0.1.0</Small>
+        <Small style={{ textAlign: 'center' }}>GrubScout app v0.1.0</Small>
       </ScrollView>
     </SafeAreaView>
   );
