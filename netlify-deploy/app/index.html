@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FoodiePass">
-<title>FoodiePass app (preview)</title>
+<meta name="apple-mobile-web-app-title" content="GrubScout">
+<title>GrubScout app (preview)</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -76,7 +76,7 @@ label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 600; fon
 </div>
 <script>
 'use strict';
-// FoodiePass phone app preview. Mirrors foodiepass-app/ (Expo). Everything stays on this device.
+// GrubScout phone app preview. Mirrors GrubScout-app/ (Expo). Everything stays on this device.
 var D = { rice: 'Rice Village / West U', montrose: 'Montrose', heights: 'The Heights', downtown: 'Midtown · Downtown · EaDo', tmc: 'Medical Center / Museum District', bellaire: 'Bellaire Blvd / Chinatown' };
 var O = { ten: '10% off food · Sun–Thu', fifteen: '15% off food · Mon–Thu', app: 'Free appetizer with 2 entrées · Sun–Thu', dessert: 'Free dessert with 2 entrées · Daily', drink: 'Free drink or pastry with purchase · Daily' };
 var R = [
@@ -122,7 +122,7 @@ var emailOk = function () { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(S.email.tri
 var profileOk = function () { return !!S.first.trim() && !!S.last.trim() && emailOk(); };
 var match = function (r, q) { return !q || (r.name + ' ' + r.cuisine + ' ' + D[r.district]).toLowerCase().indexOf(q.toLowerCase()) >= 0; };
 var fullName = function () { return (S.first.trim() + ' ' + S.last.trim()).trim() || 'Member'; };
-var ICON = {
+var LOGO = '<svg width="SIZE" height="SIZE" viewBox="240 148 840 840" role="img" aria-label="GrubScout"><path d="M552 795 A239 98 0 1 0 770 795 L751 821 A177 58 0 1 1 570 821 Z" fill="#E34C19"/><path d="M660 157 C515 157 398 275 398 420 C398 470 410 515 430 555 C480 660 590 800 653 881 Q660 888 667 881 C730 800 840 660 890 547 C910 505 920 470 920 420 C920 275 805 157 660 157 Z" fill="#E34C19"/><path d="M567 283 A21 21 0 0 1 609 283 V407 A16 16 0 0 0 641 407 V283 A21.5 21.5 0 0 1 684 283 V407 A16 16 0 0 0 716 407 V283 A21 21 0 0 1 758 283 L764 435 C764 478 735 506 702 507 C697 507 694 510 694 516 V550 L698 670 C698 692 682 708 662 708 C642 708 626 692 626 670 L630 550 V516 C630 510 627 507 622 507 C589 506 561 478 561 435 Z" fill="#FFFFFF"/></svg>'; var ICON = {
   fork: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 2-2 6 0 8v10"/></svg>',
   card: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7h18v10H3zM3 11h18M7 15h4"/></svg>',
   user: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"/></svg>'
@@ -131,8 +131,8 @@ var ICON = {
 // ---------- Screens ----------
 function vWelcome() {
   return '<div class="screen dark"><div class="stack" style="gap:18px; margin-top:32px">' +
-    '<div style="width:64px;height:64px;border-radius:18px;background:var(--chili);display:flex;align-items:center;justify-content:center;color:var(--linen)">' + ICON.fork.replace('width="24" height="24"', 'width="34" height="34"') + '</div>' +
-    '<p style="font-family:var(--display);font-size:28px;font-weight:800;letter-spacing:-.5px">Foodie<span style="color:var(--mustard)">Pass</span></p>' +
+    LOGO.replace('SIZE', '72').replace('SIZE', '72') +
+    '<p style="font-family:var(--display);font-size:28px;font-weight:800;letter-spacing:-.5px">Grub<span style="color:var(--chili)">Scout</span></p>' +
     '<h1 style="font-size:40px;color:var(--linen)">One $30 pass. <span style="color:var(--mustard)">Every great local table in Houston.</span></h1>' +
     '<p style="color:var(--mint);font-size:19px;line-height:1.4">Show your pass, save on the check. Pays for itself in about five dinners.</p></div>' +
     '<div class="stack" style="gap:12px"><button class="btn" data-act="join">Get started</button><button class="btn ghost-light" data-act="signin">I already have an account</button>' +
@@ -145,7 +145,7 @@ function vPhone() {
     '<label class="f">Mobile number<span style="display:flex;gap:10px"><span style="border:1.5px solid #CFC7B8;border-radius:14px;padding:0 14px;display:flex;align-items:center;background:var(--card);font-size:18px;font-weight:600">+1</span>' +
     '<input id="phoneIn" class="in" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(713) 555-0123" value="' + esc(fmt(S.phone)) + '" style="font-size:22px"></span></label></div>' +
     '<div class="stack" style="gap:12px"><button class="btn" data-act="sendCode"' + (phoneOk() ? '' : ' disabled') + '>Send code</button>' +
-    '<p class="small" style="text-align:center">By continuing you agree to the FoodiePass Terms and Privacy Policy.</p>' +
+    '<p class="small" style="text-align:center">By continuing you agree to the GrubScout Terms and Privacy Policy.</p>' +
     '<p class="small" style="text-align:center;font-size:13px">Preview: no text is sent. Any 6 digits work on the next screen.</p></div></div>';
 }
 function vCode() {
@@ -241,7 +241,7 @@ function vAccount() {
     '<div class="card"><p style="font-size:20px;font-weight:800">Membership</p><p style="border-radius:14px;padding:14px;font-size:15px;background:' + (S.paid ? 'var(--okbg);color:var(--okfg)' : 'var(--sand);color:var(--ink2)') + '">' +
     (S.paid ? 'Active through November 2027. Renews automatically; we remind you 30 days before.' : 'No active membership yet. Activate it from My pass.') + '</p></div>' +
     '<button class="btn ghost" data-act="signOut">Sign out</button><button class="btn" data-act="startOver">Start over from the beginning</button>' +
-    '<p class="small" style="text-align:center;font-size:13px">FoodiePass app v0.1.0 · preview</p></div>';
+    '<p class="small" style="text-align:center;font-size:13px">GrubScout app v0.1.0 · preview</p></div>';
 }
 function tabsHtml() {
   return '<nav class="tabs" aria-label="Main">' + [['explore', 'Explore', ICON.fork], ['pass', 'My pass', ICON.card], ['account', 'Account', ICON.user]].map(function (t) {
