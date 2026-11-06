@@ -125,6 +125,37 @@ section { padding-block: 72px; }
 /* Green banner shared by How It Works, Restaurants and For Restaurants. */
 .page-banner { display: flex; align-items: center; min-height: 320px; padding-block: 28px; }
 .page-banner > .wrap { width: 100%; }
+/* Admin console: sidebar | content. My Pass renders inside it for admins. */
+.admin-shell { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 28px; align-items: start; }
+.admin-side { position: sticky; top: 96px; display: grid; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 10px; }
+.admin-side .side-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 14px; border: 0; border-radius: 12px; background: transparent; color: var(--ink-2); font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.admin-side .side-item:hover { background: var(--sand); }
+.admin-side .side-item.on { background: var(--bayou); color: var(--linen); }
+.admin-side .count { font-size: 13px; font-weight: 700; background: var(--chili); color: var(--bayou); border-radius: 999px; padding: 1px 8px; }
+.admin-side hr { border: 0; border-top: 1px solid var(--line); margin: 6px 4px; }
+.admin-main { min-width: 0; }
+.admin-main section { padding-block: 0; }
+.admin-main .wrap { max-width: none; padding-inline: 0; }
+.admin-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.admin-head h1 { font-size: clamp(30px, 4vw, 44px); }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.stat-grid .card p.stat { font-size: 40px; }
+.admin-table-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.admin-table th, .admin-table td { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.admin-table th { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brick); white-space: nowrap; }
+.admin-table tr:last-child td { border-bottom: 0; }
+.admin-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.admin-filters input, .admin-filters select { min-height: 44px; padding: 8px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--bayou); font: inherit; }
+.admin-filters input { flex: 1 1 240px; }
+/* Opening hours picker */
+.hours-field { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; min-width: 0; }
+.hours-field legend { font-weight: 600; font-size: 15px; padding: 0; margin-bottom: 4px; }
+.hours-block { display: grid; gap: 10px; padding: 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--linen); }
+.day-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.day-pick label { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1.5px solid #CFC7B8; border-radius: 999px; background: var(--card); font-size: 14px; font-weight: 600; cursor: pointer; }
+.day-pick input { width: 16px; height: 16px; margin: 0; accent-color: var(--bayou); }
+.day-pick label:has(input:checked) { background: var(--bayou); border-color: var(--bayou); color: var(--linen); }
 .searchbar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
 .searchbar input { flex: 1 1 280px; min-height: 52px; padding: 12px 18px; border: 2px solid var(--bayou); border-radius: 999px; background: var(--card); color: var(--bayou); font-size: 18px; }
 .finder { display: grid; grid-template-columns: minmax(320px, 2fr) minmax(0, 3fr); gap: 20px; align-items: start; padding-top: 28px; padding-bottom: 72px; }
@@ -162,7 +193,6 @@ select.inp { width: 100%; min-height: 44px; padding: 8px 12px; border-radius: 12
 .pin { width: 22px; height: 22px; border-radius: 50%; background: var(--chili); border: 3px solid var(--card); box-shadow: 0 2px 6px rgba(0,0,0,0.35); }
 .pin.fp { border-color: var(--mustard); }
 .pin.hot { transform: scale(1.35); background: var(--bayou); }
-.dlabel { background: transparent; border: 0; box-shadow: none; font-family: var(--f-display); font-weight: 800; font-size: 13px; color: var(--bayou); text-shadow: 0 0 3px var(--linen), 0 0 3px var(--linen); white-space: nowrap; }
 .filters-toggle { display: none; }
 
 /* Drawer (restaurant detail) */
@@ -218,6 +248,13 @@ footer a:hover { color: var(--linen); text-decoration: underline; }
 }
 @media (min-width: 761px) and (max-width: 1000px) {
   .panel h3 { position: absolute; left: -9999px; }
+}
+@media (max-width: 860px) {
+  .admin-shell { grid-template-columns: 1fr; gap: 18px; }
+  .admin-side { position: static; display: flex; overflow-x: auto; padding: 6px; scrollbar-width: none; }
+  .admin-side::-webkit-scrollbar { display: none; }
+  .admin-side .side-item { width: auto; }
+  .admin-side hr { display: none; }
 }
 @media (max-width: 760px) {
   section { padding-block: 52px; }
@@ -316,28 +353,21 @@ function mark(size) {
 }
 document.querySelectorAll('[data-logo]').forEach((el) => { el.innerHTML = mark(el.dataset.logo); el.style.display = 'inline-flex'; });
 
-// ---------- Data: districts and restaurants live in Supabase; the admin panel adds them ----------
-let DISTRICTS = [];
-let D = {};
+// ---------- Data: restaurants live in Supabase; the admin panel adds them ----------
 let RESTAURANTS = [];
 let CUISINES = [];
 const directory = { loaded: false, error: false };
 const NEW_DAYS = 30;
 function restaurantFromRow(r, i) {
   const listed = Date.parse(r.listed_at || '') || 0;
-  return { id: r.id, name: r.name, district: r.district_id, cuisine: r.cuisine, desc: r.description, offer: r.offer_text, dineIn: r.dine_in, pickup: r.pickup, isNew: Date.now() - listed < NEW_DAYS * 86400000, founding: !!r.founding_until && Date.parse(r.founding_until) > Date.now(), price: r.price_level, lat: r.lat, lng: r.lng, address: r.address, hours: r.hours, phone: r.phone, website: r.website_url, featured: r.featured, photo: /^https?:\/\//i.test(r.photo_url || '') ? r.photo_url : null, order: i };
+  return { id: r.id, name: r.name, place: [r.city, r.state].filter(Boolean).join(', '), cuisine: r.cuisine, desc: r.description, offer: r.offer_text, dineIn: r.dine_in, pickup: r.pickup, isNew: Date.now() - listed < NEW_DAYS * 86400000, founding: !!r.founding_until && Date.parse(r.founding_until) > Date.now(), price: r.price_level, lat: r.lat, lng: r.lng, address: r.address, hours: r.hours, phone: r.phone, website: r.website_url, featured: r.featured, photo: /^https?:\/\//i.test(r.photo_url || '') ? r.photo_url : null, order: i };
 }
 async function loadDirectory() {
   directory.error = false;
   if (sb) {
     try {
-      const [d, r] = await Promise.all([
-        sb.from('districts').select('id, name, lat, lng, live').order('sort_order'),
-        sb.from('restaurants').select('id, name, description, cuisine, district_id, address, hours, phone, website_url, lat, lng, price_level, dine_in, pickup, offer_text, founding_until, listed_at, featured, photo_url').eq('status', 'active').order('name'),
-      ]);
-      if (d.error || r.error) throw d.error || r.error;
-      DISTRICTS = d.data;
-      D = Object.fromEntries(DISTRICTS.map((x) => [x.id, x]));
+      const r = await sb.from('restaurants').select('id, name, description, cuisine, city, state, address, hours, phone, website_url, lat, lng, price_level, dine_in, pickup, offer_text, founding_until, listed_at, featured, photo_url').eq('status', 'active').order('name');
+      if (r.error) throw r.error;
       RESTAURANTS = r.data.map(restaurantFromRow);
       CUISINES = [...new Set(RESTAURANTS.map((x) => x.cuisine).filter(Boolean))].sort();
     } catch (e) { directory.error = true; console.warn('GrubScout: restaurants not loaded', e); }
@@ -663,7 +693,14 @@ function afterSignIn() {
   if (view === 'admin') return go('admin');
   return go('pass');
 }
-function refreshChrome() { const b = $('#signinBtn'); if (b) b.textContent = member ? 'My Pass' : 'Sign In'; }
+// Header account button: Sign In, My Pass for customers, or Admin for admins. Also starts the admin check once per account.
+function refreshChrome() {
+  if (AUTH_LIVE && member && member.live && adminState.checkedFor !== member.id) loadAdmin();
+  const b = $('#signinBtn'); if (!b) return;
+  const admin = isAdminNow();
+  b.textContent = !member ? 'Sign In' : admin ? 'Admin' : 'My Pass';
+  b.dataset.go = admin ? 'admin' : 'pass'; b.setAttribute('href', admin ? '#admin' : '#pass');
+}
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = (s) => document.querySelector(s);
 function toast(t) { const el = $('#toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (el.hidden = true), 2800); }
@@ -684,7 +721,7 @@ function heroOffers() {
   const picks = RESTAURANTS.filter((r) => r.founding).concat(RESTAURANTS.filter((r) => !r.founding)).slice(0, 3);
   return `<div class="pass" aria-label="Member offers">
     <div class="pass-top"><span class="eyebrow">Member offers</span></div>
-    ${!picks.length ? '<p class="small muted">Partner restaurants are being added now</p>' : ''}${picks.map((r) => `<div class="pass-row" style="flex-direction:column; gap:2px"><p class="v">${esc(r.name)}</p><p class="small muted">${esc(D[r.district].name)} \u00b7 ${esc(r.offer)}</p></div>`).join('')}
+    ${!picks.length ? '<p class="small muted">Partner restaurants are being added now</p>' : ''}${picks.map((r) => `<div class="pass-row" style="flex-direction:column; gap:2px"><p class="v">${esc(r.name)}</p><p class="small muted">${r.place ? esc(r.place) + ' \u00b7 ' : ''}${esc(r.offer)}</p></div>`).join('')}
     <a class="btn pri" href="#join" data-go="join">Join To Unlock Your Pass</a>
   </div>`;
 }
@@ -692,12 +729,11 @@ function heroOffers() {
 const COLLAGE = [1, 2, 3, 4, 5, 6].map((n) => `https://mroiimqqklitidpzaqnk.supabase.co/storage/v1/object/public/restaurant-photos/site/collage-${n}.jpg`);
 
 function restaurantCard(r, compact) {
-  const d = D[r.district];
   const flags = r.isNew || r.founding ? `<div class="badges">${r.isNew ? `<span class="badge new">${I.star}New</span>` : ''}${r.founding ? `<span class="badge fp">${I.star}Founding partner</span>` : ''}</div>` : '';
   return `<article class="rc${ui.hl === r.id ? ' hl' : ''}" data-rid="${r.id}">
     ${compact ? `<div class="rc-photo">${r.photo ? `<img src="${esc(r.photo)}" alt="${esc(r.name)}" loading="lazy">` : I.fork}</div>` : ''}
     <div class="rc-top"><div class="rc-name"><h3>${esc(r.name)}</h3>${compact ? '' : flags}</div>${compact ? `<span class="muted small">${'$'.repeat(r.price)}</span>` : ''}</div>
-    <div class="meta"><span>${I.fork}${esc(r.cuisine)}</span><span>${I.pin}${esc(d.name)}</span></div>
+    <div class="meta">${r.cuisine ? `<span>${I.fork}${esc(r.cuisine)}</span>` : ''}${r.place ? `<span>${I.pin}${esc(r.place)}</span>` : ''}</div>
     ${compact ? '' : `<p style="color: var(--ink-2)">${esc(r.desc)}</p>`}
     ${compact ? flags : ''}
     <span class="offer">${I.spark}${esc(r.offer)}</span>
@@ -833,7 +869,7 @@ function filtered() {
   let items = RESTAURANTS.slice();
   items = items.filter((r) => (ui.mode === 'pickup' ? r.pickup : r.dineIn));
   if (ui.cuisine) items = items.filter((r) => r.cuisine === ui.cuisine);
-  if (ui.q) { const q = ui.q.toLowerCase(); items = items.filter((r) => (r.name + ' ' + r.cuisine + ' ' + r.desc + ' ' + D[r.district].name).toLowerCase().includes(q)); }
+  if (ui.q) { const q = ui.q.toLowerCase(); items = items.filter((r) => (r.name + ' ' + r.cuisine + ' ' + r.desc + ' ' + r.place + ' ' + (r.address || '')).toLowerCase().includes(q)); }
   if (ui.sort === 'az') items.sort((a, b) => a.name.localeCompare(b.name));
   else if (ui.sort === 'near' && ui.here) items.sort((a, b) => dist(a) - dist(b));
   else items.sort((a, b) => (b.isNew - a.isNew) || (b.founding - a.founding) || a.order - b.order);
@@ -881,7 +917,9 @@ function vJoin() {
   </div></section>` : ''}`;
 }
 
-function vPass() {
+// Admins see My Pass inside the admin console, so the sidebar stays in reach.
+function vPass() { return isAdminNow() ? adminShell('pass', '', vPassBody()) : vPassBody(); }
+function vPassBody() {
   if (!member) {
     return `<section><div class="wrap band">
       <div class="sec-head" style="margin:0"><p class="eyebrow">My pass</p><h1 style="font-size: clamp(40px, 5.4vw, 60px)">Welcome back</h1><p>Sign in with the email you joined with. Not a member yet? <a href="#join" data-go="join">Join for $30</a>.</p></div>
@@ -935,8 +973,9 @@ function vPartners() {
           <label class="f" style="min-width: 0">First Name<input id="pFirst" required maxlength="59" autocomplete="given-name" style="width: 100%; min-width: 0"></label>
           <label class="f" style="min-width: 0">Last Name<input id="pLast" required maxlength="60" autocomplete="family-name" style="width: 100%; min-width: 0"></label>
         </div>
-        <label class="f">Phone<input id="pPhone" type="tel" required maxlength="40" autocomplete="tel"></label>
+        <label class="f">Business Phone<input id="pPhone" type="tel" required maxlength="40" autocomplete="tel"><span class="small muted" style="font-weight:400">For GrubScout to reach you. Not shown on the site.</span></label>
         <label class="f">Email<input id="pEmail" type="email" required maxlength="140" autocomplete="email"></label>
+        <label class="f">Public Phone<input id="pPublicPhone" type="tel" maxlength="40"><span class="small muted" style="font-weight:400">Shown on your listing for guests to call.</span></label>
         <label class="f">Address Line 1<input id="pAddress1" required maxlength="120" autocomplete="address-line1"></label>
         <label class="f">Address Line 2<input id="pAddress2" maxlength="80" autocomplete="address-line2"></label>
         <label class="f">City<input id="pCity" required maxlength="80" autocomplete="address-level2"></label>
@@ -945,6 +984,8 @@ function vPartners() {
           <label class="f" style="min-width: 0">Zip<input id="pZip" required maxlength="10" inputmode="numeric" pattern="[0-9]{5}(-[0-9]{4})?" title="Enter a 5-digit zip code" autocomplete="postal-code" style="width: 100%; min-width: 0"></label>
         </div>
         <label class="f">Cuisine<select id="pCuisine" required><option value=""></option>${CUISINE_OPTIONS.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select></label>
+        <label class="f">Website<input id="pWebsite" maxlength="300" inputmode="url" autocomplete="url" placeholder="yourrestaurant.com"></label>
+        ${hoursEditor('p', ui.partnerHours)}
         <label class="f">Describe Your Restaurant<textarea id="pDesc" required maxlength="2000" rows="4"></textarea></label>
         <label class="f">The Offer You\u2019d Like To Give Members<input id="pOffer" maxlength="200" placeholder="10% Off Food, Every Day"></label>
         <label aria-hidden="true" style="position:absolute; left:-9999px">Leave this empty<input id="pHp" tabindex="-1" autocomplete="off"></label>
@@ -1038,9 +1079,16 @@ function vPrivacy() {
 
 // ---------- Admin panel (#admin): review restaurant applications and add restaurants to the map ----------
 // Access is enforced by row level security; this page only decides what to show.
-const adminState = { checkedFor: null, loaded: false, isAdmin: false, failed: false, tab: 'applications', apps: [], restaurants: [], draft: null, msg: null };
+const adminState = { checkedFor: null, loaded: false, isAdmin: false, failed: false, tab: 'overview', apps: [], restaurants: [], contacts: {}, contactsReady: false, customers: null, customersError: false, q: '', status: 'all', draft: null, msg: null };
+const isAdminNow = () => !!(member && adminState.isAdmin && adminState.checkedFor === member.id);
 let adminMap = null, adminPin = null;
-const blankDraft = () => ({ id: null, appId: null, name: '', description: '', cuisine: '', district_id: '', address: '', hours: '', phone: '', website_url: '', lat: null, lng: null, price_level: 2, dine_in: true, pickup: false, offer_text: '', founding_until: null, featured: false, photo_url: null, status: 'draft' });
+const blankDraft = () => ({ id: null, appId: null, name: '', description: '', cuisine: '', address: '', address_line1: '', address_line2: '', city: '', state: '', zip: '', hours: '', hours_json: null, phone: '', website_url: '', lat: null, lng: null, price_level: 2, dine_in: true, pickup: false, offer_text: '', founding_until: null, featured: false, photo_url: null, status: 'draft', contact_first: '', contact_last: '', contact_phone: '', contact_email: '' });
+// A restaurant ready for the form: private contact attached, and an older one-line address put in Line 1 to tidy up.
+function restaurantDraft(r) {
+  const c = adminState.contacts[r.id] || {};
+  return { ...blankDraft(), ...r, appId: null, address_line1: r.address_line1 || (r.city ? '' : r.address || ''),
+    contact_first: c.first_name || '', contact_last: c.last_name || '', contact_phone: c.phone || '', contact_email: c.email || '' };
+}
 const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 function adminPhotoPreview(r) {
   const src = r.photoPreview || (/^https?:\/\//i.test(r.photo_url || '') ? r.photo_url : null);
@@ -1058,23 +1106,163 @@ function adminPhotoRemove() {
   $('#aPhoto').value = ''; $('#aPhotoPreview').innerHTML = adminPhotoPreview(adminState.draft);
 }
 async function loadAdminData() {
-  const [a, r] = await Promise.all([
+  const [a, r, c, k] = await Promise.all([
     sb.from('partner_applications').select('*').order('created_at', { ascending: false }),
     sb.from('restaurants').select('*').order('name'),
+    sb.rpc('admin_customers'),
+    sb.from('restaurant_contacts').select('*'),
   ]);
   if (a.error || r.error) throw a.error || r.error;
   adminState.apps = a.data; adminState.restaurants = r.data;
+  // Contacts live in their own admin-only table; until it exists the form just starts them empty.
+  adminState.contactsReady = !k.error;
+  adminState.contacts = Object.fromEntries((k.error ? [] : k.data).map((x) => [x.restaurant_id, x]));
+  if (k.error) console.warn('GrubScout: restaurant contacts not loaded', k.error);
+  // The customer list needs the admin_customers database function; without it the rest of the console still works.
+  adminState.customersError = !!c.error; adminState.customers = c.error ? null : c.data;
+  if (c.error) console.warn('GrubScout: customer list not loaded', c.error);
 }
 async function loadAdmin() {
-  adminState.checkedFor = member.id; adminState.isAdmin = false; adminState.failed = false; adminState.loaded = false;
+  const forId = member.id;
+  adminState.checkedFor = forId; adminState.isAdmin = false; adminState.failed = false; adminState.loaded = false;
   try {
-    const { data, error } = await sb.from('platform_admins').select('user_id').eq('user_id', member.id).maybeSingle();
+    const { data, error } = await sb.from('platform_admins').select('user_id').eq('user_id', forId).maybeSingle();
     if (error) throw error;
     adminState.isAdmin = !!data;
     if (adminState.isAdmin) await loadAdminData();
   } catch (e) { adminState.failed = true; console.warn('GrubScout: admin not loaded', e); }
+  if (!member || member.id !== forId) return; // signed out or switched accounts while this was loading
   adminState.loaded = true;
-  if (view === 'admin') go('admin');
+  refreshChrome();
+  if (view === 'admin' || (view === 'pass' && adminState.isAdmin)) { const y = window.scrollY; go(view); window.scrollTo(0, y); }
+}
+function resetAdmin() { Object.assign(adminState, { checkedFor: null, loaded: false, isAdmin: false, failed: false, tab: 'overview', apps: [], restaurants: [], contacts: {}, contactsReady: false, customers: null, customersError: false, q: '', status: 'all', draft: null, msg: null }); }
+
+// ---------- Customers ----------
+function customerStatus(c, now = Date.now()) {
+  const until = c.access_until ? Date.parse(c.access_until) : null, grace = c.grace_until ? Date.parse(c.grace_until) : null;
+  if (c.is_admin) return { key: 'admin', label: 'Admin', until: null };
+  if (until && until > now) return { key: 'active', label: (c.sources || []).includes('gift') && !(c.sources || []).includes('subscription') ? 'Active (Gift)' : 'Active', until };
+  if (grace && grace > now) return { key: 'due', label: 'Payment Due', until: grace };
+  if (until) return { key: 'lapsed', label: 'Lapsed', until };
+  return { key: 'unpaid', label: 'Unpaid', until: null };
+}
+const STATUS_FILTERS = [['all', 'All Customers'], ['active', 'Active'], ['due', 'Payment Due'], ['lapsed', 'Lapsed'], ['unpaid', 'Unpaid'], ['admin', 'Admins']];
+function filteredCustomers() {
+  const q = adminState.q.trim().toLowerCase();
+  return (adminState.customers || []).filter((c) => {
+    if (adminState.status !== 'all' && customerStatus(c).key !== adminState.status) return false;
+    return !q || `${c.full_name || ''} ${c.email || ''}`.toLowerCase().includes(q);
+  });
+}
+function customerRows() {
+  const list = filteredCustomers();
+  if (!list.length) return '<tr><td colspan="6" class="muted">No customers match.</td></tr>';
+  return list.map((c) => {
+    const s = customerStatus(c);
+    const confirming = adminState.confirmCustomer === c.id;
+    // Admins can't be deleted here; active members need their membership cancelled first.
+    const action = s.key === 'admin' ? '' : confirming ? '' : `<button class="btn sm" data-act="custDeleteAsk" data-id="${esc(c.id)}" style="border-color:#8F3215; color:#8F3215">Delete</button>`;
+    const row = `<tr><td><b>${esc(c.full_name || '(no name)')}</b><br><span class="small muted">${esc(c.email || '')}</span></td>
+      <td><span class="badge${s.key === 'active' || s.key === 'admin' ? ' new' : ''}">${esc(s.label)}</span></td>
+      <td class="tabular">${s.until ? esc(fmtDate(new Date(s.until).toISOString())) : '—'}</td>
+      <td class="tabular">${esc(fmtDate(c.joined_at))}</td>
+      <td>${c.marketing ? 'Yes' : 'No'}</td>
+      <td>${action}</td></tr>`;
+    if (!confirming) return row;
+    const warn = s.key === 'active' || s.key === 'due'
+      ? 'This member still has access. If their membership renews, deleting is blocked until it’s cancelled.'
+      : 'Their account, pass and any unused gift codes are removed.';
+    return row + `<tr><td colspan="6" style="background:#FCE7DF; color:#8F3215">
+      <b>Delete ${esc(c.full_name || c.email || 'this customer')} permanently?</b> ${warn} This can’t be undone.
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px"><button class="btn sm" data-act="custDeleteYes" data-id="${esc(c.id)}" id="custDeleteYes" style="border-color:#8F3215; color:#8F3215">Yes, Delete Customer</button><button class="btn sm" data-act="custDeleteNo">Keep Customer</button></div>
+    </td></tr>`;
+  }).join('');
+}
+const CUSTOMER_DELETE_ERRORS = {
+  is_admin: 'Admins can’t be deleted here.',
+  live_subscription: 'This customer has a renewing membership. Cancel it first, then delete the account.',
+  checkout_open: 'This customer is in the middle of paying. Try again in an hour.',
+  not_found: 'That account was already deleted.',
+};
+async function adminDeleteCustomer(id) {
+  const btn = $('#custDeleteYes'); if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
+  const { error } = await sb.rpc('admin_delete_customer', { p_user: id });
+  adminState.confirmCustomer = null;
+  if (error) {
+    console.warn('GrubScout: customer not deleted', error);
+    const known = Object.keys(CUSTOMER_DELETE_ERRORS).find((k) => (error.message || '').includes(k));
+    toast(known ? CUSTOMER_DELETE_ERRORS[known] : /admin_delete_customer/.test(error.message || '') ? 'Deleting customers isn’t set up yet. Run its SQL in Supabase.' : 'That customer wasn’t deleted. Try again.');
+    if (known !== 'not_found') return refreshCustomers();
+  } else toast('Customer deleted');
+  adminState.customers = (adminState.customers || []).filter((c) => c.id !== id);
+  refreshCustomers();
+}
+function adminCustomers() {
+  if (adminState.customersError || !adminState.customers) return `<div class="note"><b>The customer list isn’t set up yet.</b> Run the SQL in <code>foodiepass-backend/supabase/migrations/20261106000000_admin_customers.sql</code> in the Supabase SQL Editor, then refresh this page.</div>`;
+  return `<div class="admin-filters">
+      <input id="custSearch" type="search" placeholder="Search by name or email" value="${esc(adminState.q)}" aria-label="Search customers">
+      <select id="custStatus" aria-label="Filter by status">${STATUS_FILTERS.map(([v, l]) => `<option value="${v}"${adminState.status === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
+      <button class="btn" type="button" data-act="custExport">Download CSV</button>
+    </div>
+    <p class="small muted" style="margin-bottom:10px"><span id="custCount">${filteredCustomers().length}</span> of <span id="custTotal">${adminState.customers.length}</span> accounts</p>
+    <div class="admin-table-wrap"><table class="admin-table">
+      <thead><tr><th>Customer</th><th>Status</th><th>Member Through</th><th>Joined</th><th>Marketing Emails</th><th><span class="sr" style="position:absolute; left:-9999px">Actions</span></th></tr></thead>
+      <tbody id="custRows">${customerRows()}</tbody>
+    </table></div>`;
+}
+function refreshCustomers() {
+  const rows = document.getElementById('custRows'), count = document.getElementById('custCount');
+  if (rows) rows.innerHTML = customerRows();
+  if (count) count.textContent = filteredCustomers().length;
+  const total = document.getElementById('custTotal'); if (total) total.textContent = (adminState.customers || []).length;
+}
+function exportCustomers() {
+  const cell = (v) => { const s = String(v ?? ''); return /^[=+\-@]/.test(s) ? `"'${s.replace(/"/g, '""')}"` : `"${s.replace(/"/g, '""')}"`; };
+  const lines = [['Name', 'Email', 'Status', 'Member Through', 'Joined', 'Marketing Emails']].concat(filteredCustomers().map((c) => {
+    const s = customerStatus(c);
+    return [c.full_name || '', c.email || '', s.label, s.until ? new Date(s.until).toISOString().slice(0, 10) : '', (c.joined_at || '').slice(0, 10), c.marketing ? 'Yes' : 'No'];
+  }));
+  const blob = new Blob([lines.map((l) => l.map(cell).join(',')).join('\r\n')], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `grubscout-customers-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// ---------- Overview ----------
+function adminOverview() {
+  const cs = adminState.customers;
+  const count = (k) => (cs ? cs.filter((c) => customerStatus(c).key === k).length : '—');
+  const tile = (n, label, tab) => `<button class="card" data-act="adminTab" data-tab="${tab}" style="text-align:left; cursor:pointer; font:inherit; color:inherit"><p class="stat tabular">${n}</p><p class="small muted">${label}</p></button>`;
+  const newApps = adminState.apps.filter((a) => a.status === 'new').length;
+  return `<div class="stat-grid">
+      ${tile(count('active'), 'Active Members', 'customers')}
+      ${tile(count('due'), 'Payment Due', 'customers')}
+      ${tile(count('unpaid'), 'Unpaid Accounts', 'customers')}
+      ${tile(count('lapsed'), 'Lapsed Members', 'customers')}
+      ${tile(newApps, 'New Applications', 'applications')}
+      ${tile(adminState.restaurants.filter((r) => r.status === 'active').length, 'Restaurants On The Map', 'restaurants')}
+    </div>
+    ${cs ? '' : `<div class="note" style="margin-top:14px">Member counts appear once the customer list is set up. See the Customers tab.</div>`}`;
+}
+
+// ---------- Console layout ----------
+const ADMIN_TABS = [['overview', 'Overview'], ['applications', 'Applications'], ['restaurants', 'Restaurants'], ['customers', 'Customers']];
+function adminShell(active, title, body, actions = '') {
+  const newApps = adminState.apps.filter((a) => a.status === 'new').length;
+  const item = ([id, label]) => `<button class="side-item${active === id ? ' on' : ''}" data-act="adminTab" data-tab="${id}"${active === id ? ' aria-current="page"' : ''}>${label}${id === 'applications' && newApps ? `<span class="count">${newApps}</span>` : ''}</button>`;
+  return `<section style="padding-block:40px 72px"><div class="wrap admin-shell">
+    <nav class="admin-side" aria-label="Admin">
+      ${ADMIN_TABS.map(item).join('')}
+      <hr>
+      <a class="side-item${active === 'pass' ? ' on' : ''}" href="#pass" data-go="pass"${active === 'pass' ? ' aria-current="page"' : ''}>My Pass</a>
+      <a class="side-item" href="#home" data-go="home">View Site</a>
+      <button class="side-item" data-act="signout">Sign Out</button>
+    </nav>
+    <div class="admin-main">
+      ${title ? `<div class="admin-head"><div><p class="eyebrow">Admin</p><h1>${title}</h1></div>${actions}</div>` : ''}
+      ${body}
+    </div>
+  </div></section>`;
 }
 function adminApps() {
   if (!adminState.apps.length) return '<div class="card"><h3>No applications yet</h3><p>New restaurant sign-ups will appear here.</p></div>';
@@ -1082,20 +1270,31 @@ function adminApps() {
   return adminState.apps.map((a) => `<div class="card" style="gap:8px">
     <div class="rc-top"><h3>${esc(a.restaurant_name)}</h3><span class="badge">${esc(a.status)}</span></div>
     <p class="small muted">Received ${esc(fmtDate(a.created_at))}</p>
-    ${row('Contact', a.contact_name)}${row('Reach them at', a.contact_reach)}${row('Address', a.address)}${row('City', a.district_text)}${row('Cuisine', a.cuisine)}${row('Description', a.description)}${row('Offer they suggested', a.proposed_offer)}${row('Slowest nights', a.slow_nights)}
+    ${row('Contact', a.first_name ? `${a.first_name} ${a.last_name || ''}`.trim() : a.contact_name)}${a.phone || a.email ? row('Business phone', a.phone) + row('Email', a.email) : row('Reach them at', a.contact_reach)}${row('Public phone', a.public_phone)}${row('Hours', a.hours)}${row('Address', a.address)}${row('Cuisine', a.cuisine)}${a.website_url ? `<p><b>Website:</b> <a href="${esc(websiteUrl(a.website_url))}" target="_blank" rel="noopener noreferrer">${esc(a.website_url)}</a></p>` : ''}${row('Description', a.description)}${row('Offer they suggested', a.proposed_offer)}${row('Slowest nights', a.slow_nights)}
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px">
       ${a.status === 'added' ? '' : `<button class="btn sm pri" data-act="adminFromApp" data-id="${esc(a.id)}">Create listing</button>`}
       ${a.status === 'new' ? `<button class="btn sm" data-act="adminAppStatus" data-id="${esc(a.id)}" data-status="contacted">Mark contacted</button>` : ''}
       ${a.status === 'new' || a.status === 'contacted' ? `<button class="btn sm" data-act="adminAppStatus" data-id="${esc(a.id)}" data-status="declined">Decline</button>` : ''}
+      ${adminState.confirmApp === a.id ? '' : `<button class="btn sm" data-act="appDeleteAsk" data-id="${esc(a.id)}" style="border-color:#8F3215; color:#8F3215">Delete</button>`}
     </div>
+    ${adminState.confirmApp === a.id ? `<div class="note" role="alert" style="background:#FCE7DF; color:#8F3215; margin-top:6px"><b>Delete this application permanently?</b> ${a.restaurant_id ? 'Its restaurant listing stays on the site. ' : ''}This can’t be undone.</div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap"><button class="btn sm" data-act="appDeleteYes" data-id="${esc(a.id)}" style="border-color:#8F3215; color:#8F3215">Yes, Delete Application</button><button class="btn sm" data-act="appDeleteNo">Keep Application</button></div>` : ''}
   </div>`).join('');
 }
+async function adminDeleteApp(id) {
+  const { data, error } = await sb.from('partner_applications').delete().eq('id', id).select('id');
+  adminState.confirmApp = null;
+  if (error || !data || !data.length) { console.warn('GrubScout: application not deleted', error); toast('That application wasn’t deleted. Try again.'); return rerenderAdmin(); }
+  adminState.apps = adminState.apps.filter((a) => a.id !== id);
+  toast('Application deleted'); rerenderAdmin();
+}
+function rerenderAdmin() { const y = window.scrollY; go('admin'); window.scrollTo(0, y); }
 function adminRestaurants() {
   const list = adminState.restaurants.length ? adminState.restaurants.map((r) => `<div class="card" style="flex-direction:row; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap">
     <div style="display:grid; gap:4px; min-width:0"><h3>${esc(r.name)}</h3><p class="small muted">${esc(r.status)}${r.offer_text ? ' · ' + esc(r.offer_text) : ''}</p></div>
     <button class="btn sm" data-act="adminEdit" data-id="${esc(r.id)}">Edit</button>
   </div>`).join('') : '<div class="card"><h3>No restaurants yet</h3><p>Add one here, or create a listing from an application.</p></div>';
-  return `<div style="margin-bottom:14px"><button class="btn pri" data-act="adminNew">Add a restaurant</button></div><div class="grid" style="gap:12px">${list}</div>`;
+  return `<div class="grid" style="gap:12px">${list}</div>`;
 }
 function adminForm() {
   const r = adminState.draft;
@@ -1104,12 +1303,30 @@ function adminForm() {
     <h2 style="font-size:30px">${r.id ? 'Edit restaurant' : 'Add a restaurant'}</h2>
     ${adminState.msg ? `<div class="note" role="alert" style="background:#FCE7DF; color:#8F3215">${esc(adminState.msg)}</div>` : ''}
     <form class="stack" id="adminForm" novalidate>
-      <label class="f">Restaurant name<input id="aName" maxlength="120" value="${esc(r.name)}"></label>
-      <label class="f">Description<textarea id="aDesc" rows="3">${esc(r.description)}</textarea></label>
-      <label class="f">Member offer (one line)<input id="aOffer" maxlength="120" value="${esc(r.offer_text)}" placeholder="10% off food · Sun–Thu"></label>
+      <p class="eyebrow" style="margin-top:6px">From The Application</p>
+      <label class="f">Restaurant Name<input id="aName" maxlength="120" value="${esc(r.name)}"></label>
+      <p class="small muted" style="margin-bottom:-6px">Contact person (private, never shown on the site)</p>
+      <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px">
+        <label class="f" style="min-width:0">First Name<input id="aFirst" maxlength="60" autocomplete="off" value="${esc(r.contact_first)}" style="width:100%; min-width:0"></label>
+        <label class="f" style="min-width:0">Last Name<input id="aLast" maxlength="60" autocomplete="off" value="${esc(r.contact_last)}" style="width:100%; min-width:0"></label>
+      </div>
+      <label class="f">Business Phone<input id="aContactPhone" type="tel" maxlength="40" autocomplete="off" value="${esc(r.contact_phone)}"></label>
+      <label class="f">Email<input id="aContactEmail" type="email" maxlength="140" autocomplete="off" value="${esc(r.contact_email)}"></label>
+      <label class="f">Public Phone<input id="aPhone" type="tel" maxlength="40" autocomplete="off" value="${esc(r.phone)}"><span class="small muted" style="font-weight:400">Shown on the listing.</span></label>
+      <label class="f">Address Line 1<input id="aLine1" maxlength="120" autocomplete="off" value="${esc(r.address_line1)}"></label>
+      <label class="f">Address Line 2<input id="aLine2" maxlength="80" autocomplete="off" value="${esc(r.address_line2)}"></label>
+      <label class="f">City<input id="aCity" maxlength="80" autocomplete="off" value="${esc(r.city)}"></label>
+      <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px">
+        <label class="f" style="min-width:0">State<select id="aState" style="width:100%; min-width:0">${opt('', '', r.state)}${US_STATES.map((s) => opt(s, s, r.state)).join('')}</select></label>
+        <label class="f" style="min-width:0">Zip<input id="aZip" maxlength="10" inputmode="numeric" autocomplete="off" value="${esc(r.zip)}" style="width:100%; min-width:0"></label>
+      </div>
       <label class="f">Cuisine<select id="aCuisine">${opt('', '', r.cuisine)}${(r.cuisine && !CUISINE_OPTIONS.includes(r.cuisine) ? [r.cuisine, ...CUISINE_OPTIONS] : CUISINE_OPTIONS).map((c) => opt(c, c, r.cuisine)).join('')}</select></label>
-      <label class="f">Neighborhood<select id="aDistrict">${opt('', 'Choose one', r.district_id)}${DISTRICTS.map((d) => opt(d.id, d.name, r.district_id)).join('')}</select></label>
-      <label class="f">Full address (street, city, state)<input id="aAddress" value="${esc(r.address)}"></label>
+      <label class="f">Website<input id="aWebsite" maxlength="300" value="${esc(r.website_url)}" placeholder="yourrestaurant.com"></label>
+      ${r.hours && !(r.hours_json && r.hours_json.length) ? `<div class="note">Hours saved before the picker: <b>${esc(r.hours)}</b>. Enter them below to replace this, or leave the picker empty to keep it.</div>` : ''}
+      ${hoursEditor('a', r.hours_json)}
+      <label class="f">Describe Your Restaurant<textarea id="aDesc" rows="3">${esc(r.description)}</textarea></label>
+      <label class="f">The Offer You’d Like To Give Members<input id="aOffer" maxlength="120" value="${esc(r.offer_text)}" placeholder="10% Off Food, Every Day"></label>
+      <p class="eyebrow" style="margin-top:14px">Listing Details</p>
       <div><button class="btn sm" type="button" data-act="adminGeocode">Find this address on the map</button></div>
       <div id="adminMap" role="region" aria-label="Click the map to place the restaurant" style="height:300px; border-radius:14px; border:1.5px solid var(--line)"></div>
       <p class="small muted">Click the map to place or move the pin.</p>
@@ -1117,9 +1334,6 @@ function adminForm() {
         <label class="f">Latitude<input id="aLat" type="number" step="any" value="${esc(r.lat)}"></label>
         <label class="f">Longitude<input id="aLng" type="number" step="any" value="${esc(r.lng)}"></label>
       </div>
-      <label class="f">Hours<input id="aHours" value="${esc(r.hours)}"></label>
-      <label class="f">Phone<input id="aPhone" value="${esc(r.phone)}"></label>
-      <label class="f">Website<input id="aWebsite" value="${esc(r.website_url)}" placeholder="https://"></label>
       <label class="f">Price<select id="aPrice">${[1, 2, 3].map((n) => opt(n, '$'.repeat(n), r.price_level)).join('')}</select></label>
       <label style="display:flex; gap:10px; align-items:center"><input type="checkbox" id="aDine" style="width:20px; height:20px"${r.dine_in ? ' checked' : ''}> Dine-in</label>
       <label style="display:flex; gap:10px; align-items:center"><input type="checkbox" id="aPickup" style="width:20px; height:20px"${r.pickup ? ' checked' : ''}> Pickup</label>
@@ -1130,7 +1344,14 @@ function adminForm() {
       <label class="f">Status<select id="aStatus">${[['draft', 'Draft (hidden)'], ['active', 'Active (on the map)'], ['paused', 'Paused (hidden)'], ['ended', 'Ended (hidden)']].map(([v, l]) => opt(v, l, r.status)).join('')}</select></label>
       <div style="display:flex; gap:10px; flex-wrap:wrap"><button class="btn pri" type="submit" id="aSave">Save</button><button class="btn" type="button" data-act="adminCancel">Cancel</button></div>
     </form>
+    ${r.id ? `<div id="aDeleteArea" style="border-top:1px solid var(--line); margin-top:8px; padding-top:18px; display:grid; gap:10px">${adminDeleteArea()}</div>` : ''}
   </div>`;
+}
+function adminDeleteArea() {
+  const r = adminState.draft;
+  return adminState.confirmDelete ? `<div class="note" role="alert" style="background:#FCE7DF; color:#8F3215"><b>Delete ${esc(r.name)} permanently?</b> It comes off the map and the site, and its photo is removed. This can’t be undone. To hide it for now instead, set Status to Paused and save.</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap"><button class="btn" type="button" data-act="adminDeleteYes" id="aDeleteYes" style="border-color:#8F3215; color:#8F3215">Yes, Delete Restaurant</button><button class="btn" type="button" data-act="adminDeleteNo">Keep Restaurant</button></div>`
+    : `<div><button class="btn sm" type="button" data-act="adminDeleteAsk" style="border-color:#8F3215; color:#8F3215">Delete Restaurant</button></div>`;
 }
 function vAdmin() {
   const wrap = (body) => `<section><div class="wrap" style="max-width:820px"><div class="sec-head" style="margin-bottom:20px"><p class="eyebrow">GrubScout</p><h1 style="font-size: clamp(34px, 5vw, 52px)">Admin</h1></div>${body}</div></section>`;
@@ -1139,11 +1360,12 @@ function vAdmin() {
   if (adminState.checkedFor !== member.id || !adminState.loaded) return wrap('<p>Checking your access…</p>');
   if (adminState.failed) return wrap('<div class="note">The admin panel couldn’t load. Refresh the page and try again.</div>');
   if (!adminState.isAdmin) return wrap(`<div class="note">${esc(member.email || 'This account')} doesn’t have admin access.</div>`);
-  if (adminState.draft) return wrap(adminForm());
-  const newApps = adminState.apps.filter((a) => a.status === 'new').length;
-  const tab = (id, label) => `<button class="${adminState.tab === id ? 'on' : ''}" data-act="adminTab" data-tab="${id}" aria-pressed="${adminState.tab === id}">${label}</button>`;
-  return wrap(`<div class="seg" role="group" aria-label="Admin sections" style="margin-bottom:18px">${tab('applications', `Applications${newApps ? ' (' + newApps + ' new)' : ''}`)}${tab('restaurants', `Restaurants (${adminState.restaurants.length})`)}</div>
-    ${adminState.tab === 'applications' ? `<div class="grid" style="gap:12px">${adminApps()}</div>` : adminRestaurants()}`);
+  if (adminState.draft) return adminShell('restaurants', '', adminForm());
+  const t = adminState.tab;
+  if (t === 'applications') return adminShell(t, 'Applications', `<div class="grid" style="gap:12px">${adminApps()}</div>`);
+  if (t === 'restaurants') return adminShell(t, 'Restaurants', adminRestaurants(), '<button class="btn pri" data-act="adminNew">Add A Restaurant</button>');
+  if (t === 'customers') return adminShell(t, 'Customers', adminCustomers());
+  return adminShell('overview', 'Overview', adminOverview());
 }
 function mountAdminMap() {
   const el = document.getElementById('adminMap');
@@ -1162,8 +1384,9 @@ function setAdminPin(lat, lng, writeInputs) {
   if (writeInputs) { $('#aLat').value = lat.toFixed(6); $('#aLng').value = lng.toFixed(6); }
 }
 async function adminGeocode() {
-  const a = $('#aAddress').value.trim();
-  if (!a) return toast('Enter an address first.');
+  const val = (id) => $('#' + id).value.trim();
+  const a = joinAddress(val('aLine1'), '', val('aCity'), val('aState'), val('aZip')); // Line 2 (suite, unit) only confuses the lookup
+  if (!val('aLine1')) return toast('Enter Address Line 1 first.');
   try {
     const res = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=' + encodeURIComponent(a));
     const hit = res.ok ? (await res.json())[0] : null;
@@ -1175,18 +1398,28 @@ async function adminGeocode() {
 async function adminSave() {
   const v = (id) => $('#' + id).value.trim();
   const num = (id) => (v(id) === '' ? null : Number(v(id)));
-  let site = v('aWebsite');
-  if (site && !/^https?:\/\//i.test(site)) site = 'https://' + site;
+  const orNull = (id) => v(id) || null;
   const row = {
-    name: v('aName'), description: v('aDesc'), offer_text: v('aOffer'), cuisine: v('aCuisine'), district_id: v('aDistrict'),
-    address: v('aAddress') || null, hours: v('aHours') || null, phone: v('aPhone') || null, website_url: site || null,
+    name: v('aName'), description: v('aDesc'), offer_text: v('aOffer'), cuisine: v('aCuisine'),
+    address_line1: orNull('aLine1'), address_line2: orNull('aLine2'), city: orNull('aCity'), state: orNull('aState'), zip: orNull('aZip'),
+    address: joinAddress(v('aLine1'), v('aLine2'), v('aCity'), v('aState'), v('aZip')) || null,
+    hours: null, hours_json: null, phone: orNull('aPhone'), website_url: websiteUrl(v('aWebsite')) || null,
     lat: num('aLat'), lng: num('aLng'), price_level: Number(v('aPrice')), dine_in: $('#aDine').checked, pickup: $('#aPickup').checked,
     founding_until: v('aFounding') ? new Date(v('aFounding') + 'T12:00:00').toISOString() : null, status: v('aStatus'),
     featured: $('#aFeatured').checked, photo_url: adminState.draft.photo_url,
   };
-  const problem = !row.name ? 'Enter the restaurant name.' : !row.district_id ? 'Choose a neighborhood.'
+  const contact = { first_name: orNull('aFirst'), last_name: orNull('aLast'), phone: orNull('aContactPhone'), email: orNull('aContactEmail') };
+  // Hours: the picker wins; with the picker left empty, hours typed before the picker existed are kept.
+  const hours = readHours('a'), old = adminState.draft;
+  if (hours.length) { row.hours_json = hours; row.hours = hoursText(hours); }
+  else if (old.hours && !(old.hours_json && old.hours_json.length)) row.hours = old.hours;
+  const keep = { ...row, hours_json: readHours('a', true), contact_first: v('aFirst'), contact_last: v('aLast'), contact_phone: v('aContactPhone'), contact_email: v('aContactEmail') }; // what's typed, if we come back to the form
+  const problem = !row.name ? 'Enter the restaurant name.'
+    : hours.length && hoursProblem(hours) ? hoursProblem(hours)
+    : contact.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email) ? 'Check the contact email address.'
+    : row.zip && !/^\d{5}(-\d{4})?$/.test(row.zip) ? 'Enter a 5-digit zip code.'
     : row.status === 'active' && (!row.offer_text || row.lat === null || row.lng === null) ? 'An active restaurant needs an offer and a pin on the map. Add them, or save it as a draft.' : null;
-  if (problem) { adminState.draft = { ...adminState.draft, ...row }; adminState.msg = problem; return go('admin'); }
+  if (problem) { adminState.draft = { ...adminState.draft, ...keep }; adminState.msg = problem; return go('admin'); }
   const btn = $('#aSave'); btn.disabled = true; btn.textContent = 'Saving…';
   try {
     const { id, appId, photoFile } = adminState.draft;
@@ -1198,13 +1431,46 @@ async function adminSave() {
     }
     const res = id ? await sb.from('restaurants').update(row).eq('id', id).select('id').single() : await sb.from('restaurants').insert(row).select('id').single();
     if (res.error) throw res.error;
-    if (appId) { const u = await sb.from('partner_applications').update({ status: 'added', restaurant_id: res.data.id }).eq('id', appId); if (u.error) throw u.error; }
+    const savedId = res.data.id;
+    if (appId) { const u = await sb.from('partner_applications').update({ status: 'added', restaurant_id: savedId }).eq('id', appId); if (u.error) throw u.error; }
+    // The private contact is saved separately; the listing above is already saved either way.
+    let contactSaved = true;
+    if (Object.values(contact).some(Boolean) || adminState.contacts[savedId]) {
+      const c = await sb.from('restaurant_contacts').upsert({ restaurant_id: savedId, ...contact, updated_at: new Date().toISOString() });
+      if (c.error) { contactSaved = false; console.warn('GrubScout: restaurant contact not saved', c.error); }
+    }
     adminState.draft = null; adminState.msg = null; adminState.tab = 'restaurants';
     await loadAdminData(); await loadDirectory();
-    toast('Saved'); go('admin');
+    toast(contactSaved ? 'Saved' : 'Listing saved, but the contact details weren’t. Edit the restaurant to try again.'); go('admin');
   } catch (e) {
     console.warn('GrubScout: restaurant not saved', e);
-    adminState.draft = { ...adminState.draft, ...row }; adminState.msg = 'That didn’t save. Check your connection and try again.'; go('admin');
+    const needsSql = e && (e.code === 'PGRST204' || /address_line1|column/i.test(e.message || ''));
+    adminState.draft = { ...adminState.draft, ...keep };
+    adminState.msg = needsSql ? 'The new address fields need their SQL run in Supabase before this can save.' : 'That didn’t save. Check your connection and try again.';
+    go('admin');
+  }
+}
+// Path of a photo inside the restaurant-photos bucket, or null for anything else (other sites, the shared site/ images).
+function restaurantPhotoPath(url) {
+  const m = /\/storage\/v1\/object\/public\/restaurant-photos\/(.+)$/.exec(url || '');
+  return m && !m[1].startsWith('site/') ? decodeURIComponent(m[1].split('?')[0]) : null;
+}
+async function adminDelete() {
+  const r = adminState.draft; if (!r || !r.id) return;
+  const btn = $('#aDeleteYes'); if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
+  try {
+    const { data, error } = await sb.from('restaurants').delete().eq('id', r.id).select('id');
+    if (error) throw error;
+    if (!data || !data.length) throw new Error('nothing deleted');
+    const path = restaurantPhotoPath(r.photo_url);
+    if (path) { const rm = await sb.storage.from('restaurant-photos').remove([path]); if (rm.error) console.warn('GrubScout: photo not removed', rm.error); }
+    adminState.draft = null; adminState.msg = null; adminState.confirmDelete = false; adminState.tab = 'restaurants';
+    try { await loadAdminData(); } catch (e) { adminState.restaurants = adminState.restaurants.filter((x) => x.id !== r.id); }
+    await loadDirectory();
+    toast(`${r.name} was deleted`); go('admin');
+  } catch (e) {
+    console.warn('GrubScout: restaurant not deleted', e);
+    adminState.confirmDelete = false; adminState.msg = 'That restaurant wasn’t deleted. Check your connection and try again.'; go('admin');
   }
 }
 async function adminAppStatus(id, status) {
@@ -1215,15 +1481,105 @@ async function adminAppStatus(id, status) {
 }
 function adminFromApp(id) {
   const a = adminState.apps.find((x) => x.id === id); if (!a) return;
-  const d = DISTRICTS.find((x) => x.name === a.district_text);
-  adminState.draft = { ...blankDraft(), appId: a.id, name: a.restaurant_name, description: a.description, cuisine: a.cuisine || '', district_id: d ? d.id : '', address: a.address || '', offer_text: (a.proposed_offer || '').slice(0, 120) };
+  // Older applications only have the combined fields, so pull what we can out of those.
+  const names = (a.contact_name || '').trim().split(/\s+/);
+  const reach = a.contact_reach || '';
+  const fromReach = (label) => { const m = new RegExp(label + ':\\s*([^|]+)', 'i').exec(reach); return m ? m[1].trim() : ''; };
+  const looseEmail = /\S+@\S+/.exec(reach);
+  adminState.draft = { ...blankDraft(), appId: a.id, name: a.restaurant_name, description: a.description, cuisine: a.cuisine || '',
+    contact_first: a.first_name || names[0] || '', contact_last: a.last_name || names.slice(1).join(' '),
+    contact_phone: a.phone || fromReach('Phone') || (looseEmail ? '' : reach), contact_email: a.email || fromReach('Email') || (looseEmail ? looseEmail[0] : ''),
+    address_line1: a.address_line1 || (a.city ? '' : a.address || ''), address_line2: a.address_line2 || '', city: a.city || a.district_text || '',
+    state: a.state || '', zip: a.zip || '', website_url: a.website_url || '', offer_text: (a.proposed_offer || '').slice(0, 120),
+    phone: a.public_phone || '', hours_json: a.hours_json || null, hours: a.hours || '' };
   adminState.msg = null; go('admin');
 }
+// ---------- Opening hours (application form and admin form) ----------
+// Stored as [{ days: ['mon', 'tue'], open: '11:00', close: '21:00' }], shown as "Mon–Fri 11 AM – 9 PM".
+const WEEK = [['mon', 'Mon'], ['tue', 'Tue'], ['wed', 'Wed'], ['thu', 'Thu'], ['fri', 'Fri'], ['sat', 'Sat'], ['sun', 'Sun']];
+const TIMES = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`);
+function fmtTime(t) {
+  const [h, m] = t.split(':').map(Number);
+  if (!m && h === 0) return 'Midnight';
+  if (!m && h === 12) return 'Noon';
+  const hr = h % 12 || 12, ap = h < 12 ? 'AM' : 'PM';
+  return m ? `${hr}:${String(m).padStart(2, '0')} ${ap}` : `${hr} ${ap}`;
+}
+function hoursText(blocks) {
+  return (blocks || []).filter((b) => b.days.length && b.open && b.close).map((b) => {
+    const idx = WEEK.map(([k]) => k).filter((k) => b.days.includes(k)).map((k) => WEEK.findIndex(([x]) => x === k));
+    const runs = [];
+    idx.forEach((i) => { const last = runs[runs.length - 1]; if (last && i === last[1] + 1) last[1] = i; else runs.push([i, i]); });
+    const days = idx.length === 7 ? 'Every day' : runs.map(([a, z]) => (a === z ? WEEK[a][1] : `${WEEK[a][1]}–${WEEK[z][1]}`)).join(', ');
+    return `${days} ${fmtTime(b.open)} – ${fmtTime(b.close)}`;
+  }).join(' · ');
+}
+function hoursBlock(prefix, b, i, count) {
+  const sel = (which, cur) => `<select data-hours="${which}" aria-label="${which === 'open' ? 'Opens' : 'Closes'}" style="width:100%; min-width:0"><option value=""></option>${TIMES.map((t) => `<option value="${t}"${t === cur ? ' selected' : ''}>${fmtTime(t)}</option>`).join('')}</select>`;
+  return `<div class="hours-block" data-i="${i}">
+    <div class="day-pick" role="group" aria-label="Days">${WEEK.map(([k, label]) => `<label><input type="checkbox" value="${k}"${b.days.includes(k) ? ' checked' : ''}>${label}</label>`).join('')}</div>
+    <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px">
+      <label class="f" style="min-width:0">Opens${sel('open', b.open)}</label>
+      <label class="f" style="min-width:0">Closes${sel('close', b.close)}</label>
+    </div>
+    ${count > 1 ? `<div><button type="button" class="btn sm" data-act="hoursRemove" data-prefix="${prefix}" data-i="${i}">Remove These Hours</button></div>` : ''}
+  </div>`;
+}
+function hoursEditor(prefix, blocks) {
+  const list = blocks && blocks.length ? blocks : [{ days: [], open: '', close: '' }];
+  return `<fieldset class="hours-field" id="${prefix}Hours"><legend>Hours</legend>
+    <p class="small muted">Check the days, then pick when you open and close. Use Add Hours for days with different times.</p>
+    ${list.map((b, i) => hoursBlock(prefix, b, i, list.length)).join('')}
+    ${list.length < 7 ? `<div><button type="button" class="btn sm" data-act="hoursAdd" data-prefix="${prefix}">Add Hours</button></div>` : ''}
+  </fieldset>`;
+}
+// keepEmpty keeps half-filled sets while the editor is redrawn; saving drops sets with nothing in them.
+function readHours(prefix, keepEmpty) {
+  const root = document.getElementById(prefix + 'Hours'); if (!root) return [];
+  return [...root.querySelectorAll('.hours-block')].map((el) => ({
+    days: [...el.querySelectorAll('.day-pick input:checked')].map((x) => x.value),
+    open: el.querySelector('[data-hours="open"]').value, close: el.querySelector('[data-hours="close"]').value,
+  })).filter((b) => keepEmpty || b.days.length || b.open || b.close);
+}
+function hoursProblem(blocks) {
+  if (blocks.some((b) => !b.days.length)) return 'Check at least one day for each set of hours.';
+  if (blocks.some((b) => !b.open || !b.close)) return 'Pick an opening and closing time for each set of hours.';
+  if (blocks.some((b) => b.open === b.close)) return 'Opening and closing times can’t be the same.';
+  const seen = blocks.flatMap((b) => b.days);
+  if (new Set(seen).size !== seen.length) return 'Each day can only be in one set of hours.';
+  return null;
+}
+function redrawHours(prefix, blocks) {
+  const root = document.getElementById(prefix + 'Hours'); if (!root) return;
+  root.outerHTML = hoursEditor(prefix, blocks);
+}
+
+// "123 Main St, Suite 4, Houston, TX 77005" from the separate address fields.
+function joinAddress(line1, line2, city, state, zip) {
+  const tail = [state, zip].filter(Boolean).join(' ');
+  return [line1, line2, city, tail].filter(Boolean).join(', ');
+}
+function websiteUrl(s) { s = String(s || '').trim(); return s && !/^https?:\/\//i.test(s) ? 'https://' + s : s; }
 async function submitPartner() {
   if (!sb) return toast('The sign-up form isn’t connected yet.');
   const v = (id) => $('#' + id).value.trim();
+  const hours = readHours('p');
+  const hoursIssue = hours.length ? hoursProblem(hours) : null;
+  if (hoursIssue) return toast(hoursIssue);
   const btn = $('#pSend'); btn.disabled = true; btn.textContent = 'Sending…';
-  const { error } = await sb.rpc('submit_partner_application', { p_restaurant_name: v('pName'), p_contact_name: `${v('pFirst')} ${v('pLast')}`, p_contact_reach: `Phone: ${v('pPhone')} | Email: ${v('pEmail')}`, p_description: v('pDesc'), p_address: `${[v('pAddress1'), v('pAddress2'), v('pCity')].filter(Boolean).join(', ')}, ${v('pState')} ${v('pZip')}`, p_district: v('pCity'), p_cuisine: v('pCuisine'), p_proposed_offer: v('pOffer'), p_hp: v('pHp') }).then((r) => r, () => ({ error: { message: 'network' } }));
+  // The combined fields keep older applications readable; the separate ones fill the admin form.
+  const base = { p_restaurant_name: v('pName'), p_contact_name: `${v('pFirst')} ${v('pLast')}`, p_contact_reach: `Phone: ${v('pPhone')} | Email: ${v('pEmail')}`, p_description: v('pDesc'), p_address: joinAddress(v('pAddress1'), v('pAddress2'), v('pCity'), v('pState'), v('pZip')), p_district: v('pCity'), p_cuisine: v('pCuisine'), p_proposed_offer: v('pOffer'), p_hp: v('pHp') };
+  const fields = { p_first_name: v('pFirst'), p_last_name: v('pLast'), p_phone: v('pPhone'), p_email: v('pEmail'), p_address_line1: v('pAddress1'), p_address_line2: v('pAddress2'), p_city: v('pCity'), p_state: v('pState'), p_zip: v('pZip'), p_website: websiteUrl(v('pWebsite')) };
+  const send = (args) => sb.rpc('submit_partner_application', args).then((r) => r, () => ({ error: { message: 'network' } }));
+  const latest = { p_public_phone: v('pPublicPhone'), p_hours: hoursText(hours), p_hours_json: hours.length ? hours : null };
+  let { error } = await send({ ...base, ...fields, ...latest });
+  if (error && error.code === 'PGRST202') {
+    // The database hasn't been updated yet: send what it accepts and keep the rest in the description.
+    const extra = [latest.p_public_phone && 'Public phone: ' + latest.p_public_phone, latest.p_hours && 'Hours: ' + latest.p_hours].filter(Boolean).join('\n');
+    const description = base.p_description + (extra ? '\n\n' + extra : '');
+    ({ error } = await send({ ...base, ...fields, p_description: description }));
+    if (error && error.code === 'PGRST202') ({ error } = await send({ ...base, p_description: description + (fields.p_website ? '\nWebsite: ' + fields.p_website : '') }));
+  }
   if (error) {
     btn.disabled = false; btn.textContent = 'Send';
     return toast(error.message === 'rate_limited' ? 'We’re getting a lot of sign-ups. Please try again in a little while.' : 'That didn’t send. Check your connection and try again.');
@@ -1270,7 +1626,6 @@ function mountMap() {
     L.polyline([[29.786, -95.85], [29.77, -95.37], [29.76, -95.0]], s).addTo(map);
     L.polyline([[30.17, -95.46], [29.77, -95.36], [29.55, -95.12]], s).addTo(map);
     L.polyline([[29.62, -95.63], [29.73, -95.42], [29.78, -95.35], [30.0, -95.27]], s).addTo(map);
-    DISTRICTS.forEach((d) => L.marker([d.lat + 0.012, d.lng], { interactive: false, icon: L.divIcon({ className: 'dlabel', html: esc(d.name), iconSize: null }) }).addTo(map));
     const note = document.getElementById('mapNote'); if (note) note.hidden = false;
   }
   drawPins(true);
@@ -1305,12 +1660,11 @@ function refreshResults(fit) {
 // ---------- Drawer ----------
 function openDrawer(id) {
   const r = RESTAURANTS.find((x) => x.id === id); if (!r) return;
-  const d = D[r.district];
   $('#drawerRoot').innerHTML = `<div class="scrim" data-act="closeDrawer"><div class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
     <button class="x" data-act="closeDrawer" aria-label="Close">\u00D7</button>
     <p class="eyebrow">${esc(r.cuisine)} \u00B7 ${'$'.repeat(r.price)}</p>
     <h2 id="dTitle">${esc(r.name)}</h2>
-    <p class="muted" style="display:flex; gap:6px; align-items:center">${I.pin}${esc(r.address || d.name)}</p>
+    ${r.address || r.place ? `<p class="muted" style="display:flex; gap:6px; align-items:center">${I.pin}${esc(r.address || r.place)}</p>` : ''}
     <p style="font-size:19px; color: var(--ink-2)">${esc(r.desc)}</p>
     ${r.hours ? `<p class="small muted">${esc(r.hours)}</p>` : ''}
     ${r.phone || /^https?:\/\//i.test(r.website || '') ? `<p class="small">${r.phone ? `<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>` : ''}${r.phone && r.website ? ' · ' : ''}${/^https?:\/\//i.test(r.website || '') ? `<a href="${esc(r.website)}" target="_blank" rel="noopener noreferrer">Website</a>` : ''}</p>` : ''}
@@ -1333,13 +1687,10 @@ function go(name, anchor) {
   if (adminMap) { adminMap.remove(); adminMap = null; }
   $('#app').innerHTML = VIEWS[view]();
   document.querySelectorAll('.nav a').forEach((a) => a.classList.toggle('on', a.dataset.go === view));
-  $('#signinBtn').textContent = member ? 'My Pass' : 'Sign In';
+  refreshChrome();
   if (location.hash !== '#' + view) { try { history.replaceState(null, '', '#' + view); } catch (e) { /* ignore */ } }
   if (view === 'restaurants') setTimeout(mountMap, 0);
-  if (view === 'admin') {
-    if (AUTH_LIVE && member && adminState.checkedFor !== member.id) loadAdmin();
-    setTimeout(mountAdminMap, 0);
-  }
+  if (view === 'admin') setTimeout(mountAdminMap, 0);
   startClock();
   const target = anchor && document.getElementById(anchor);
   if (target) target.scrollIntoView({ behavior: 'smooth' }); else window.scrollTo(0, 0);
@@ -1366,10 +1717,27 @@ document.addEventListener('click', (e) => {
   if (d.mode) { ui.mode = d.mode; document.querySelectorAll('[data-mode]').forEach((b) => { b.classList.toggle('on', b.dataset.mode === ui.mode); b.setAttribute('aria-pressed', b.dataset.mode === ui.mode); }); return refreshResults(true); }
   if (d.planPick) { ui.plan = d.planPick; ui.joined = false; go('join', 'checkout'); return; }
   switch (d.act) {
-    case 'adminTab': adminState.tab = d.tab; return go('admin');
+    case 'adminTab': adminState.tab = d.tab; adminState.draft = null; adminState.msg = null; adminState.confirmDelete = false; adminState.confirmApp = null; adminState.confirmCustomer = null; return go('admin');
+    case 'custExport': return exportCustomers();
     case 'adminNew': adminState.draft = blankDraft(); adminState.msg = null; return go('admin');
-    case 'adminEdit': { const r = adminState.restaurants.find((x) => x.id === d.id); if (r) { adminState.draft = { ...r, appId: null }; adminState.msg = null; go('admin'); } return; }
-    case 'adminCancel': adminState.draft = null; adminState.msg = null; return go('admin');
+    case 'adminEdit': { const r = adminState.restaurants.find((x) => x.id === d.id); if (r) { adminState.draft = restaurantDraft(r); adminState.msg = null; adminState.confirmDelete = false; go('admin'); } return; }
+    case 'adminCancel': adminState.draft = null; adminState.msg = null; adminState.confirmDelete = false; return go('admin');
+    case 'adminDeleteAsk': case 'adminDeleteNo': {
+      // Only the delete area changes, so anything typed in the form stays.
+      adminState.confirmDelete = d.act === 'adminDeleteAsk';
+      const area = $('#aDeleteArea'); if (area) area.innerHTML = adminDeleteArea();
+      const next = $(adminState.confirmDelete ? '#aDeleteYes' : '[data-act="adminDeleteAsk"]'); if (next) next.focus();
+      return;
+    }
+    case 'adminDeleteYes': return adminDelete();
+    case 'hoursAdd': { const b = readHours(d.prefix, true); b.push({ days: [], open: '', close: '' }); return redrawHours(d.prefix, b); }
+    case 'hoursRemove': { const b = readHours(d.prefix, true); b.splice(Number(d.i), 1); return redrawHours(d.prefix, b); }
+    case 'appDeleteAsk': adminState.confirmApp = d.id; return rerenderAdmin();
+    case 'appDeleteNo': adminState.confirmApp = null; return rerenderAdmin();
+    case 'appDeleteYes': return adminDeleteApp(d.id);
+    case 'custDeleteAsk': adminState.confirmCustomer = d.id; refreshCustomers(); { const b = $('#custDeleteYes'); if (b) b.focus(); } return;
+    case 'custDeleteNo': adminState.confirmCustomer = null; return refreshCustomers();
+    case 'custDeleteYes': return adminDeleteCustomer(d.id);
     case 'adminFromApp': return adminFromApp(d.id);
     case 'adminAppStatus': return adminAppStatus(d.id, d.status);
     case 'adminGeocode': return adminGeocode();
@@ -1383,7 +1751,7 @@ document.addEventListener('click', (e) => {
     case 'signout':
     case 'signoutAll':
       if (AUTH_LIVE) { sb.auth.signOut(d.act === 'signoutAll' ? { scope: 'global' } : undefined).catch(() => {}); }
-      member = null; store.set('member', null); auth.step = 'email'; auth.msg = null;
+      member = null; store.set('member', null); auth.step = 'email'; auth.msg = null; resetAdmin();
       toast(d.act === 'signoutAll' ? 'Signed out on all devices' : 'Signed out'); return go('pass');
     case 'oauth':
       if (!AUTH_LIVE) return;
@@ -1410,7 +1778,11 @@ document.addEventListener('click', (e) => {
   }
 });
 document.addEventListener('mouseover', (e) => { const c = e.target.closest('.rc'); if (c && view === 'restaurants' && ui.hl !== c.dataset.rid) highlight(c.dataset.rid); });
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'custSearch') { adminState.q = e.target.value; refreshCustomers(); }
+});
 document.addEventListener('change', (e) => {
+  if (e.target.id === 'custStatus') { adminState.status = e.target.value; refreshCustomers(); }
   if (e.target.id === 'cuisineSel') { ui.cuisine = e.target.value; refreshResults(true); }
   if (e.target.id === 'sortSel') { ui.sort = e.target.value; if (ui.sort === 'near' && !ui.here) toast('Tap \u201CUse my location\u201D to sort by distance.'); refreshResults(false); }
   if (e.target.id === 'aPhoto') adminPhotoChosen(e.target);
@@ -1470,7 +1842,7 @@ if (AUTH_LIVE) {
     if (view === 'pass' || view === 'join' || view === 'admin') go(view, view === 'join' && member ? 'checkout' : null);
   });
   sb.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') { member = null; billing.status = null; refreshChrome(); return; }
+    if (event === 'SIGNED_OUT') { member = null; billing.status = null; resetAdmin(); refreshChrome(); if (view === 'admin' || view === 'pass') go(view); return; }
     if (session && session.user) {
       const wasIn = !!member, prev = member;
       member = memberFromUser(session.user);
