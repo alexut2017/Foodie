@@ -15,6 +15,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=DM+Sans:wght@400..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root { --linen:#F6F4EF; --sand:#EDE8DE; --card:#FFFDF8; --bayou:#172A2A; --chili:#E2552B; --mustard:#F2B134; --brick:#B5401C; --ink2:#4A5857; --muted:#5C6968; --line:#E2DDD2; --mint:#BFD3CF; --ok:#2F6B4C; --okbg:#DDEFE3; --okfg:#1F4D35; --errbg:#FBE3DA; --errfg:#8A2E12; --display:'Bricolage Grotesque', 'Arial Black', Arial, sans-serif; color-scheme: light; }
 * { box-sizing: border-box; }
@@ -85,6 +87,28 @@ textarea.in { padding: 12px 16px; min-height: 96px; resize: vertical; font-size:
 .sr { position: absolute; left: -9999px; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .center { flex: 1; display: flex; align-items: center; justify-content: center; }
+.finder { background: var(--bayou); color: var(--linen); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.gbtn { min-height: 44px; border-radius: 999px; padding: 0 16px; border: 1.5px solid var(--mint); background: transparent; color: var(--linen); font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; }
+.gbtn.on { background: var(--linen); color: var(--bayou); }
+.fpanel { background: var(--card); color: var(--bayou); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.flabel { font-size: 12px; font-weight: 800; letter-spacing: 1.4px; color: var(--brick); }
+.seg { display: flex; flex-wrap: wrap; align-self: flex-start; gap: 4px; background: var(--sand); border-radius: 999px; padding: 4px; }
+.segb { border: 0; background: transparent; border-radius: 999px; padding: 8px 16px; font: inherit; font-weight: 700; color: var(--ink2); cursor: pointer; }
+.segb.on { background: var(--bayou); color: var(--linen); }
+.mapbox { position: relative; flex-shrink: 0; height: 260px; border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: var(--sand); z-index: 0; }
+.linkbtn { border: 0; background: transparent; color: var(--brick); font: inherit; font-weight: 700; cursor: pointer; padding: 6px 0; }
+.rcard { text-align: left; width: 100%; background: var(--card); border: 1.5px solid #E9B9A5; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px; font: inherit; color: var(--bayou); cursor: pointer; }
+.rcard .name { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; }
+.rcard .meta { font-size: 14px; color: var(--muted); }
+.rtop { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.rphoto { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 14px; background: var(--sand); }
+.rdesc { font-size: 16px; line-height: 1.4; color: var(--ink2); }
+.roffer { align-self: flex-start; font-weight: 700; font-size: 15px; background: var(--sand); padding: 8px 12px; border-radius: 10px; }
+.svc { font-size: 13px; font-weight: 600; color: var(--ink2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
+.rview { align-self: flex-start; background: var(--bayou); color: var(--linen); border-radius: 999px; padding: 10px 18px; font-weight: 700; font-size: 15px; }
+.badge.new { background: var(--errbg); color: var(--errfg); }
+.badge.popular { background: var(--okbg); color: var(--okfg); }
+.badge.founding { background: #FBEBC4; color: #5E4205; }
 </style>
 </head>
 <body>
@@ -102,7 +126,7 @@ var CFG = {
   termsVersion: '2026-11-04',
   resendSeconds: 60,
   passMinutes: 15,
-  version: '0.3.0'
+  version: '0.4.0'
 };
 var sb = null;
 try {
@@ -114,12 +138,12 @@ var KEY = 'gs-app';
 var DAY = 86400000;
 
 // UI state that survives a reload (no account data).
-function fresh() { return { tab: 'explore', q: '', district: null, passQ: '', visit: null, mode: 'join', method: 'phone', phone: '', email: '', name: '' }; }
+function fresh() { return { tab: 'explore', q: '', show: 'all', cuisine: null, sort: 'new', district: null, passQ: '', visit: null, mode: 'join', method: 'phone', phone: '', email: '', name: '' }; }
 var S = (function () { try { var v = JSON.parse(localStorage.getItem(KEY)); return Object.assign(fresh(), v && typeof v === 'object' ? v : {}); } catch (e) { return fresh(); } })();
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private mode */ } }
 
 // Runtime state.
-var R = { screen: 'loading', detail: null, sentAt: 0, code: '', agree: false, marketing: false, busy: false, msg: null, user: null, member: null, status: { active: false }, isAdmin: false, payOpen: false,
+var R = { screen: 'loading', detail: null, sentAt: 0, code: '', agree: false, marketing: false, filtersOpen: false, here: null, locMsg: null, map: null, markers: null, busy: false, msg: null, user: null, member: null, status: { active: false }, isAdmin: false, payOpen: false,
   districts: [], list: [], dirState: 'loading', partner: null, partnerOpen: false };
 
 function set(patch, keepFocus) { Object.keys(patch).forEach(function (k) { if (k in S) S[k] = patch[k]; else R[k] = patch[k]; }); save(); render(keepFocus); }
@@ -142,6 +166,7 @@ function restaurantFromRow(r) {
   var now = Date.now();
   return {
     id: String(r.id), name: r.name || 'Restaurant', desc: r.description || '', cuisine: r.cuisine || '', district: r.district_id || '',
+    place: [r.city, r.state].filter(Boolean).join(', '), lat: r.lat == null ? null : Number(r.lat), lng: r.lng == null ? null : Number(r.lng),
     address: r.address || '', hours: r.hours || '', phone: r.phone || '', website: safeUrl(r.website_url),
     price: Math.max(1, Math.min(4, Number(r.price_level) || 2)), dineIn: r.dine_in !== false, pickup: !!r.pickup,
     offer: r.offer_text || 'Member offer coming soon', featured: !!r.featured, photo: safeUrl(r.photo_url),
@@ -156,7 +181,7 @@ async function loadDirectory() {
   if (!sb) { R.dirState = 'error'; return render(); }
   try {
     var d = await sb.from('districts').select('id, name, lat, lng, live').order('sort_order');
-    var r = await sb.from('restaurants').select('id, name, description, cuisine, district_id, address, hours, phone, website_url, lat, lng, price_level, dine_in, pickup, offer_text, founding_until, listed_at, featured, photo_url').eq('status', 'active').order('name');
+    var r = await sb.from('restaurants').select('id, name, description, cuisine, district_id, city, state, address, hours, phone, website_url, lat, lng, price_level, dine_in, pickup, offer_text, founding_until, listed_at, featured, photo_url').eq('status', 'active').order('name');
     if (d.error || r.error) throw d.error || r.error;
     R.districts = d.data || [];
     R.list = (r.data || []).map(restaurantFromRow).sort(function (a, b) { return (b.featured - a.featured) || a.name.localeCompare(b.name); });
@@ -292,43 +317,115 @@ function vCode() {
     '<button class="btn ghost" id="resendBtn" data-act="resend"' + (wait > 0 || R.busy ? ' disabled' : '') + '>' + (wait > 0 ? 'Resend in ' + wait + 's' : 'Resend code') + '</button>' +
     '<button class="btn link" data-act="method" data-id="' + (phone ? 'email' : 'phone') + '">' + (phone ? 'Use email instead' : 'Use phone instead') + '</button></div></div>';
 }
+// Status badges, same as the website: New, Founding partner, plus Popular for featured partners.
 function badgesHtml(r) {
   var b = [];
-  if (r.featured) b.push('<span class="badge featured">Featured</span>');
-  if (r.isNew) b.push('<span class="badge new">New</span>');
-  if (r.founding) b.push('<span class="badge founding">Founding partner</span>');
-  if (r.dineIn) b.push('<span class="badge">Dine-in</span>');
-  if (r.pickup) b.push('<span class="badge">Pickup</span>');
+  if (r.isNew) b.push('<span class="badge new">★ New</span>');
+  if (r.founding) b.push('<span class="badge founding">★ Founding partner</span>');
+  if (r.featured) b.push('<span class="badge popular">♥ Popular</span>');
   return b.length ? '<span class="badges">' + b.join('') + '</span>' : '';
 }
-function thumbHtml(r) { return r.photo ? '<img class="thumb" src="' + esc(r.photo) + '" alt="" loading="lazy">' : '<span class="thumb" aria-hidden="true">' + logo(36) + '</span>'; }
-function rowHtml(r) {
-  return '<button class="row" data-act="detail" data-id="' + esc(r.id) + '">' + thumbHtml(r) + '<span style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0"><span class="name">' + esc(r.name) + '</span>' +
-    '<span class="meta">' + esc([r.cuisine, districtName(r.district), '$'.repeat(r.price)].filter(Boolean).join(' · ')) + '</span><span class="offer">' + esc(r.offer) + '</span>' + badgesHtml(r) + '</span></button>';
+var placeOf = function (r) { return r.place || districtName(r.district); };
+var match = function (r, q) { return !q || [r.name, r.cuisine, placeOf(r), r.desc, r.offer].join(' ').toLowerCase().indexOf(q.toLowerCase()) >= 0; };
+function miles(a, r) {
+  if (r.lat == null || r.lng == null) return Infinity;
+  var rad = function (d) { return d * Math.PI / 180; }, dLat = rad(r.lat - a.lat), dLng = rad(r.lng - a.lng);
+  var h = Math.pow(Math.sin(dLat / 2), 2) + Math.cos(rad(a.lat)) * Math.cos(rad(r.lat)) * Math.pow(Math.sin(dLng / 2), 2);
+  return 3958.8 * 2 * Math.asin(Math.sqrt(h));
 }
-var match = function (r, q) { return !q || [r.name, r.cuisine, districtName(r.district), r.desc, r.offer].join(' ').toLowerCase().indexOf(q.toLowerCase()) >= 0; };
-function exploreItems() { return R.list.filter(function (r) { return (!S.district || r.district === S.district) && match(r, S.q); }); }
+function cardHtml(r) {
+  var dist = S.sort === 'near' && R.here && miles(R.here, r) < Infinity ? miles(R.here, r).toFixed(1) + ' mi' : '';
+  return '<button class="rcard" data-act="detail" data-id="' + esc(r.id) + '">' +
+    (r.photo ? '<img class="rphoto" src="' + esc(r.photo) + '" alt="" loading="lazy">' : '') +
+    '<span class="rtop"><span class="name">' + esc(r.name) + '</span>' + badgesHtml(r) + '</span>' +
+    '<span class="meta">' + esc([r.cuisine, placeOf(r), dist].filter(Boolean).join('  ·  ')) + '</span>' +
+    (r.desc ? '<span class="rdesc">' + esc(r.desc) + '</span>' : '') +
+    '<span class="roffer">' + esc(r.offer) + '</span>' +
+    '<span class="badges">' + (r.dineIn ? '<span class="svc">Dine-in</span>' : '') + (r.pickup ? '<span class="svc">Pickup</span>' : '') + '</span>' +
+    '<span class="rview">View restaurant</span></button>';
+}
+function exploreItems() {
+  var list = R.list.filter(function (r) {
+    return (S.show === 'all' || (S.show === 'new' ? r.isNew : r.featured)) && (!S.cuisine || r.cuisine === S.cuisine) && match(r, S.q);
+  });
+  if (S.sort === 'near' && R.here) return list.sort(function (a, b) { return miles(R.here, a) - miles(R.here, b); });
+  if (S.sort === 'az') return list.sort(function (a, b) { return a.name.localeCompare(b.name); });
+  return list.sort(function (a, b) { return (b.isNew - a.isNew) || (b.featured - a.featured) || a.name.localeCompare(b.name); });
+}
+var filtered = function () { return S.show !== 'all' || !!S.cuisine || !!S.q.trim() || S.sort !== 'new'; };
 function listHtml() {
   if (R.dirState === 'loading') return '<p class="small">Loading restaurants…</p>';
   if (R.dirState === 'error') return '<div class="card"><p class="lede">We couldn’t load restaurants. Check your connection.</p><button class="btn ghost" data-act="reloadDir">Try again</button></div>';
   var items = exploreItems();
-  if (!items.length) {
-    var d = S.district && R.districts.filter(function (x) { return x.id === S.district; })[0];
-    return '<div class="card"><p class="lede">' + (d && !d.live ? esc(d.name) + ' is coming soon. Know a spot that should join? Tell them about GrubScout.' : 'No partners match yet. New restaurants join every week.') + '</p></div>';
-  }
-  return items.map(rowHtml).join('');
+  if (!items.length) return '<div class="card"><p class="lede">' + (R.list.length ? 'No restaurants match these filters.' : 'Partners are being added now. Check back soon.') + '</p>' + (R.list.length ? '<button class="btn ghost" data-act="clearFilters">Clear filters</button>' : '') + '</div>';
+  return items.map(cardHtml).join('');
+}
+function countHtml() {
+  var n = R.dirState === 'ready' ? exploreItems().length : 0;
+  return '<p style="font-size:16px"><b>' + n + '</b> restaurant' + (n === 1 ? '' : 's') + ' ' + (S.sort === 'near' && R.here ? 'near you' : 'found') + '</p>' +
+    (filtered() ? '<button class="linkbtn" data-act="clearFilters">Reset filters</button>' : '');
+}
+function seg(name, opts, val) {
+  return '<div class="seg" role="group">' + opts.map(function (o) { return '<button class="segb' + (val === o[0] ? ' on' : '') + '" data-act="' + name + '" data-id="' + o[0] + '" aria-pressed="' + (val === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>';
 }
 function vExplore() {
-  var chips = '<button class="chip' + (!S.district ? ' on' : '') + '" data-act="district" data-id="" aria-pressed="' + !S.district + '">All</button>' +
-    R.districts.slice().sort(function (a, b) { return (b.live ? 1 : 0) - (a.live ? 1 : 0); }).map(function (d) {
-      var on = S.district === d.id;
-      return '<button class="chip' + (on ? ' on' : '') + (d.live ? '' : ' soon') + '" data-act="district" data-id="' + esc(d.id) + '" aria-pressed="' + on + '">' + esc(d.name) + (d.live ? '' : ' · soon') + '</button>';
-    }).join('');
-  var hi = R.member ? 'Hi, ' + esc(R.member.name.split(' ')[0]) : 'Houston partners';
-  return '<div class="main"><div style="display:flex;align-items:center;gap:10px">' + logo(32) + '<p class="eyebrow">' + hi + '</p></div><h1 style="font-size:30px">Where are we eating?</h1>' +
-    '<label class="sr" for="qIn">Search restaurants</label><input id="qIn" class="in search" type="search" placeholder="Search restaurants or cuisines" value="' + esc(S.q) + '">' +
-    '<div class="chips">' + chips + '</div><div id="exploreList" class="stack" style="gap:12px">' + listHtml() + '</div>' +
+  var cuisines = R.list.map(function (r) { return r.cuisine; }).filter(function (c, i, a) { return c && a.indexOf(c) === i; }).sort();
+  var panel = !R.filtersOpen ? '' : '<div class="fpanel">' +
+    '<p class="flabel">SHOW</p>' + seg('show', [['all', 'All'], ['new', 'New'], ['popular', 'Popular']], S.show) +
+    '<p class="flabel">CUISINE</p><div class="chips" style="flex-wrap:wrap">' +
+      '<button class="chip' + (!S.cuisine ? ' on' : '') + '" data-act="cuisine" data-id="">All cuisines</button>' +
+      cuisines.map(function (c) { return '<button class="chip' + (S.cuisine === c ? ' on' : '') + '" data-act="cuisine" data-id="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>' +
+    '<p class="flabel">SORT BY</p>' + seg('sort', [['new', 'New first'], ['az', 'A–Z'], ['near', R.here ? 'Nearest' : 'Nearest ◎']], S.sort) +
+    '<button class="btn ghost" data-act="clearFilters" style="min-height:44px">Clear filters</button></div>';
+  return '<div class="main">' +
+    '<div class="finder"><div style="display:flex;align-items:center;gap:10px">' + logo(28) + '<p class="eyebrow" style="color:var(--mustard)">Partner restaurants</p></div>' +
+    '<h1 style="font-size:28px;color:var(--linen)">Find a GrubScout restaurant</h1>' +
+    '<div style="display:flex;gap:8px"><label class="sr" for="qIn">Search restaurants</label><input id="qIn" class="in search" type="search" placeholder="Search by name or cuisine" value="' + esc(S.q) + '" style="border:0">' +
+    '<button class="pill" data-act="searchGo">Search</button></div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="gbtn" data-act="locate">' + (R.here ? '◉ Near me' : '◎ Use my location') + '</button>' +
+    '<button class="gbtn' + (R.filtersOpen ? ' on' : '') + '" data-act="filters" aria-expanded="' + !!R.filtersOpen + '">Filters' + (filtered() ? ' •' : '') + '</button></div>' +
+    (R.locMsg ? '<p class="small" style="color:var(--mint)">' + esc(R.locMsg) + '</p>' : '') + panel + '</div>' +
+    '<div id="map" class="mapbox" role="region" aria-label="Map of partner restaurants"></div>' +
+    '<div id="countLine" style="display:flex;justify-content:space-between;align-items:center">' + countHtml() + '</div>' +
+    '<div id="exploreList" class="stack" style="gap:14px">' + listHtml() + '</div>' +
     (R.member ? '' : '<button class="btn" data-act="join">Join GrubScout · $30 a year</button>') + '</div>';
+}
+// Leaflet map (same map tiles as the website). Rebuilt after each render of Explore; markers follow the filters.
+function drawMap() {
+  if (R.map) { try { R.map.remove(); } catch (e) { /* already gone */ } R.map = null; }
+  var el = document.getElementById('map');
+  if (!el || !window.L) return;
+  R.map = L.map(el, { zoomControl: true, attributionControl: true }).setView([29.745, -95.43], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(R.map);
+  R.markers = L.layerGroup().addTo(R.map);
+  updateMarkers();
+}
+function updateMarkers() {
+  if (!R.map) return;
+  R.markers.clearLayers();
+  var pts = [];
+  (R.dirState === 'ready' ? exploreItems() : []).forEach(function (r) {
+    if (r.lat == null || r.lng == null) return;
+    pts.push([r.lat, r.lng]);
+    L.circleMarker([r.lat, r.lng], { radius: 10, color: '#FFFDF8', weight: 3, fillColor: '#172A2A', fillOpacity: 1 })
+      .bindPopup('<b>' + esc(r.name) + '</b><br>' + esc(r.offer) + '<br><a href="#" data-act="detail" data-id="' + esc(r.id) + '">View restaurant</a>')
+      .addTo(R.markers);
+  });
+  if (R.here) { pts.push([R.here.lat, R.here.lng]); L.circleMarker([R.here.lat, R.here.lng], { radius: 7, color: '#FFFDF8', weight: 3, fillColor: '#E2552B', fillOpacity: 1 }).bindPopup('You are here').addTo(R.markers); }
+  if (pts.length === 1) R.map.setView(pts[0], 14);
+  else if (pts.length > 1) R.map.fitBounds(pts, { padding: [30, 30], maxZoom: 15 });
+}
+function refreshResults() {
+  var l = document.getElementById('exploreList'); if (l) l.innerHTML = listHtml();
+  var c = document.getElementById('countLine'); if (c) c.innerHTML = countHtml();
+  updateMarkers();
+}
+function locate() {
+  if (!navigator.geolocation) return set({ locMsg: 'This browser can’t share your location.' });
+  navigator.geolocation.getCurrentPosition(function (p) {
+    S.sort = 'near'; save();
+    set({ here: { lat: p.coords.latitude, lng: p.coords.longitude }, locMsg: null });
+  }, function () { set({ locMsg: 'Location is off for this site. Allow it in your browser settings to sort by distance.' }); }, { timeout: 10000, maximumAge: 300000 });
 }
 function vDetail() {
   var r = find(R.detail); if (!r) return vExplore();
@@ -460,7 +557,9 @@ function render(keepFocusId) {
   else if (R.screen === 'login') html = vLogin();
   else if (R.screen === 'code') html = vCode();
   else html = (R.detail ? vDetail() : S.tab === 'explore' ? vExplore() : S.tab === 'account' ? (R.member ? vAccount() : vAccountSignedOut()) : vPass()) + tabsHtml();
+  if (R.map) { try { R.map.remove(); } catch (e) { /* already gone */ } R.map = null; }
   document.getElementById('app').innerHTML = html;
+  if (document.getElementById('map')) drawMap();
   if (keepFocusId) { var el = document.getElementById(keepFocusId); if (el) { el.focus(); var n = el.value.length; try { el.setSelectionRange(n, n); } catch (e) { /* not a text field */ } } }
 }
 
@@ -510,6 +609,7 @@ async function submitPartner() {
 // ---------- Events ----------
 document.addEventListener('click', function (e) {
   var t = e.target.closest('[data-act]'); if (!t || t.disabled) return;
+  if (t.tagName === 'A' && t.getAttribute('href') === '#') e.preventDefault();
   var id = t.getAttribute('data-id');
   switch (t.getAttribute('data-act')) {
     case 'join': return set({ screen: 'login', mode: 'join', detail: null, msg: null }, S.name ? idField() : 'nameIn');
@@ -521,7 +621,13 @@ document.addEventListener('click', function (e) {
     case 'send': return sendCode(false);
     case 'resend': return sendCode(true);
     case 'verify': return verifyCode();
-    case 'district': return set({ district: id || null });
+    case 'show': return S.show = id, save(), render();
+    case 'cuisine': return S.cuisine = id || null, save(), render();
+    case 'sort': if (id === 'near' && !R.here) return locate(); S.sort = id; save(); return render();
+    case 'filters': return set({ filtersOpen: !R.filtersOpen });
+    case 'locate': return locate();
+    case 'searchGo': var qi = document.getElementById('qIn'); if (qi) qi.blur(); return;
+    case 'clearFilters': S.show = 'all'; S.cuisine = null; S.sort = 'new'; S.q = ''; save(); return render();
     case 'detail': return set({ detail: id });
     case 'closeDetail': return set({ detail: null });
     case 'toPassTab': return set({ detail: null, tab: 'pass' });
@@ -552,7 +658,7 @@ document.addEventListener('input', function (e) {
   else if (el.id === 'phoneIn') { S.phone = el.value.replace(/\D/g, '').replace(/^1(?=\d{10})/, '').slice(0, 10); save(); el.value = fmtPhone(S.phone); syncSend(); }
   else if (el.id === 'codeIn') { R.code = el.value.replace(/\D/g, '').slice(0, 8); el.value = R.code; var vb = document.getElementById('verifyBtn'); if (vb) vb.disabled = R.busy || R.code.length < 6; if (R.code.length === 6 && e.inputType !== 'insertText') verifyCode(); }
   else if (el.id === 'nameIn') { S.name = el.value; save(); syncSend(); }
-  else if (el.id === 'qIn') { S.q = el.value; save(); document.getElementById('exploreList').innerHTML = listHtml(); }
+  else if (el.id === 'qIn') { S.q = el.value; save(); refreshResults(); }
   else if (el.id === 'passQIn') { S.passQ = el.value; save(); document.getElementById('passList').innerHTML = passItems().map(passRow).join(''); }
   else if (el.id === 'swipe') { if (Number(el.value) >= 92) confirmVisit(); }
   else if (el.classList.contains('pf')) { R.partner = R.partner || {}; R.partner[el.id] = el.value; }
