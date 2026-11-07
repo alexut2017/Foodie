@@ -29,7 +29,7 @@ export default function RestaurantDetail() {
         <Eyebrow>{[r.cuisine, '$'.repeat(r.price)].filter(Boolean).join(' · ')}</Eyebrow>
         <H1>{r.name}</H1>
         <Badges r={r} />
-        {districtName(r.district) ? <Small>{districtName(r.district)}</Small> : null}
+        {r.place || districtName(r.district) ? <Small>{[r.place || districtName(r.district), r.dineIn ? 'Dine-in' : '', r.pickup ? 'Pickup' : ''].filter(Boolean).join(' · ')}</Small> : null}
         {r.desc ? <Body>{r.desc}</Body> : null}
         <Card>
           <Eyebrow>Member offer</Eyebrow>

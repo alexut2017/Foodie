@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 // Districts and restaurants live in Supabase (same queries as the website); the website's admin panel adds them.
 export type District = { id: string; name: string; lat: number; lng: number; live: boolean };
 export type Restaurant = {
-  id: string; name: string; district: string; cuisine: string; desc: string; offer: string;
+  id: string; name: string; district: string; place: string; cuisine: string; desc: string; offer: string;
   dineIn: boolean; pickup: boolean; isNew: boolean; founding: boolean; featured: boolean; price: number;
   lat: number | null; lng: number | null; photo: string | null;
   address: string | null; hours: string | null; phone: string | null; website: string | null;
@@ -22,7 +22,7 @@ async function fetchDirectory() {
   const [d, r] = await Promise.all([
     supabase.from('districts').select('id, name, lat, lng, live').order('sort_order'),
     supabase.from('restaurants')
-      .select('id, name, description, cuisine, district_id, address, hours, phone, website_url, lat, lng, price_level, dine_in, pickup, offer_text, founding_until, listed_at, featured, photo_url')
+      .select('id, name, description, cuisine, district_id, city, state, address, hours, phone, website_url, lat, lng, price_level, dine_in, pickup, offer_text, founding_until, listed_at, featured, photo_url')
       .eq('status', 'active').order('name'),
   ]);
   if (d.error) throw d.error;
@@ -31,7 +31,7 @@ async function fetchDirectory() {
   districtNames = Object.fromEntries(districts.map((x) => [x.id, x.name]));
   const now = Date.now();
   const restaurants: Restaurant[] = (r.data ?? []).map((x) => ({
-    id: String(x.id), name: x.name ?? 'Restaurant', district: x.district_id ?? '', cuisine: x.cuisine ?? '', desc: x.description ?? '',
+    id: String(x.id), name: x.name ?? 'Restaurant', district: x.district_id ?? '', place: [x.city, x.state].filter(Boolean).join(', '), cuisine: x.cuisine ?? '', desc: x.description ?? '',
     offer: x.offer_text || 'Member offer coming soon',
     dineIn: x.dine_in !== false, pickup: !!x.pickup, featured: !!x.featured,
     isNew: !!x.listed_at && now - Date.parse(x.listed_at) < NEW_DAYS * 86400000,
