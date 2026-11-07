@@ -20,10 +20,13 @@ export default function Account() {
 
   const leave = async (everywhere?: boolean) => { await signOut(everywhere); router.replace('/'); };
 
-  const invite = () => {
-    const url = CONFIG.siteUrl.replace(/#.*$/, '') + '?ref=' + encodeURIComponent(ref);
-    Share.share({ message: `Join me on GrubScout: one $30 pass for great local Houston restaurants. ${url}` }).catch(() => undefined);
-  };
+  // Invite friends straight from Messages or Mail, prefilled with the member's referral link.
+  const inviteLink = CONFIG.siteUrl.replace(/#.*$/, '') + '?ref=' + encodeURIComponent(ref);
+  const inviteBody = `I use GrubScout: one $30 pass that saves on the check at great local Houston restaurants. Join with my link: ${inviteLink}`;
+  const openOr = (url: string) => Linking.openURL(url).catch(() => setMsg({ err: true, text: 'This phone couldn’t open that app. Use “Share another way” instead.' }));
+  const textFriend = () => openOr(`sms:${Platform.OS === 'ios' ? '&' : '?'}body=${encodeURIComponent(inviteBody)}`);
+  const emailFriend = () => openOr(`mailto:?subject=${encodeURIComponent('Join me on GrubScout')}&body=${encodeURIComponent(inviteBody)}`);
+  const invite = () => { Share.share({ message: inviteBody }).catch(() => undefined); };
 
   function confirmDelete() {
     Alert.alert(
@@ -70,7 +73,11 @@ export default function Account() {
             <Text style={s.h}>Invite friends</Text>
             <Small>Your referral code</Small>
             <Text style={s.code} selectable>{ref}</Text>
-            <Button title="Share my referral link" kind="ghost" onPress={invite} />
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <Button title="Text a friend" onPress={textFriend} style={{ flex: 1, paddingHorizontal: 10 }} />
+              <Button title="Email a friend" kind="ghost" onPress={emailFriend} style={{ flex: 1, paddingHorizontal: 10 }} />
+            </View>
+            <Button title="Share another way" kind="ghost" style={{ borderColor: 'transparent' }} onPress={invite} />
           </Card>
           <PartnerForm />
           {isAdmin ? <Button title="Open admin dashboard" kind="dark" onPress={() => Linking.openURL(siteLink('admin'))} /> : null}
