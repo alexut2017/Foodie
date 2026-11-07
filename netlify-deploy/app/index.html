@@ -534,11 +534,24 @@ function vAccount() {
     (m.email ? '<div class="kv"><span class="small">Email</span><span class="v">' + esc(m.email) + '</span></div>' : '') +
     (m.since ? '<div class="kv"><span class="small">Member since</span><span class="v">' + esc(fmtDate(m.since)) + '</span></div>' : '') + '</div>' +
     '<div class="card"><h2>Membership</h2><p class="note' + (st.active ? ' ok' : '') + '">' + esc(memb) + '</p></div>' +
-    '<div class="card"><h2>Invite friends</h2><p class="small">Your referral code</p><p style="font-family:var(--display);font-size:24px;font-weight:800">' + esc(m.ref) + '</p><button class="btn ghost" data-act="copyRef">Copy my referral link</button></div>' +
+    inviteHtml(m) +
     partnerFormHtml() +
     (R.isAdmin ? '<a class="btn ghost" href="' + CFG.site + '#admin" target="_blank" rel="noopener">Open admin dashboard</a>' : '') +
     '<button class="btn ghost" data-act="signOut"' + (R.busy ? ' disabled' : '') + '>Sign out</button><button class="btn link" data-act="signOutAll"' + (R.busy ? ' disabled' : '') + '>Sign out on all devices</button>' +
     linksHtml() + '</div>';
+}
+// Invite friends straight from the phone's Messages or Mail app, prefilled with the member's referral link.
+function inviteText(m) {
+  var link = new URL(CFG.site, location.href).href.replace(/#.*$/, '') + '?ref=' + encodeURIComponent(m.ref);
+  return { link: link, subject: 'Join me on GrubScout', body: 'I use GrubScout: one $30 pass that saves on the check at great local Houston restaurants. Join with my link: ' + link };
+}
+function inviteHtml(m) {
+  var t = inviteText(m), ios = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
+  var sms = 'sms:' + (ios ? '&' : '?') + 'body=' + encodeURIComponent(t.body);
+  var mail = 'mailto:?subject=' + encodeURIComponent(t.subject) + '&body=' + encodeURIComponent(t.body);
+  return '<div class="card"><h2>Invite friends</h2><p class="small">Your referral code</p><p style="font-family:var(--display);font-size:24px;font-weight:800">' + esc(m.ref) + '</p>' +
+    '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><a class="btn" href="' + esc(sms) + '">Text a friend</a><a class="btn ghost" href="' + esc(mail) + '">Email a friend</a></div>' +
+    '<button class="btn link" data-act="copyRef">' + (navigator.share ? 'Share another way' : 'Copy my referral link') + '</button></div>';
 }
 function tabsHtml() {
   return '<nav class="tabs" aria-label="Main">' + [['explore', 'Explore', ICON.fork], ['pass', 'My pass', ICON.card], ['account', 'Account', ICON.user]].map(function (t) {
@@ -637,9 +650,9 @@ document.addEventListener('click', function (e) {
     case 'reloadDir': R.dirState = 'loading'; render(); return loadDirectory();
     case 'refreshStatus': return R.user && statusFromEntitlements(R.user.id).then(function (st) { set({ status: st }); });
     case 'copyRef':
-      var link = new URL(CFG.site, location.href).href + '?ref=' + encodeURIComponent(R.member.ref);
+      var it = inviteText(R.member), link = it.link;
       var done = function () { set({ msg: { kind: 'ok', text: 'Referral link copied.' } }); };
-      if (navigator.share) return navigator.share({ title: 'GrubScout', text: 'Join me on GrubScout: one $30 pass for great local Houston restaurants.', url: link }).catch(function () {});
+      if (navigator.share) return navigator.share({ title: it.subject, text: it.body }).catch(function () {});
       if (navigator.clipboard) return navigator.clipboard.writeText(link).then(done, function () { set({ msg: { kind: 'ok', text: link } }); });
       return set({ msg: { kind: 'ok', text: link } });
     case 'report': return set({ msg: { kind: 'ok', text: 'Thanks. A short report form opens at launch, and we follow up with the restaurant.' } });
