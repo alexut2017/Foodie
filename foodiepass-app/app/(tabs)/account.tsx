@@ -1,21 +1,29 @@
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSession } from '../../src/session';
 import { manageBilling } from '../../src/checkout';
 import { deleteAccount, errText } from '../../src/billing';
+import { CONFIG, siteLink } from '../../src/config';
+import { PartnerForm } from '../../src/PartnerForm';
 import { Body, Button, Card, Eyebrow, H1, Note, Small } from '../../src/ui';
 import { formatUS, fmtDate } from '../../src/format';
 import { C } from '../../src/theme';
 
 export default function Account() {
-  const { name, email, phone, session, status, paid, signOut } = useSession();
+  const { name, email, phone, session, status, paid, isAdmin, signOut } = useSession();
   const [msg, setMsg] = useState<{ err?: boolean; text: string } | null>(null);
   const pendingEmail = session?.user.new_email;
   const m = status?.membership;
+  const ref = session ? 'GS-' + session.user.id.replace(/-/g, '').slice(0, 6).toUpperCase() : '';
 
   const leave = async (everywhere?: boolean) => { await signOut(everywhere); router.replace('/'); };
+
+  const invite = () => {
+    const url = CONFIG.siteUrl.replace(/#.*$/, '') + '?ref=' + encodeURIComponent(ref);
+    Share.share({ message: `Join me on GrubScout: one $30 pass for great local Houston restaurants. ${url}` }).catch(() => undefined);
+  };
 
   function confirmDelete() {
     Alert.alert(
@@ -38,32 +46,48 @@ export default function Account() {
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <ScrollView contentContainerStyle={s.wrap}>
-        <Eyebrow>Account</Eyebrow>
-        <H1>{name || 'Your account'}</H1>
-        <Card>
-          <Row k="Phone" v={phone ? formatUS(phone.replace(/^1/, '').replace(/^\+1/, '')) : '—'} />
-          <Row k="Email" v={email || '—'} />
-          {pendingEmail ? <Small>Check {pendingEmail} for a link to confirm your email.</Small> : null}
-          <Button title="Edit name or email" kind="ghost" onPress={() => router.push('/profile')} />
-        </Card>
-        <Card>
-          <Text style={s.h}>Membership</Text>
-          {paid && m ? (
-            m.in_grace
-              ? <Note tone="err">Your renewal payment didn{'’'}t go through. Your pass stays active until {fmtDate(m.grace_until)}. Update your card to keep it.</Note>
-              : <Note tone="ok">Active through {fmtDate(m.access_until)}.{status?.subscription?.cancel_at_period_end ? ' It will not renew.' : status?.subscription?.renews ? ' Renews automatically; we remind you 30 days before.' : ''}</Note>
-          ) : <Body>No active membership yet. Activate it from My pass.</Body>}
-          {status?.can_manage_billing ? <Button title="Manage billing" kind="dark" onPress={() => manageBilling().catch((e) => setMsg({ err: true, text: errText(e) }))} /> : null}
-        </Card>
-        {msg ? <Note tone={msg.err ? 'err' : 'ok'}>{msg.text}</Note> : null}
-        <View style={{ gap: 10 }}>
-          <Button title="Sign out" kind="ghost" onPress={() => leave()} />
-          <Button title="Sign out on all devices" kind="ghost" onPress={() => leave(true)} />
-          <Button title="Delete account" kind="ghost" onPress={confirmDelete} style={{ borderColor: C.brick }} />
-        </View>
-        <Small style={{ textAlign: 'center' }}>GrubScout app v0.1.0</Small>
-      </ScrollView>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
+          <Eyebrow>Account</Eyebrow>
+          <H1>{name || 'Your account'}</H1>
+          <Card>
+            <Row k="Mobile" v={phone ? formatUS(phone.replace(/^\+?1(?=\d{10}$)/, '')) : '—'} />
+            <Row k="Email" v={email || '—'} />
+            {session?.user.created_at ? <Row k="Member since" v={fmtDate(session.user.created_at)} /> : null}
+            {pendingEmail ? <Small>Check {pendingEmail} for a link to confirm your email.</Small> : null}
+            <Button title="Edit name or email" kind="ghost" onPress={() => router.push('/profile')} />
+          </Card>
+          <Card>
+            <Text style={s.h}>Membership</Text>
+            {paid && m ? (
+              m.in_grace
+                ? <Note tone="err">Your renewal payment didn{'’'}t go through. Your pass stays active until {fmtDate(m.grace_until)}. Update your card to keep it.</Note>
+                : <Note tone="ok">Active through {fmtDate(m.access_until)}.{status?.subscription?.cancel_at_period_end ? ' It will not renew.' : status?.subscription?.renews ? ' Renews automatically; we remind you 30 days before.' : ''}</Note>
+            ) : <Body>No active membership yet. Activate it from My pass.</Body>}
+            {status?.can_manage_billing ? <Button title="Manage billing" kind="dark" onPress={() => manageBilling().catch((e) => setMsg({ err: true, text: errText(e) }))} /> : null}
+          </Card>
+          <Card>
+            <Text style={s.h}>Invite friends</Text>
+            <Small>Your referral code</Small>
+            <Text style={s.code} selectable>{ref}</Text>
+            <Button title="Share my referral link" kind="ghost" onPress={invite} />
+          </Card>
+          <PartnerForm />
+          {isAdmin ? <Button title="Open admin dashboard" kind="dark" onPress={() => Linking.openURL(siteLink('admin'))} /> : null}
+          {msg ? <Note tone={msg.err ? 'err' : 'ok'}>{msg.text}</Note> : null}
+          <View style={{ gap: 10 }}>
+            <Button title="Sign out" kind="ghost" onPress={() => leave()} />
+            <Button title="Sign out on all devices" kind="ghost" onPress={() => leave(true)} />
+            <Button title="Delete account" kind="ghost" onPress={confirmDelete} style={{ borderColor: C.brick }} />
+          </View>
+          <Card style={{ gap: 2, paddingVertical: 8 }}>
+            {([['How it works', 'how'], ['FAQ', 'faq'], ['Member code of conduct', 'conduct'], ['Terms', 'terms'], ['Privacy', 'privacy']] as const).map(([label, hash]) => (
+              <Text key={hash} accessibilityRole="link" onPress={() => Linking.openURL(siteLink(hash))} style={s.link}>{label}</Text>
+            ))}
+          </Card>
+          <Small style={{ textAlign: 'center' }}>GrubScout app v{CONFIG.version}</Small>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -77,4 +101,6 @@ const Row = ({ k, v }: { k: string; v: string }) => (
 const s = StyleSheet.create({
   wrap: { padding: 20, gap: 14, paddingBottom: 40 },
   h: { fontSize: 20, fontWeight: '800', color: C.bayou },
+  code: { fontSize: 24, fontWeight: '800', color: C.bayou, letterSpacing: 1 },
+  link: { fontSize: 16, fontWeight: '600', color: C.brick, paddingVertical: 10, textAlign: 'center' },
 });
