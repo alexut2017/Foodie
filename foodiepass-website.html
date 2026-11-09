@@ -401,7 +401,41 @@ try {
 const AUTH_LIVE = !!sb;
 // Preview fallback (no real accounts) only when Supabase isn't configured.
 let member = AUTH_LIVE ? null : store.get('member');
-const auth = { step: 'email', email: '', busy: false, msg: null, cooldownUntil: 0, timer: null };
+const auth = { step: 'email', email: '', busy: false, msg: null, cooldownUntil: 0, timer: null, details: {}, marketing: false };
+// Join form: the member's details, laid out like the restaurant form. Kept in auth.details so a message or a resend never loses them.
+const JOIN_HALF = 'style="width: 100%; min-width: 0"';
+function joinDetailsTop() {
+  const d = auth.details;
+  return `<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <label class="f" style="min-width: 0">First Name<input id="jdFirst" required maxlength="59" autocomplete="given-name" value="${esc(d.first_name || '')}" ${JOIN_HALF}></label>
+      <label class="f" style="min-width: 0">Last Name<input id="jdLast" required maxlength="60" autocomplete="family-name" value="${esc(d.last_name || '')}" ${JOIN_HALF}></label>
+    </div>`;
+}
+function joinDetailsBottom() {
+  const d = auth.details;
+  return `<label class="f">Phone<input id="jdPhone" type="tel" required maxlength="20" autocomplete="tel" data-phone placeholder="555-555-5555" value="${esc(d.phone || '')}"></label>
+    <label class="f">Address Line 1<input id="jdAddress1" required maxlength="120" autocomplete="address-line1" value="${esc(d.address_line1 || '')}"></label>
+    <label class="f">Address Line 2<input id="jdAddress2" maxlength="80" autocomplete="address-line2" value="${esc(d.address_line2 || '')}"></label>
+    <label class="f">City<input id="jdCity" required maxlength="80" autocomplete="address-level2" value="${esc(d.city || '')}"></label>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <label class="f" style="min-width: 0">State<select id="jdState" required autocomplete="address-level1" ${JOIN_HALF}><option value=""></option>${US_STATES.map((s) => `<option${d.state === s ? ' selected' : ''}>${s}</option>`).join('')}</select></label>
+      <label class="f" style="min-width: 0">Zip<input id="jdZip" required maxlength="10" inputmode="numeric" autocomplete="postal-code" value="${esc(d.zip || '')}" ${JOIN_HALF}></label>
+    </div>`;
+}
+// Reads the join fields into auth.details. Returns a message for the first problem, or '' when everything is filled in.
+function readJoinDetails() {
+  const v = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const d = { first_name: v('jdFirst'), last_name: v('jdLast'), phone: v('jdPhone'), address_line1: v('jdAddress1'), address_line2: v('jdAddress2'), city: v('jdCity'), state: v('jdState'), zip: v('jdZip') };
+  auth.details = d;
+  const m = document.getElementById('authMarketing'); auth.marketing = !!(m && m.checked);
+  if (!d.first_name || !d.last_name) return 'Enter your first and last name.';
+  const phone = formatPhone(d.phone);
+  if (!phone) return phone === '' ? 'Enter your phone number.' : 'Enter a 10-digit phone number, like 555-555-5555.';
+  d.phone = phone;
+  if (!d.address_line1 || !d.city || !d.state) return 'Enter your full address.';
+  if (!/^\d{5}(-\d{4})?$/.test(d.zip)) return 'Enter a 5-digit zip code.';
+  return '';
+}
 
 // ---------- Billing: Stripe Checkout + Customer Portal through GrubScout server functions ----------
 // The browser only names an offering. Prices, customers and access are decided on the server.
@@ -540,8 +574,8 @@ async function deleteAccount(confirmWord) {
   }
 }
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '');
-function accountPanel() {
-  if (!AUTH_LIVE || !member || !member.live) return '';
+// Pieces of the account area. Admins see them stacked under the pass; customers see them as side-menu tabs.
+function accountParts() {
   const s = billing.status, m = s && s.membership, sub = s && s.subscription;
   const err = 'style="background:#FCE7DF; color:#8F3215"';
   let state = billing.statusError
@@ -552,16 +586,22 @@ function accountPanel() {
     else if (m.active) state = `<div class="note ok"><b>Membership active</b> through ${fmtDate(m.access_until)}.${sub ? (sub.cancel_at_period_end ? ' It will not renew.' : sub.renews ? ' It renews automatically; we remind you 30 days before.' : '') : m.source === 'gift' ? ' (gift membership)' : ''}</div>`;
     else state = '<div class="note">No active membership yet. <a href="#join" data-go="join" data-plan="member">Activate for $30 a year</a>.</div>';
   }
-  const gifts = s && s.gift_codes && s.gift_codes.length ? `<h3 style="margin-top:8px">Gift codes you bought</h3><ul style="display:grid; gap:8px; padding:0; list-style:none">${s.gift_codes.map((g) => `<li style="display:flex; gap:10px; align-items:center; flex-wrap:wrap"><code style="font-size:17px">${esc(g.code)}</code><span class="small muted">${g.revoked ? 'Cancelled' : g.redeemed ? 'Redeemed' : 'Ready to give'}</span>${!g.revoked && !g.redeemed ? `<button class="btn sm" data-act="copyGift" data-code="${esc(g.code)}">Copy</button>` : ''}</li>`).join('')}</ul>` : '';
+  const gifts = s && s.gift_codes && s.gift_codes.length ? `<h3 style="margin-top:8px">Gift Codes You Bought</h3><ul style="display:grid; gap:8px; padding:0; list-style:none">${s.gift_codes.map((g) => `<li style="display:flex; gap:10px; align-items:center; flex-wrap:wrap"><code style="font-size:17px">${esc(g.code)}</code><span class="small muted">${g.revoked ? 'Cancelled' : g.redeemed ? 'Redeemed' : 'Ready to give'}</span>${!g.revoked && !g.redeemed ? `<button class="btn sm" data-act="copyGift" data-code="${esc(g.code)}">Copy</button>` : ''}</li>`).join('')}</ul>` : '';
   const giftMsg = billing.giftMsg ? `<div class="note ${billing.giftMsg.err ? '' : 'ok'}" role="status" ${billing.giftMsg.err ? err : ''}>${esc(billing.giftMsg.text)}</div>` : '';
   const del = billing.delStep === 0
-    ? '<button class="btn sm" data-act="delAsk">Delete my account</button>'
+    ? '<button class="btn sm" data-act="delAsk">Delete My Account</button>'
     : `<form class="stack" id="deleteForm" novalidate>
         <div class="note" role="alert" ${err}><b>This can\u2019t be undone.</b> Any renewing membership is cancelled right away with no further charges, and your account, pass and unused gift codes are removed. Payment records the law requires us to keep are held by our payment provider.</div>
         ${billing.delMsg ? `<p class="small" style="color:#8F3215">${esc(billing.delMsg)}</p>` : ''}
-        <label class="f">Type DELETE to confirm<input id="delConfirm" autocomplete="off" autocapitalize="characters"></label>
-        <div style="display:flex; gap:10px; flex-wrap:wrap"><button class="btn pri" type="submit">Delete my account</button><button class="btn" type="button" data-act="delCancel">Keep my account</button></div>
+        <label class="f">Type DELETE To Confirm<input id="delConfirm" autocomplete="off" autocapitalize="characters"></label>
+        <div style="display:flex; gap:10px; flex-wrap:wrap"><button class="btn pri" type="submit">Delete My Account</button><button class="btn" type="button" data-act="delCancel">Keep My Account</button></div>
       </form>`;
+  const portal = s && s.can_manage_billing ? '<div><button class="btn dark" data-act="portal">Manage Billing</button><p class="small muted" style="margin-top:6px">Update your card, see receipts or turn off renewal on our payment provider’s secure page.</p></div>' : '';
+  return { s, state, portal, gifts, giftMsg, del };
+}
+function accountPanel() {
+  if (!AUTH_LIVE || !member || !member.live) return '';
+  const { s, state, giftMsg, gifts, del } = accountParts();
   return `<section class="sand" id="account"><div class="wrap band">
     <div class="card" style="display:grid; gap:14px">
       <p class="eyebrow">Account</p><h2 style="font-size:30px">Membership and billing</h2>
@@ -583,7 +623,8 @@ const isPaid = () => !!member && (member.live ? !!member.membershipActive : true
 function memberFromUser(u) {
   if (!u) return null;
   const md = u.user_metadata || {};
-  return { id: u.id, name: md.full_name || md.name || String(u.email || 'Member').split('@')[0], email: u.email || '', since: Date.parse(u.created_at) || Date.now(), code: 'GS-' + u.id.replace(/-/g, '').slice(0, 6).toUpperCase(), live: true, membershipActive: false };
+  // details: the phone and address given when joining (older accounts may not have them).
+  return { id: u.id, name: md.full_name || md.name || String(u.email || 'Member').split('@')[0], email: u.email || '', details: md, since: Date.parse(u.created_at) || Date.now(), code: 'GS-' + u.id.replace(/-/g, '').slice(0, 6).toUpperCase(), live: true, membershipActive: false };
 }
 const RETURN_KEY = 'fp-return';
 function setReturnTo(r) { try { localStorage.setItem(RETURN_KEY, JSON.stringify(r)); } catch (e) { /* ignore */ } }
@@ -626,10 +667,11 @@ function authInner(mode) {
   }
   return `${msg}${providerButtons()}
     <form class="stack" id="authEmailForm" novalidate>
-      ${mode === 'join' ? '<label class="f">Your name (shown on your pass)<input id="authName" autocomplete="name"></label>' : ''}
+      ${mode === 'join' ? joinDetailsTop() : ''}
       <label class="f">Email<input id="authEmail" type="email" required autocomplete="email" value="${esc(auth.email)}"></label>
-      ${mode === 'join' ? '<label style="display:flex; gap:10px; align-items:flex-start; font-size:15px"><input type="checkbox" id="authMarketing" style="width:20px; height:20px; margin-top:2px"> Send me new restaurants and member offers (optional)</label>' : ''}
-      <button class="btn pri" type="submit" ${auth.busy ? 'disabled' : ''}>${auth.busy ? 'Sending\u2026' : 'Continue with email'}</button>
+      ${mode === 'join' ? joinDetailsBottom() : ''}
+      ${mode === 'join' ? `<label style="display:flex; gap:10px; align-items:flex-start; font-size:15px"><input type="checkbox" id="authMarketing" style="width:20px; height:20px; margin-top:2px"${auth.marketing ? ' checked' : ''}> Send me new restaurants and member offers (optional)</label>` : ''}
+      <button class="btn pri" type="submit" ${auth.busy ? 'disabled' : ''}>${auth.busy ? 'Sending\u2026' : 'Continue With Email'}</button>
       <p class="small muted">We\u2019ll email you a one-time ${AUTH_CONFIG.emailMode === 'link' ? 'sign-in link' : 'code'}. No password needed. ${mode === 'join' ? 'Next, you\u2019ll pay $30 to activate your membership. Accounts without a completed payment may be deleted after 2 days.' : 'Sign-in is for existing members.'} By continuing you agree to the <a href="#terms" data-go="terms">Terms Of Use</a> and <a href="#privacy" data-go="privacy">Privacy Policy</a>.</p>
     </form>`;
 }
@@ -647,8 +689,10 @@ function renderAuth() {
   }
 }
 const isRateLimited = (err) => err && (err.status === 429 || /rate limit|too many|security purposes/i.test(err.message || ''));
-async function sendCode(email, name, marketing) {
+async function sendCode(email, details, marketing) {
   if (auth.busy) return;
+  details = details || {};
+  const fullName = [details.first_name, details.last_name].filter(Boolean).join(' ');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { auth.msg = { err: true, text: 'Enter a valid email address, like name@example.com.' }; return renderAuth(); }
   auth.busy = true; auth.msg = null; renderAuth();
   const panel = document.getElementById('authPanel');
@@ -657,7 +701,7 @@ async function sendCode(email, name, marketing) {
   try {
     ({ error } = await sb.auth.signInWithOtp({ email, options: signingIn
       ? { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname }
-      : { shouldCreateUser: true, emailRedirectTo: location.origin + location.pathname, data: { full_name: name || undefined, terms_version: AUTH_CONFIG.termsVersion, terms_accepted_at: new Date().toISOString(), marketing_opt_in: !!marketing } } }));
+      : { shouldCreateUser: true, emailRedirectTo: location.origin + location.pathname, data: { full_name: fullName || undefined, first_name: details.first_name || undefined, last_name: details.last_name || undefined, phone: details.phone || undefined, address_line1: details.address_line1 || undefined, address_line2: details.address_line2 || undefined, city: details.city || undefined, state: details.state || undefined, zip: details.zip || undefined, terms_version: AUTH_CONFIG.termsVersion, terms_accepted_at: new Date().toISOString(), marketing_opt_in: !!marketing } } }));
   } catch (e) { error = { message: 'network' }; }
   auth.busy = false;
   // No account for this email: answer the same way as a real one, so the form doesn't reveal who is a member.
@@ -918,8 +962,72 @@ function vJoin() {
 }
 
 // Admins see My Pass inside the admin console, so the sidebar stays in reach.
-function vPass() { return isAdminNow() ? adminShell('pass', '', vPassBody()) : vPassBody(); }
-function vPassBody() {
+function vPass() {
+  if (isAdminNow()) return adminShell('pass', '', vPassBody());
+  if (!member || !AUTH_LIVE || !member.live) return vPassBody();
+  const tab = CUSTOMER_TABS.some(([id]) => id === ui.passTab) ? ui.passTab : 'pass';
+  return customerShell(tab, tab === 'pass' ? vPassBody(true) : CUSTOMER_PAGES[tab]());
+}
+// Customer side menu: the same layout as the admin console, with only the member's own pages.
+const CUSTOMER_TABS = [['pass', 'My Pass'], ['membership', 'Membership'], ['gifts', 'Gifts'], ['account', 'Account']];
+function customerShell(active, body) {
+  const item = ([id, label]) => `<button class="side-item${active === id ? ' on' : ''}" data-act="passTab" data-tab="${id}"${active === id ? ' aria-current="page"' : ''}>${label}</button>`;
+  return `<section style="padding-block:40px 72px"><div class="wrap admin-shell">
+    <nav class="admin-side" aria-label="My account">
+      ${CUSTOMER_TABS.map(item).join('')}
+      <hr>
+      <a class="side-item" href="#restaurants" data-go="restaurants">Restaurants</a>
+      <a class="side-item" href="#faq" data-go="faq">Help</a>
+      <button class="side-item" data-act="signout">Sign Out</button>
+    </nav>
+    <div class="admin-main">${body}</div>
+  </div></section>`;
+}
+const customerHead = (title) => `<div class="admin-head"><div><p class="eyebrow">My Account</p><h1>${title}</h1></div></div>`;
+const CUSTOMER_PAGES = {
+  membership() {
+    const { state, portal } = accountParts();
+    return `${customerHead('Membership')}
+      <div class="card" style="display:grid; gap:14px">
+        ${state}
+        ${portal}
+        ${isPaid() ? '' : '<a class="btn pri" href="#join" data-go="join" data-plan="member" style="justify-self:start">Activate Membership</a>'}
+        <p class="small muted">$30 a year, renewing automatically until you cancel. See the <a href="#terms" data-go="terms">Terms Of Use</a>.</p>
+      </div>`;
+  },
+  gifts() {
+    const { gifts, giftMsg } = accountParts();
+    return `${customerHead('Gifts')}
+      <div style="display:grid; gap:18px">
+        <div class="card" style="display:grid; gap:14px">
+          <h3>Give A Year Of GrubScout</h3>
+          <p>Buy a gift membership for $30. You’ll get a code here to send however you like.</p>
+          <a class="btn pri" href="#join" data-go="join" data-plan="gift" style="justify-self:start">Send A Gift</a>
+          ${gifts}
+        </div>
+        ${billing.fnOk ? `<div class="card" style="display:grid; gap:14px">
+          <h3>Redeem A Gift</h3>${giftMsg}
+          <form class="stack" id="giftForm" novalidate><label class="f">Gift Code<input id="giftCode" placeholder="FP-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" required></label><button class="btn" type="submit" style="justify-self:start">Add To My Membership</button></form>
+        </div>` : ''}
+      </div>`;
+  },
+  account() {
+    const { del } = accountParts();
+    return `${customerHead('Account')}
+      <div style="display:grid; gap:18px">
+        <div class="card" style="display:grid; gap:10px">
+          <h3>Your Details</h3>
+          <p><b>Name:</b> ${esc(member.name || '')}</p>
+          <p><b>Email:</b> ${esc(member.email || '')}</p>
+          ${(member.details || {}).phone ? `<p><b>Phone:</b> ${esc(formatPhone(member.details.phone) || member.details.phone)}</p>` : ''}
+          ${(() => { const d = member.details || {}; const a = joinAddress(d.address_line1, d.address_line2, d.city, d.state, d.zip); return a ? `<p><b>Address:</b> ${esc(a)}</p>` : ''; })()}
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px"><button class="btn" data-act="signout">Sign Out</button><button class="btn" data-act="signoutAll">Sign Out On All Devices</button></div>
+        </div>
+        ${billing.fnOk ? `<div class="card" style="display:grid; gap:14px"><h3>Delete Account</h3>${del}</div>` : ''}
+      </div>`;
+  },
+};
+function vPassBody(inShell) {
   if (!member) {
     return `<section><div class="wrap band">
       <div class="sec-head" style="margin:0"><p class="eyebrow">My pass</p><h1 style="font-size: clamp(40px, 5.4vw, 60px)">Welcome back</h1><p>Sign in with the email you joined with. Not a member yet? <a href="#join" data-go="join">Join for $30</a>.</p></div>
@@ -931,14 +1039,16 @@ function vPassBody() {
   const paid = isPaid();
   const notice = billing.confirming ? '<div class="note" role="status" style="margin-top:14px"><b>Confirming your membership\u2026</b> This usually takes a few seconds.</div>'
     : billing.msg ? `<div class="note" role="status" style="margin-top:14px">${esc(billing.msg)}</div>` : '';
-  const tools = `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px">${paid ? '' : '<a class="btn pri" href="#join" data-go="join" data-plan="member">Activate membership</a>'}<button class="btn" data-act="share">Copy my referral link</button><button class="btn" data-act="signout">Sign out</button>${member.live ? '<button class="btn" data-act="signoutAll">Sign out on all devices</button>' : ''}</div>`;
+  // In the customer side menu, sign-out lives in the menu and the Account tab, and billing has its own tab.
+  const tools = `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px">${paid ? '' : '<a class="btn pri" href="#join" data-go="join" data-plan="member">Activate membership</a>'}<button class="btn" data-act="share">Copy my referral link</button>${inShell ? '' : `<button class="btn" data-act="signout">Sign out</button>${member.live ? '<button class="btn" data-act="signoutAll">Sign out on all devices</button>' : ''}`}</div>`;
+  const panel = inShell ? '' : accountPanel();
   // No pass until the membership is paid.
   if (!paid) {
     return `<section><div class="wrap band">
       <div class="sec-head" style="margin:0"><p class="eyebrow">My pass</p><h1 style="font-size: clamp(40px, 5.4vw, 60px)">Your account is verified</h1>
         <p>Signed in as <b>${esc(member.email)}</b>. Your member pass appears here once your $30 membership is active.</p>${notice}${tools}</div>
       <div class="card"><h3>How the pass works</h3><p>At the restaurant, open My pass and show the screen to your server before you pay. The moving clock shows it isn\u2019t a screenshot, and your server applies the offer.</p></div>
-    </div></section>${accountPanel()}`;
+    </div></section>${panel}`;
   }
   // Paid: the pass itself. Staff only need to look at it.
   return `<section><div class="wrap" style="max-width:640px">
@@ -952,7 +1062,7 @@ function vPassBody() {
     </div>
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:18px"><a class="btn" href="#restaurants" data-go="restaurants">See restaurants and offers</a><button class="btn" data-act="report">Report a problem</button></div>
     ${tools}
-  </div></section>${accountPanel()}`;
+  </div></section>${panel}`;
 }
 
 const US_STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
@@ -1030,7 +1140,7 @@ function vConduct() {
 // ---------- Legal pages. Keep these matched to what the site and app actually do. ----------
 // Contact address shown on the FAQ and both legal pages.
 const LEGAL_EMAIL = 'joingrubscout@outlook.com';
-const LEGAL_UPDATED = 'November 4, 2026';
+const LEGAL_UPDATED = 'November 9, 2026';
 function legalPage(title, intro, sections) {
   return `<section><div class="wrap" style="max-width: 900px">
     <div class="sec-head"><p class="eyebrow">Legal</p><h1 style="font-size: clamp(40px, 5.4vw, 60px)">${title}</h1><p>Last updated ${LEGAL_UPDATED}. ${intro}</p></div>
@@ -1060,7 +1170,7 @@ function vTerms() {
 
 function vPrivacy() {
   return legalPage('Privacy Policy', 'This policy explains what GrubScout collects through its website and app, how we use it, and the choices you have.', [
-    ['What We Collect','<ul><li><b>Account details:</b> your email, your name if you give it, and your phone number if you sign up by phone in the app. If you sign in with another provider such as Google or Apple, we receive basic details from them, such as your name and email.</li><li><b>Membership details:</b> your membership status and dates, gift codes, and purchase records such as the amount and date.</li><li><b>Your choices:</b> when you accepted our terms and whether you opted in to marketing emails.</li><li><b>Messages:</b> what you send when you contact us or report a problem.</li><li><b>Restaurant applications:</b> contact and business details submitted on our partner form.</li><li><b>Technical data:</b> our service providers may log information such as your IP address, browser and device when you connect.</li></ul>'],
+    ['What We Collect','<ul><li><b>Account details:</b> your name, email, phone number and mailing address, which you give when you join. If you sign in with another provider such as Google or Apple, we receive basic details from them, such as your name and email.</li><li><b>Membership details:</b> your membership status and dates, gift codes, and purchase records such as the amount and date.</li><li><b>Your choices:</b> when you accepted our terms and whether you opted in to marketing emails.</li><li><b>Messages:</b> what you send when you contact us or report a problem.</li><li><b>Restaurant applications:</b> contact and business details submitted on our partner form.</li><li><b>Technical data:</b> our service providers may log information such as your IP address, browser and device when you connect.</li></ul>'],
     ['What We Don’t Collect','<p><b>Card details:</b> Stripe collects and handles them, and we never see or store your full card number. <b>Visits:</b> we do not track which restaurants you visit or when you use your pass.</p>'],
     ['Your Location','<p>If you allow it, your device’s location is used to show restaurants near you. We do not save it to your account. You can turn off location access at any time in your browser or phone settings, and you can still search by name or cuisine.</p>'],
     ['How We Use Information','<ul><li>To create your account, sign you in and show your pass</li><li>To process payments and send receipts and renewal reminders</li><li>To answer questions and follow up on problem reports</li><li>To send restaurant news and member offers if you opted in</li><li>To keep the service secure, prevent misuse and meet legal obligations</li></ul>'],
@@ -1152,18 +1262,19 @@ function filteredCustomers() {
   const q = adminState.q.trim().toLowerCase();
   return (adminState.customers || []).filter((c) => {
     if (adminState.status !== 'all' && customerStatus(c).key !== adminState.status) return false;
-    return !q || `${c.full_name || ''} ${c.email || ''}`.toLowerCase().includes(q);
+    return !q || `${c.full_name || ''} ${c.email || ''} ${c.phone || ''} ${c.city || ''} ${c.zip || ''}`.toLowerCase().includes(q);
   });
 }
 function customerRows() {
   const list = filteredCustomers();
-  if (!list.length) return '<tr><td colspan="6" class="muted">No customers match.</td></tr>';
+  if (!list.length) return '<tr><td colspan="7" class="muted">No customers match.</td></tr>';
   return list.map((c) => {
     const s = customerStatus(c);
     const confirming = adminState.confirmCustomer === c.id;
     // Admins can't be deleted here; active members need their membership cancelled first.
     const action = s.key === 'admin' ? '' : confirming ? '' : `<button class="btn sm" data-act="custDeleteAsk" data-id="${esc(c.id)}" style="border-color:#8F3215; color:#8F3215">Delete</button>`;
     const row = `<tr><td><b>${esc(c.full_name || '(no name)')}</b><br><span class="small muted">${esc(c.email || '')}</span></td>
+      <td class="small" style="min-width:190px">${c.phone ? '<span style="white-space:nowrap">' + esc(formatPhone(c.phone) || c.phone) + '</span><br>' : ''}${esc(joinAddress(c.address_line1, c.address_line2, c.city, c.state, c.zip)) || (c.phone ? '' : '<span class="muted">—</span>')}</td>
       <td><span class="badge${s.key === 'active' || s.key === 'admin' ? ' new' : ''}">${esc(s.label)}</span></td>
       <td class="tabular">${s.until ? esc(fmtDate(new Date(s.until).toISOString())) : '—'}</td>
       <td class="tabular">${esc(fmtDate(c.joined_at))}</td>
@@ -1173,7 +1284,7 @@ function customerRows() {
     const warn = s.key === 'active' || s.key === 'due'
       ? 'This member still has access. If their membership renews, deleting is blocked until it’s cancelled.'
       : 'Their account, pass and any unused gift codes are removed.';
-    return row + `<tr><td colspan="6" style="background:#FCE7DF; color:#8F3215">
+    return row + `<tr><td colspan="7" style="background:#FCE7DF; color:#8F3215">
       <b>Delete ${esc(c.full_name || c.email || 'this customer')} permanently?</b> ${warn} This can’t be undone.
       <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px"><button class="btn sm" data-act="custDeleteYes" data-id="${esc(c.id)}" id="custDeleteYes" style="border-color:#8F3215; color:#8F3215">Yes, Delete Customer</button><button class="btn sm" data-act="custDeleteNo">Keep Customer</button></div>
     </td></tr>`;
@@ -1201,13 +1312,13 @@ async function adminDeleteCustomer(id) {
 function adminCustomers() {
   if (adminState.customersError || !adminState.customers) return `<div class="note"><b>The customer list isn’t set up yet.</b> Run the SQL in <code>foodiepass-backend/supabase/migrations/20261106000000_admin_customers.sql</code> in the Supabase SQL Editor, then refresh this page.</div>`;
   return `<div class="admin-filters">
-      <input id="custSearch" type="search" placeholder="Search by name or email" value="${esc(adminState.q)}" aria-label="Search customers">
+      <input id="custSearch" type="search" placeholder="Search by name, email, phone or city" value="${esc(adminState.q)}" aria-label="Search customers">
       <select id="custStatus" aria-label="Filter by status">${STATUS_FILTERS.map(([v, l]) => `<option value="${v}"${adminState.status === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
       <button class="btn" type="button" data-act="custExport">Download CSV</button>
     </div>
     <p class="small muted" style="margin-bottom:10px"><span id="custCount">${filteredCustomers().length}</span> of <span id="custTotal">${adminState.customers.length}</span> accounts</p>
     <div class="admin-table-wrap"><table class="admin-table">
-      <thead><tr><th>Customer</th><th>Status</th><th>Member Through</th><th>Joined</th><th>Marketing Emails</th><th><span class="sr" style="position:absolute; left:-9999px">Actions</span></th></tr></thead>
+      <thead><tr><th>Customer</th><th>Contact</th><th>Status</th><th>Member Through</th><th>Joined</th><th>Marketing Emails</th><th><span class="sr" style="position:absolute; left:-9999px">Actions</span></th></tr></thead>
       <tbody id="custRows">${customerRows()}</tbody>
     </table></div>`;
 }
@@ -1219,9 +1330,9 @@ function refreshCustomers() {
 }
 function exportCustomers() {
   const cell = (v) => { const s = String(v ?? ''); return /^[=+\-@]/.test(s) ? `"'${s.replace(/"/g, '""')}"` : `"${s.replace(/"/g, '""')}"`; };
-  const lines = [['Name', 'Email', 'Status', 'Member Through', 'Joined', 'Marketing Emails']].concat(filteredCustomers().map((c) => {
+  const lines = [['First Name', 'Last Name', 'Name', 'Email', 'Phone', 'Address Line 1', 'Address Line 2', 'City', 'State', 'Zip', 'Status', 'Member Through', 'Joined', 'Marketing Emails']].concat(filteredCustomers().map((c) => {
     const s = customerStatus(c);
-    return [c.full_name || '', c.email || '', s.label, s.until ? new Date(s.until).toISOString().slice(0, 10) : '', (c.joined_at || '').slice(0, 10), c.marketing ? 'Yes' : 'No'];
+    return [c.first_name || '', c.last_name || '', c.full_name || '', c.email || '', c.phone || '', c.address_line1 || '', c.address_line2 || '', c.city || '', c.state || '', c.zip || '', s.label, s.until ? new Date(s.until).toISOString().slice(0, 10) : '', (c.joined_at || '').slice(0, 10), c.marketing ? 'Yes' : 'No'];
   }));
   const blob = new Blob([lines.map((l) => l.map(cell).join(',')).join('\r\n')], { type: 'text/csv' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `grubscout-customers-${new Date().toISOString().slice(0, 10)}.csv`;
@@ -1736,6 +1847,7 @@ document.addEventListener('click', (e) => {
   if (d.mode) { ui.mode = d.mode; document.querySelectorAll('[data-mode]').forEach((b) => { b.classList.toggle('on', b.dataset.mode === ui.mode); b.setAttribute('aria-pressed', b.dataset.mode === ui.mode); }); return refreshResults(true); }
   if (d.planPick) { ui.plan = d.planPick; ui.joined = false; go('join', 'checkout'); return; }
   switch (d.act) {
+    case 'passTab': ui.passTab = d.tab; billing.delStep = 0; billing.delMsg = null; billing.giftMsg = null; go('pass'); window.scrollTo(0, 0); return;
     case 'adminTab': adminState.tab = d.tab; adminState.draft = null; adminState.msg = null; adminState.confirmDelete = false; adminState.confirmApp = null; adminState.confirmCustomer = null; return go('admin');
     case 'custExport': return exportCustomers();
     case 'adminNew': adminState.draft = blankDraft(); adminState.msg = null; return go('admin');
@@ -1770,14 +1882,14 @@ document.addEventListener('click', (e) => {
     case 'signout':
     case 'signoutAll':
       if (AUTH_LIVE) { sb.auth.signOut(d.act === 'signoutAll' ? { scope: 'global' } : undefined).catch(() => {}); }
-      member = null; store.set('member', null); auth.step = 'email'; auth.msg = null; resetAdmin();
+      member = null; store.set('member', null); auth.step = 'email'; auth.msg = null; ui.passTab = 'pass'; resetAdmin();
       toast(d.act === 'signoutAll' ? 'Signed out on all devices' : 'Signed out'); return go('pass');
     case 'oauth':
       if (!AUTH_LIVE) return;
       if (view === 'join') setReturnTo({ view: 'join', anchor: 'checkout', plan: ui.plan });
       sb.auth.signInWithOAuth({ provider: d.provider, options: { redirectTo: location.origin + location.pathname } }).then(({ error }) => { if (error) toast('That sign-in option isn\u2019t available right now. Try email instead.'); });
       return;
-    case 'resendCode': return sendCode(auth.email, '', false);
+    case 'resendCode': { const p = document.getElementById('authPanel'); const joining = !!p && p.dataset.mode === 'join'; return sendCode(auth.email, joining ? auth.details : null, joining && auth.marketing); }
     case 'changeEmail': auth.step = 'email'; auth.msg = null; return renderAuth();
     case 'checkout': return startCheckout();
     case 'portal': return openPortal();
@@ -1827,8 +1939,13 @@ document.addEventListener('submit', (e) => {
   if (f.id === 'authEmailForm') {
     if (view === 'join') setReturnTo({ view: 'join', anchor: 'checkout', plan: ui.plan });
     if (view === 'admin') setReturnTo({ view: 'admin' });
-    const n = document.getElementById('authName'), m = document.getElementById('authMarketing');
-    return sendCode($('#authEmail').value.trim().toLowerCase(), n ? n.value.trim() : '', m ? m.checked : false);
+    const email = $('#authEmail').value.trim().toLowerCase();
+    const joining = !!document.getElementById('jdFirst');
+    if (joining) {
+      const problem = readJoinDetails(); auth.email = email;
+      if (problem) { auth.msg = { err: true, text: problem }; renderAuth(); const el = document.getElementById('authPanel'); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
+    }
+    return sendCode(email, joining ? auth.details : null, joining && auth.marketing);
   }
   if (f.id === 'authCodeForm') return verifyCode($('#authCode').value);
   if (f.id === 'giftForm') { const c = $('#giftCode').value.trim(); if (c) redeemGift(c); return; }
@@ -1846,13 +1963,14 @@ if (AUTH_LIVE) {
   if (qp.get('error_description') || qp.get('error')) { toast('Sign-in was cancelled or failed. Try again or use email.'); }
   // Returns from Stripe: ?checkout=success&attempt=<id>, ?checkout=canceled, ?portal=return
   const checkoutResult = qp.get('checkout'), checkoutAttempt = qp.get('attempt'), portalReturn = qp.get('portal');
+  if (portalReturn) ui.passTab = 'membership'; // back from Manage Billing: show the Membership tab
   const configReady = loadBillingConfig();
   sb.auth.getSession().then(async ({ data }) => {
     await configReady;
     const signedIn = !!(data && data.session);
     member = memberFromUser(signedIn ? data.session.user : null);
     if (location.search) { try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) { /* ignore */ } }
-    if (signedIn && checkoutResult === 'success') { view = 'pass'; return confirmCheckout(checkoutAttempt); }
+    if (signedIn && checkoutResult === 'success') { view = 'pass'; ui.passTab = 'pass'; return confirmCheckout(checkoutAttempt); }
     if (checkoutResult === 'canceled') toast('Checkout cancelled. You weren\u2019t charged.');
     if (signedIn && (function () { try { return localStorage.getItem(RETURN_KEY); } catch (e) { return null; } })()) { await loadStatus(); return afterSignIn(); }
     refreshChrome();
@@ -1861,7 +1979,7 @@ if (AUTH_LIVE) {
     if (view === 'pass' || view === 'join' || view === 'admin') go(view, view === 'join' && member ? 'checkout' : null);
   });
   sb.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') { member = null; billing.status = null; resetAdmin(); refreshChrome(); if (view === 'admin' || view === 'pass') go(view); return; }
+    if (event === 'SIGNED_OUT') { member = null; ui.passTab = 'pass'; billing.status = null; resetAdmin(); refreshChrome(); if (view === 'admin' || view === 'pass') go(view); return; }
     if (session && session.user) {
       const wasIn = !!member, prev = member;
       member = memberFromUser(session.user);
