@@ -2,7 +2,7 @@ import * as Crypto from 'expo-crypto';
 import { supabase } from './supabase';
 import { CONFIG, FN_URL } from './config';
 
-// Calls the same Supabase Edge Functions the website uses (see GrubScout-backend/).
+// Calls the same Supabase Edge Functions the website uses (see foodiepass-backend/).
 export type ApiError = { code: string; message: string };
 const NET: ApiError = { code: 'network', message: 'We couldn’t reach GrubScout. Check your connection and try again.' };
 
@@ -36,12 +36,12 @@ export type BillingStatus = {
 export const getConfig = () => api<BillingConfig>('billing-config', { auth: false });
 export const getStatus = (attempt?: string) => api<BillingStatus>('billing-status' + (attempt ? '?attempt=' + encodeURIComponent(attempt) : ''));
 
-// If the server functions can't be reached, the member's own entitlement rows still prove access.
+// If the server functions can't be reached, the member's own entitlement rows still prove access (same rule as the website).
 async function statusFromEntitlements(userId: string): Promise<BillingStatus | null> {
   const { data, error } = await supabase.from('entitlements').select('source, access_expires_at, grace_expires_at').eq('user_id', userId).eq('feature', 'membership');
   if (error || !data) return null;
   const now = Date.now();
-  const rows = data.filter((r) => Math.max(Date.parse(r.access_expires_at), r.grace_expires_at ? Date.parse(r.grace_expires_at) : 0) > now);
+  const rows = data.filter((r) => r.source === 'admin' || Math.max(Date.parse(r.access_expires_at), r.grace_expires_at ? Date.parse(r.grace_expires_at) : 0) > now);
   if (!rows.length) return null;
   const isAdmin = rows.some((r) => r.source === 'admin');
   const until = isAdmin ? now + 365 * 86400000 : Math.max(...rows.map((r) => Date.parse(r.access_expires_at)));
@@ -55,7 +55,7 @@ export async function getStatusOrEntitlements(userId: string): Promise<BillingSt
   try { return await getStatus(); } catch { return statusFromEntitlements(userId); }
 }
 
-export const startCheckout =(offeringId: string, attemptId: string) => api<{ url: string }>('billing-checkout', { method: 'POST', body: { offeringId, attemptId } });
+export const startCheckout = (offeringId: string, attemptId: string) => api<{ url: string }>('billing-checkout', { method: 'POST', body: { offeringId, attemptId } });
 export const openPortal = () => api<{ url: string }>('billing-portal', { method: 'POST' });
 export const redeemGift = (code: string) => api<{ access_until: string }>('gift-redeem', { method: 'POST', body: { code } });
 export const deleteAccount = () => api<{ ok: true }>('account-delete', { method: 'POST', body: { confirm: 'DELETE' } });

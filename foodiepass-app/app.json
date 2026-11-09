@@ -2,9 +2,11 @@
   "expo": {
     "name": "GrubScout",
     "slug": "grubscout",
-    "version": "0.1.0",
+    "owner": "wuemilyy",
+    "version": "0.3.0",
     "scheme": "grubscout",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "backgroundColor": "#F6F4EF",
     "ios": {
@@ -19,12 +21,16 @@
     "android": {
       "package": "com.grubscout.app",
       "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
-      "adaptiveIcon": { "backgroundColor": "#E2552B" }
+      "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#F6F4EF" }
     },
     "plugins": [
       "expo-router",
       "expo-secure-store",
       "expo-apple-authentication",
+      [
+        "expo-splash-screen",
+        { "image": "./assets/splash-icon.png", "imageWidth": 160, "resizeMode": "contain", "backgroundColor": "#172A2A" }
+      ],
       [
         "expo-location",
         { "locationWhenInUsePermission": "GrubScout uses your location to show partner restaurants near you." }
@@ -35,8 +41,9 @@
       "supabaseUrl": "https://mroiimqqklitidpzaqnk.supabase.co",
       "supabasePublishableKey": "sb_publishable_1YSf5nmBBotBnOULa3g7vQ_nj0Fd1RH",
       "siteUrl": "https://wuemilyy-stack.github.io/Foodie/",
-      "termsVersion": "2026-10-25",
-      "appleSignIn": false
+      "termsVersion": "2026-11-04",
+      "appleSignIn": false,
+      "eas": { "projectId": "db8a87a9-9dbb-4bee-aca7-a673a4a7f2fd" }
     }
   }
 }

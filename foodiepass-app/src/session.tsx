@@ -12,8 +12,9 @@ type Ctx = {
   phone: string;
   profileDone: boolean;          // name + email collected (step 3 of sign-up)
   onboarded: boolean;            // location step seen
-  paid: boolean;                 // membership active (server-verified)
+  paid: boolean;                 // membership active (server-verified, or the member's own entitlement rows)
   paymentsOpen: boolean | null;  // server functions + Stripe prices configured
+  isAdmin: boolean;              // has a platform_admins row (unlocks the website admin link)
   status: BillingStatus | null;
   refresh: () => Promise<void>;
   markOnboarded: () => Promise<void>;
@@ -23,16 +24,29 @@ type Ctx = {
 const SessionCtx = createContext<Ctx | null>(null);
 const ONBOARD_KEY = 'fp-onboarded';
 
+// Payments open when the billing function says so; if functions aren't deployed, fall back to the offerings table.
+async function paymentsAvailable(): Promise<boolean> {
+  try {
+    const c = await getConfig();
+    return !!c.checkout_enabled && c.offerings.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [onboarded, setOnboarded] = useState(false);
   const [status, setStatus] = useState<BillingStatus | null>(null);
   const [paymentsOpen, setPaymentsOpen] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const loadStatus = useCallback(async (s: Session | null) => {
-    if (!s) { setStatus(null); return; }
+    if (!s) { setStatus(null); setIsAdmin(false); return; }
     try { setStatus(await getStatusOrEntitlements(s.user.id)); } catch { setStatus(null); }
+    const a = await supabase.from('platform_admins').select('user_id').eq('user_id', s.user.id).maybeSingle();
+    setIsAdmin(!!a.data);
   }, []);
 
   useEffect(() => {
@@ -44,7 +58,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setOnboarded(ob === '1');
       setReady(true);
       loadStatus(data.session);
-      getConfig().then((c) => setPaymentsOpen(!!c.checkout_enabled && c.offerings.length > 0)).catch(() => setPaymentsOpen(false));
+      paymentsAvailable().then((v) => { if (alive) setPaymentsOpen(v); });
     })();
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => { setSession(s); loadStatus(s); });
     return () => { alive = false; sub.subscription.unsubscribe(); };
@@ -61,15 +75,17 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       onboarded,
       paid: !!status?.membership.active,
       paymentsOpen,
+      isAdmin,
       status,
       refresh: () => loadStatus(session),
       markOnboarded: async () => { await AsyncStorage.setItem(ONBOARD_KEY, '1'); setOnboarded(true); },
       signOut: async (everywhere) => {
         await supabase.auth.signOut(everywhere ? { scope: 'global' } : undefined).catch(() => undefined);
+        await AsyncStorage.removeItem('fp-visit');
         setStatus(null);
       },
     };
-  }, [ready, session, onboarded, status, paymentsOpen, loadStatus]);
+  }, [ready, session, onboarded, status, paymentsOpen, isAdmin, loadStatus]);
 
   return <SessionCtx.Provider value={value}>{children}</SessionCtx.Provider>;
 }

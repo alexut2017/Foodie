@@ -3,9 +3,10 @@ import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Small } from '../../src/ui';
-import { C } from '../../src/theme'; import { Logo } from '../../src/Logo';
+import { C } from '../../src/theme';
+import { Logo } from '../../src/Logo';
 
-// Step 0: brand welcome. Like inKind, one button starts phone sign-up for new and returning members alike.
+// Step 0: brand welcome. Like inKind, one button starts sign-up; returning members sign in the same way.
 export default function Welcome() {
   return (
     <SafeAreaView style={s.wrap}>
@@ -27,8 +28,6 @@ export default function Welcome() {
 const s = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: C.bayou, padding: 24, justifyContent: 'space-between' },
   top: { gap: 18, marginTop: 40 },
-  mark: { width: 64, height: 64, borderRadius: 18, backgroundColor: C.chili, alignItems: 'center', justifyContent: 'center' },
-  markFork: { fontSize: 30 },
   brand: { color: C.linen, fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
   h1: { color: C.linen, fontSize: 40, lineHeight: 44, fontWeight: '800', letterSpacing: -1 },
   lede: { color: C.mint, fontSize: 19, lineHeight: 26 },
