@@ -99,8 +99,8 @@ Deno.serve(async (req) => {
       customer: customerId,
       client_reference_id: attemptId,
       line_items: [{ price: offering.stripe_price_id, quantity: 1 }],
-      success_url: `${SITE_URL}/?checkout=success&attempt=${attemptId}#/pass`,
-      cancel_url: `${SITE_URL}/?checkout=canceled#/join`,
+      success_url: `${SITE_URL}/?checkout=success&attempt=${attemptId}#pass`,
+      cancel_url: `${SITE_URL}/?checkout=canceled#join`,
       metadata: { ...metadata, ...(purchaseId ? { purchase_id: purchaseId } : {}) },
       ...(offering.kind === 'membership'
         ? { subscription_data: { metadata } }

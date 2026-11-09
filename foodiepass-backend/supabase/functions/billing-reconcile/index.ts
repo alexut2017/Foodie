@@ -24,7 +24,14 @@ Deno.serve(async (req) => {
     const seen = new Set<string>();
     for await (const ev of stripe.events.list({ created: { gte: since }, types: ['customer.subscription.*', 'invoice.paid', 'invoice.payment_failed'], limit: 100 })) {
       const o = ev.data.object as { id: string; object: string; subscription?: string | null };
-      const subId = o.object === 'subscription' ? o.id : o.subscription ?? null;
+      let subId: string | null = o.object === 'subscription' ? o.id : null;
+      if (o.object === 'invoice') {
+        // Events can arrive in a newer Stripe format, so read the invoice in our pinned format.
+        try {
+          const s = (await stripe.invoices.retrieve(o.id)).subscription;
+          subId = typeof s === 'string' ? s : s?.id ?? null;
+        } catch (err) { report.errors++; logError('reconcile.invoice', err, { invoice: o.id }); continue; }
+      }
       if (!subId || seen.has(subId)) continue;
       seen.add(subId);
       try { await syncSubscription(subId); report.subs_synced++; } catch (err) { report.errors++; logError('reconcile.sub', err, { sub: subId }); }

@@ -177,7 +177,9 @@ export async function processEvent(event: Stripe.Event): Promise<'processed' | '
     case 'invoice.paid':
     case 'invoice.payment_failed':
     case 'invoice.payment_action_required': {
-      const sub = obj.subscription;
+      // Events can arrive in a newer Stripe format without this field, so read the invoice in our pinned format.
+      const invoice = await stripe.invoices.retrieve(obj.id);
+      const sub = invoice.subscription;
       if (!sub) return 'ignored';
       await syncSubscription(typeof sub === 'string' ? sub : sub.id);
       return 'processed';

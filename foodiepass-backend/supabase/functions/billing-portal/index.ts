@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     if (!data) return fail(req, 'not_found');
     const session = await stripe.billingPortal.sessions.create({
       customer: data.stripe_customer_id,
-      return_url: `${SITE_URL}/?portal=return#/pass`,
+      return_url: `${SITE_URL}/?portal=return#pass`,
     });
     return json(req, { url: session.url });
   } catch (e) {
