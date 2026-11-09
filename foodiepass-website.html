@@ -1271,7 +1271,7 @@ function customerRows() {
   return list.map((c) => {
     const s = customerStatus(c);
     const confirming = adminState.confirmCustomer === c.id;
-    // Admins can't be deleted here; active members need their membership cancelled first.
+    // Admins can't be deleted here. Deleting a member cancels their Stripe subscription first.
     const action = s.key === 'admin' ? '' : confirming ? '' : `<button class="btn sm" data-act="custDeleteAsk" data-id="${esc(c.id)}" style="border-color:#8F3215; color:#8F3215">Delete</button>`;
     const row = `<tr><td><b>${esc(c.full_name || '(no name)')}</b><br><span class="small muted">${esc(c.email || '')}</span></td>
       <td class="small" style="min-width:190px">${c.phone ? '<span style="white-space:nowrap">' + esc(formatPhone(c.phone) || c.phone) + '</span><br>' : ''}${esc(joinAddress(c.address_line1, c.address_line2, c.city, c.state, c.zip)) || (c.phone ? '' : '<span class="muted">—</span>')}</td>
@@ -1282,7 +1282,7 @@ function customerRows() {
       <td>${action}</td></tr>`;
     if (!confirming) return row;
     const warn = s.key === 'active' || s.key === 'due'
-      ? 'This member still has access. If their membership renews, deleting is blocked until it’s cancelled.'
+      ? 'This member still has access. Any renewing membership is cancelled in Stripe right away, with no refund, and their account and pass are removed.'
       : 'Their account, pass and any unused gift codes are removed.';
     return row + `<tr><td colspan="7" style="background:#FCE7DF; color:#8F3215">
       <b>Delete ${esc(c.full_name || c.email || 'this customer')} permanently?</b> ${warn} This can’t be undone.
@@ -1292,18 +1292,19 @@ function customerRows() {
 }
 const CUSTOMER_DELETE_ERRORS = {
   is_admin: 'Admins can’t be deleted here.',
-  live_subscription: 'This customer has a renewing membership. Cancel it first, then delete the account.',
-  checkout_open: 'This customer is in the middle of paying. Try again in an hour.',
+  not_allowed: 'Only admins can delete customers.',
   not_found: 'That account was already deleted.',
 };
 async function adminDeleteCustomer(id) {
   const btn = $('#custDeleteYes'); if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
-  const { error } = await sb.rpc('admin_delete_customer', { p_user: id });
+  // The server cancels any Stripe subscription first, then deletes the account.
+  let error = null;
+  try { await api('admin-customer-delete', { method: 'POST', body: { userId: id } }); } catch (e) { error = e || {}; }
   adminState.confirmCustomer = null;
   if (error) {
     console.warn('GrubScout: customer not deleted', error);
-    const known = Object.keys(CUSTOMER_DELETE_ERRORS).find((k) => (error.message || '').includes(k));
-    toast(known ? CUSTOMER_DELETE_ERRORS[known] : /admin_delete_customer/.test(error.message || '') ? 'Deleting customers isn’t set up yet. Run its SQL in Supabase.' : 'That customer wasn’t deleted. Try again.');
+    const known = CUSTOMER_DELETE_ERRORS[error.code] ? error.code : null;
+    toast(known ? CUSTOMER_DELETE_ERRORS[known] : error.code === 'provider_unavailable' ? 'Stripe didn’t respond, so nothing was deleted. Try again in a minute.' : 'That customer wasn’t deleted. Try again.');
     if (known !== 'not_found') return refreshCustomers();
   } else toast('Customer deleted');
   adminState.customers = (adminState.customers || []).filter((c) => c.id !== id);
