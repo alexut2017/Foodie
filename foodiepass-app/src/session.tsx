@@ -70,7 +70,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     const name = md.full_name || [md.first_name, md.last_name].filter(Boolean).join(' ');
     const email = u?.email || u?.new_email || md.contact_email || '';
     return {
-      ready, session, name, email, phone: u?.phone ?? '',
+      ready, session, name, email, phone: u?.phone || md.phone || '',
       profileDone: !!name && !!email,
       onboarded,
       paid: !!status?.membership.active,
