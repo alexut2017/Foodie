@@ -969,7 +969,7 @@ function vPass() {
   return customerShell(tab, tab === 'pass' ? vPassBody(true) : CUSTOMER_PAGES[tab]());
 }
 // Customer side menu: the same layout as the admin console, with only the member's own pages.
-const CUSTOMER_TABS = [['pass', 'My Pass'], ['membership', 'Membership'], ['gifts', 'Gifts'], ['account', 'Account']];
+const CUSTOMER_TABS = [['pass', 'My Pass'], ['account', 'Account'], ['membership', 'Billing'], ['gifts', 'Gifts']];
 function customerShell(active, body) {
   const item = ([id, label]) => `<button class="side-item${active === id ? ' on' : ''}" data-act="passTab" data-tab="${id}"${active === id ? ' aria-current="page"' : ''}>${label}</button>`;
   return `<section style="padding-block:40px 72px"><div class="wrap admin-shell">
@@ -987,7 +987,7 @@ const customerHead = (title) => `<div class="admin-head"><div><p class="eyebrow"
 const CUSTOMER_PAGES = {
   membership() {
     const { state, portal } = accountParts();
-    return `${customerHead('Membership')}
+    return `${customerHead('Billing')}
       <div class="card" style="display:grid; gap:14px">
         ${state}
         ${portal}
@@ -1964,7 +1964,7 @@ if (AUTH_LIVE) {
   if (qp.get('error_description') || qp.get('error')) { toast('Sign-in was cancelled or failed. Try again or use email.'); }
   // Returns from Stripe: ?checkout=success&attempt=<id>, ?checkout=canceled, ?portal=return
   const checkoutResult = qp.get('checkout'), checkoutAttempt = qp.get('attempt'), portalReturn = qp.get('portal');
-  if (portalReturn) ui.passTab = 'membership'; // back from Manage Billing: show the Membership tab
+  if (portalReturn) ui.passTab = 'membership'; // back from Manage Billing: show the Billing tab
   const configReady = loadBillingConfig();
   sb.auth.getSession().then(async ({ data }) => {
     await configReady;
