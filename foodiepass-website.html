@@ -1320,7 +1320,7 @@ async function loadAdmin() {
   refreshChrome();
   if (view === 'admin' || (view === 'pass' && adminState.isAdmin)) { const y = window.scrollY; go(view); window.scrollTo(0, y); }
 }
-function resetAdmin() { Object.assign(adminState, { checkedFor: null, loaded: false, isAdmin: false, failed: false, tab: 'overview', apps: [], restaurants: [], contacts: {}, contactsReady: false, customers: null, customersError: false, q: '', status: 'all', draft: null, msg: null }); }
+function resetAdmin() { Object.assign(adminState, { checkedFor: null, customerId: null, custDraft: null, loaded: false, isAdmin: false, failed: false, tab: 'overview', apps: [], restaurants: [], contacts: {}, contactsReady: false, customers: null, customersError: false, q: '', status: 'all', draft: null, msg: null }); }
 
 // ---------- Customers ----------
 function customerStatus(c, now = Date.now()) {
@@ -1346,8 +1346,8 @@ function customerRows() {
     const s = customerStatus(c);
     const confirming = adminState.confirmCustomer === c.id;
     // Admins can't be deleted here. Deleting a member cancels their Stripe subscription first.
-    const action = s.key === 'admin' ? '' : confirming ? '' : `<button class="btn sm" data-act="custDeleteAsk" data-id="${esc(c.id)}" style="border-color:#8F3215; color:#8F3215">Delete</button>`;
-    const row = `<tr><td><b>${esc(c.full_name || '(no name)')}</b><br><span class="small muted">${esc(c.email || '')}</span></td>
+    const action = `<div style="display:flex; gap:8px"><button class="btn sm" data-act="custOpen" data-id="${esc(c.id)}">Edit</button>${s.key === 'admin' || confirming ? '' : `<button class="btn sm" data-act="custDeleteAsk" data-id="${esc(c.id)}" style="border-color:#8F3215; color:#8F3215">Delete</button>`}</div>`;
+    const row = `<tr><td><button data-act="custOpen" data-id="${esc(c.id)}" style="all:unset; cursor:pointer; font-weight:700; text-decoration:underline; text-underline-offset:3px">${esc(c.full_name || '(no name)')}</button><br><span class="small muted">${esc(c.email || '')}</span></td>
       <td class="small" style="min-width:190px">${c.phone ? '<span style="white-space:nowrap">' + esc(formatPhone(c.phone) || c.phone) + '</span><br>' : ''}${esc(joinAddress(c.address_line1, c.address_line2, c.city, c.state, c.zip)) || (c.phone ? '' : '<span class="muted">—</span>')}</td>
       <td><span class="badge${s.key === 'active' || s.key === 'admin' ? ' new' : ''}">${esc(s.label)}</span></td>
       <td class="tabular">${s.until ? esc(fmtDate(new Date(s.until).toISOString())) : '—'}</td>
@@ -1355,14 +1355,85 @@ function customerRows() {
       <td>${c.marketing ? 'Yes' : 'No'}</td>
       <td>${action}</td></tr>`;
     if (!confirming) return row;
-    const warn = s.key === 'active' || s.key === 'due'
-      ? 'This member still has access. Any renewing membership is cancelled in Stripe right away, with no refund, and their account and pass are removed.'
-      : 'Their account, pass and any unused gift codes are removed.';
-    return row + `<tr><td colspan="7" style="background:#FCE7DF; color:#8F3215">
-      <b>Delete ${esc(c.full_name || c.email || 'this customer')} permanently?</b> ${warn} This can’t be undone.
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px"><button class="btn sm" data-act="custDeleteYes" data-id="${esc(c.id)}" id="custDeleteYes" style="border-color:#8F3215; color:#8F3215">Yes, Delete Customer</button><button class="btn sm" data-act="custDeleteNo">Keep Customer</button></div>
-    </td></tr>`;
+    return row + `<tr><td colspan="7" style="background:#FCE7DF; color:#8F3215">${customerDeleteConfirm(c, s)}</td></tr>`;
   }).join('');
+}
+function customerDeleteConfirm(c, s) {
+  const warn = s.key === 'active' || s.key === 'due'
+    ? 'This member still has access. Any renewing membership is cancelled in Stripe right away, with no refund, and their account and pass are removed.'
+    : 'Their account, pass and any unused gift codes are removed.';
+  return `<b>Delete ${esc(c.full_name || c.email || 'this customer')} permanently?</b> ${warn} This can’t be undone.
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px"><button class="btn sm" data-act="custDeleteYes" data-id="${esc(c.id)}" id="custDeleteYes" style="border-color:#8F3215; color:#8F3215">Yes, Delete Customer</button><button class="btn sm" data-act="custDeleteNo">Keep Customer</button></div>`;
+}
+// One customer: membership summary and an edit form, like the restaurant editor.
+function customerDetail() {
+  const c = (adminState.customers || []).find((x) => x.id === adminState.customerId);
+  if (!c) return '<div class="note">That customer is no longer in the list.</div>';
+  const s = customerStatus(c);
+  const d = adminState.custDraft || c;
+  const opt = (v, cur) => `<option value="${esc(v)}"${String(v) === String(cur || '') ? ' selected' : ''}>${esc(v)}</option>`;
+  const [first, last] = d.first_name || d.last_name ? [d.first_name || '', d.last_name || ''] : [String(c.full_name || '').split(' ')[0] || '', String(c.full_name || '').split(' ').slice(1).join(' ')];
+  const half = 'style="width:100%; min-width:0"';
+  return `<p style="margin-bottom:14px"><button class="btn sm" data-act="custBack">← All Customers</button></p>
+    <div class="admin-head"><div><p class="eyebrow">Customer</p><h1>${esc(c.full_name || c.email || 'Customer')}</h1></div></div>
+    <div style="display:grid; gap:18px">
+      <div class="card" style="display:grid; gap:8px">
+        <h3>Membership</h3>
+        <p><span class="badge${s.key === 'active' || s.key === 'admin' ? ' new' : ''}">${esc(s.label)}</span></p>
+        <p><b>Member Through:</b> ${s.until ? esc(fmtDate(new Date(s.until).toISOString())) : '—'}</p>
+        <p><b>Joined:</b> ${esc(fmtDate(c.joined_at))}</p>
+        <p class="small muted">Billing (card, renewals, refunds) is managed in Stripe.</p>
+      </div>
+      <div class="card">
+        <h3>Customer Details</h3>
+        ${adminState.msg ? `<div class="note" role="alert" style="background:#FCE7DF; color:#8F3215">${esc(adminState.msg)}</div>` : ''}
+        <form class="stack" id="custForm" novalidate>
+          <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px">
+            <label class="f" style="min-width:0">First Name<input id="cFirst" maxlength="59" autocomplete="off" value="${esc(first)}" ${half}></label>
+            <label class="f" style="min-width:0">Last Name<input id="cLast" maxlength="60" autocomplete="off" value="${esc(last)}" ${half}></label>
+          </div>
+          <label class="f">Email<input id="cEmail" type="email" maxlength="254" autocomplete="off" value="${esc(d.email || '')}"><span class="small muted" style="font-weight:400">This is the email they sign in with. Changing it takes effect right away, and Stripe receipts follow.</span></label>
+          <label class="f">Phone<input id="cPhone" type="tel" maxlength="20" autocomplete="off" data-phone placeholder="555-555-5555" value="${esc(formatPhone(d.phone) || d.phone || '')}"></label>
+          <label class="f">Address Line 1<input id="cLine1" maxlength="120" autocomplete="off" value="${esc(d.address_line1 || '')}"></label>
+          <label class="f">Address Line 2<input id="cLine2" maxlength="80" autocomplete="off" value="${esc(d.address_line2 || '')}"></label>
+          <label class="f">City<input id="cCity" maxlength="80" autocomplete="off" value="${esc(d.city || '')}"></label>
+          <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px">
+            <label class="f" style="min-width:0">State<select id="cState" ${half}><option value=""></option>${US_STATES.map((x) => opt(x, d.state)).join('')}</select></label>
+            <label class="f" style="min-width:0">Zip<input id="cZip" maxlength="10" inputmode="numeric" autocomplete="off" value="${esc(d.zip || '')}" ${half}></label>
+          </div>
+          <label style="display:flex; gap:10px; align-items:flex-start; font-size:15px"><input type="checkbox" id="cMarketing" style="width:20px; height:20px; margin-top:2px"${d.marketing ? ' checked' : ''}> Sends them marketing emails</label>
+          <div style="display:flex; gap:10px; flex-wrap:wrap"><button class="btn pri" type="submit" id="custSaveBtn">Save Changes</button><button class="btn" type="button" data-act="custBack">Cancel</button></div>
+        </form>
+      </div>
+      ${s.key === 'admin' ? '' : `<div class="card" style="display:grid; gap:10px"><h3>Delete Customer</h3>${adminState.confirmCustomer === c.id
+        ? `<div style="background:#FCE7DF; color:#8F3215; padding:14px; border-radius:12px">${customerDeleteConfirm(c, s)}</div>`
+        : `<p class="small muted">Removes their account and pass. Any renewing membership is cancelled in Stripe first.</p><button class="btn sm" data-act="custDeleteAsk" data-id="${esc(c.id)}" style="border-color:#8F3215; color:#8F3215; justify-self:start">Delete Customer</button>`}</div>`}
+    </div>`;
+}
+async function adminSaveCustomer() {
+  const c = (adminState.customers || []).find((x) => x.id === adminState.customerId);
+  if (!c) return;
+  const v = (id) => ($('#' + id) ? $('#' + id).value.trim() : '');
+  const body = { userId: c.id, first_name: v('cFirst'), last_name: v('cLast'), email: v('cEmail').toLowerCase(), phone: v('cPhone'),
+    address_line1: v('cLine1'), address_line2: v('cLine2'), city: v('cCity'), state: v('cState'), zip: v('cZip'), marketing: !!($('#cMarketing') && $('#cMarketing').checked) };
+  adminState.custDraft = { ...body, id: c.id };
+  const phone = formatPhone(body.phone);
+  const problem = !body.first_name || !body.last_name ? 'Enter a first and last name.'
+    : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email) ? 'Enter a valid email address.'
+    : phone === null ? 'Enter a 10-digit phone number, or leave it blank.'
+    : body.zip && !/^\d{5}(-\d{4})?$/.test(body.zip) ? 'Enter a 5-digit zip code, or leave it blank.' : '';
+  if (problem) { adminState.msg = problem; return rerenderAdmin(); }
+  const btn = $('#custSaveBtn'); if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  try {
+    const r = await api('admin-customer-update', { method: 'POST', body });
+    Object.assign(c, { first_name: body.first_name, last_name: body.last_name, full_name: r.full_name, email: r.email, phone: r.phone,
+      address_line1: body.address_line1, address_line2: body.address_line2, city: body.city, state: body.state, zip: body.zip, marketing: body.marketing });
+    adminState.custDraft = null; adminState.msg = null;
+    toast(r.stripe_updated === false ? 'Saved. Stripe didn’t update, so change the email there too.' : 'Customer saved');
+  } catch (e) {
+    adminState.msg = errText(e);
+  }
+  rerenderAdmin();
 }
 const CUSTOMER_DELETE_ERRORS = {
   is_admin: 'Admins can’t be deleted here.',
@@ -1382,6 +1453,7 @@ async function adminDeleteCustomer(id) {
     if (known !== 'not_found') return refreshCustomers();
   } else toast('Customer deleted');
   adminState.customers = (adminState.customers || []).filter((c) => c.id !== id);
+  if (adminState.customerId === id) { adminState.customerId = null; adminState.custDraft = null; return go('admin'); }
   refreshCustomers();
 }
 function adminCustomers() {
@@ -1546,6 +1618,7 @@ function vAdmin() {
   if (adminState.failed) return wrap('<div class="note">The admin panel couldn’t load. Refresh the page and try again.</div>');
   if (!adminState.isAdmin) return wrap(`<div class="note">${esc(member.email || 'This account')} doesn’t have admin access.</div>`);
   if (adminState.draft) return adminShell('restaurants', '', adminForm());
+  if (adminState.customerId) return adminShell('customers', '', customerDetail());
   const t = adminState.tab;
   if (t === 'applications') return adminShell(t, 'Applications', `<div class="grid" style="gap:12px">${adminApps()}</div>`);
   if (t === 'restaurants') return adminShell(t, 'Restaurants', adminRestaurants(), '<button class="btn pri" data-act="adminNew">Add A Restaurant</button>');
@@ -1923,7 +1996,7 @@ document.addEventListener('click', (e) => {
   if (d.planPick) { ui.plan = d.planPick; ui.joined = false; go('join', 'checkout'); return; }
   switch (d.act) {
     case 'passTab': ui.passTab = d.tab; billing.delStep = 0; billing.delMsg = null; billing.giftMsg = null; go('pass'); window.scrollTo(0, 0); return;
-    case 'adminTab': adminState.tab = d.tab; adminState.draft = null; adminState.msg = null; adminState.confirmDelete = false; adminState.confirmApp = null; adminState.confirmCustomer = null; return go('admin');
+    case 'adminTab': adminState.tab = d.tab; adminState.draft = null; adminState.customerId = null; adminState.custDraft = null; adminState.msg = null; adminState.confirmDelete = false; adminState.confirmApp = null; adminState.confirmCustomer = null; return go('admin');
     case 'custExport': return exportCustomers();
     case 'adminNew': adminState.draft = blankDraft(); adminState.msg = null; return go('admin');
     case 'adminEdit': { const r = adminState.restaurants.find((x) => x.id === d.id); if (r) { adminState.draft = restaurantDraft(r); adminState.msg = null; adminState.confirmDelete = false; go('admin'); } return; }
@@ -1941,8 +2014,10 @@ document.addEventListener('click', (e) => {
     case 'appDeleteAsk': adminState.confirmApp = d.id; return rerenderAdmin();
     case 'appDeleteNo': adminState.confirmApp = null; return rerenderAdmin();
     case 'appDeleteYes': return adminDeleteApp(d.id);
-    case 'custDeleteAsk': adminState.confirmCustomer = d.id; refreshCustomers(); { const b = $('#custDeleteYes'); if (b) b.focus(); } return;
-    case 'custDeleteNo': adminState.confirmCustomer = null; return refreshCustomers();
+    case 'custDeleteAsk': adminState.confirmCustomer = d.id; if (adminState.customerId) rerenderAdmin(); else refreshCustomers(); { const b = $('#custDeleteYes'); if (b) b.focus(); } return;
+    case 'custDeleteNo': adminState.confirmCustomer = null; return adminState.customerId ? rerenderAdmin() : refreshCustomers();
+    case 'custOpen': adminState.customerId = d.id; adminState.custDraft = null; adminState.msg = null; adminState.confirmCustomer = null; go('admin'); window.scrollTo(0, 0); return;
+    case 'custBack': adminState.customerId = null; adminState.custDraft = null; adminState.msg = null; adminState.confirmCustomer = null; return go('admin');
     case 'custDeleteYes': return adminDeleteCustomer(d.id);
     case 'adminFromApp': return adminFromApp(d.id);
     case 'adminAppStatus': return adminAppStatus(d.id, d.status);
@@ -2011,6 +2086,7 @@ document.addEventListener('submit', (e) => {
   if (f.id === 'signinForm') { member = { name: $('#sName').value.trim(), since: Date.now(), code: 'GS-' + Math.random().toString(36).slice(2, 7).toUpperCase() }; store.set('member', member); return go('pass'); }
   if (f.id === 'partnerForm') return submitPartner();
   if (f.id === 'adminForm') return adminSave();
+  if (f.id === 'custForm') return adminSaveCustomer();
   if (f.id === 'payJoinForm') return startSignupCheckout();
   if (f.id === 'authEmailForm') {
     if (view === 'join') setReturnTo({ view: 'join', anchor: 'checkout', plan: ui.plan });

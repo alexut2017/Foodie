@@ -40,3 +40,6 @@ verify_jwt = false   # public: no account exists yet; limited per email and per 
 
 [functions.signup-finish]
 verify_jwt = false   # public: needs the random sign-up id from the Stripe return link
+
+[functions.admin-customer-update]
+verify_jwt = true
