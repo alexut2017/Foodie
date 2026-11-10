@@ -1078,6 +1078,17 @@ const CUSTOMER_PAGES = {
   },
   account() {
     const { del } = accountParts();
+    if (ui.refs === undefined) loadMyReferrals();
+    const refs = ui.refs, isNew = member.since && Date.now() - member.since < 14 * 86400000;
+    const referCard = `<div class="card" style="display:grid; gap:12px">
+          <h3>Invite Friends</h3>
+          <p>When a friend joins with your link, they get 13 months for the price of 12 and you get a free month.</p>
+          <p><b>Your Code:</b> ${esc(member.code)}</p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap"><button class="btn" data-act="share">Copy My Referral Link</button></div>
+          ${refs ? `<p class="small muted">Friends who joined: <b>${refs.joined}</b> · Free months earned this year: <b>${refs.months_this_year}</b></p>` : ''}
+          ${refs && refs.referred_by ? `<p class="small muted">You joined with code ${esc(refs.referred_by)}.</p>` : ''}
+          ${refs && !refs.referred_by && isNew ? `<form class="stack" id="refForm" novalidate><label class="f">Joined Through A Friend? Add Their Code<input id="refCode" maxlength="9" autocapitalize="characters" autocomplete="off" placeholder="GS-1A2B3C"></label>${ui.refMsg ? `<p class="small" role="status">${esc(ui.refMsg)}</p>` : ''}<button class="btn sm" type="submit" style="justify-self:start">Add Code</button></form>` : ''}
+        </div>`;
     return `${customerHead('Account')}
       <div style="display:grid; gap:18px">
         <div class="card" style="display:grid; gap:10px">
@@ -1088,10 +1099,27 @@ const CUSTOMER_PAGES = {
           ${(() => { const d = member.details || {}; const a = joinAddress(d.address_line1, d.address_line2, d.city, d.state, d.zip); return a ? `<p><b>Address:</b> ${esc(a)}</p>` : ''; })()}
           <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px"><button class="btn" data-act="signout">Sign Out</button><button class="btn" data-act="signoutAll">Sign Out On All Devices</button></div>
         </div>
+        ${referCard}
         ${billing.fnOk ? `<div class="card" style="display:grid; gap:14px"><h3>Delete Account</h3>${del}</div>` : ''}
       </div>`;
   },
 };
+// Referral link for this member: opening it remembers the code, and joining with it earns both sides a month.
+const referralLink = () => location.origin + location.pathname + '?ref=' + encodeURIComponent(member ? member.code : '');
+async function loadMyReferrals() {
+  ui.refs = null; // loading
+  try { const { data, error } = await sb.rpc('my_referrals'); ui.refs = error || !data ? null : data; } catch (e) { ui.refs = null; }
+  if (view === 'pass' && ui.passTab === 'account') rerender();
+}
+async function claimReferral(code) {
+  code = String(code || '').trim().toUpperCase();
+  if (!/^GS-[0-9A-F]{6}$/.test(code)) { ui.refMsg = 'Referral codes look like GS-1A2B3C.'; return rerender(); }
+  let out = 'error';
+  try { const { data, error } = await sb.rpc('claim_referral', { p_code: code }); out = error ? 'error' : data; } catch (e) { out = 'error'; }
+  ui.refMsg = { ok: 'Thanks! You and your friend each get a free month once your membership is paid.', invalid_code: 'We couldn’t find that code. Check it with your friend.', own_code: 'That’s your own code. Share it with friends instead.', already_referred: 'Your account already has a referral.', too_late: 'Referral codes can be added within 14 days of joining.' }[out] || 'We couldn’t save the code. Try again.';
+  if (out === 'ok') { await loadStatus(); await loadMyReferrals(); }
+  rerender();
+}
 function vPassBody(inShell) {
   if (!member && ui.signup) {
     // Just paid on Stripe as a new member: confirm the payment, then sign in with the emailed code.
@@ -1995,7 +2023,7 @@ document.addEventListener('click', (e) => {
   if (d.mode) { ui.mode = d.mode; document.querySelectorAll('[data-mode]').forEach((b) => { b.classList.toggle('on', b.dataset.mode === ui.mode); b.setAttribute('aria-pressed', b.dataset.mode === ui.mode); }); return refreshResults(true); }
   if (d.planPick) { ui.plan = d.planPick; ui.joined = false; go('join', 'checkout'); return; }
   switch (d.act) {
-    case 'passTab': ui.passTab = d.tab; billing.delStep = 0; billing.delMsg = null; billing.giftMsg = null; go('pass'); window.scrollTo(0, 0); return;
+    case 'passTab': ui.passTab = d.tab; if (d.tab === 'account') { ui.refs = undefined; ui.refMsg = null; } billing.delStep = 0; billing.delMsg = null; billing.giftMsg = null; go('pass'); window.scrollTo(0, 0); return;
     case 'adminTab': adminState.tab = d.tab; adminState.draft = null; adminState.customerId = null; adminState.custDraft = null; adminState.msg = null; adminState.confirmDelete = false; adminState.confirmApp = null; adminState.confirmCustomer = null; return go('admin');
     case 'custExport': return exportCustomers();
     case 'adminNew': adminState.draft = blankDraft(); adminState.msg = null; return go('admin');
@@ -2050,9 +2078,9 @@ document.addEventListener('click', (e) => {
     case 'delAsk': billing.delStep = 1; billing.delMsg = null; rerender(); { const i = document.getElementById('delConfirm'); if (i) i.focus(); } return;
     case 'delCancel': billing.delStep = 0; billing.delMsg = null; return rerender();
     case 'share': {
-      const link = 'LocalScout referral: ' + (member ? member.code : '');
-      if (navigator.clipboard) navigator.clipboard.writeText(link).then(() => toast('Referral code copied'), () => toast('Your referral code: ' + member.code));
-      else toast('Your referral code: ' + member.code);
+      const link = referralLink();
+      if (navigator.clipboard) navigator.clipboard.writeText(link).then(() => toast('Referral link copied'), () => toast('Your referral link: ' + link));
+      else toast('Your referral link: ' + link);
       return;
     }
     case 'report': return toast('Thanks. In the live app this opens a short form and we follow up with the restaurant.');
@@ -2087,6 +2115,7 @@ document.addEventListener('submit', (e) => {
   if (f.id === 'partnerForm') return submitPartner();
   if (f.id === 'adminForm') return adminSave();
   if (f.id === 'custForm') return adminSaveCustomer();
+  if (f.id === 'refForm') return claimReferral($('#refCode').value);
   if (f.id === 'payJoinForm') return startSignupCheckout();
   if (f.id === 'authEmailForm') {
     if (view === 'join') setReturnTo({ view: 'join', anchor: 'checkout', plan: ui.plan });
@@ -2134,7 +2163,7 @@ if (AUTH_LIVE) {
     if (view === 'pass' || view === 'join' || view === 'admin') go(view, view === 'join' && member ? 'checkout' : null);
   });
   sb.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') { member = null; ui.passTab = 'pass'; billing.status = null; resetAdmin(); refreshChrome(); if (view === 'admin' || view === 'pass') go(view); return; }
+    if (event === 'SIGNED_OUT') { member = null; ui.passTab = 'pass'; ui.refs = undefined; ui.refMsg = null; billing.status = null; resetAdmin(); refreshChrome(); if (view === 'admin' || view === 'pass') go(view); return; }
     if (session && session.user) {
       const wasIn = !!member, prev = member;
       member = memberFromUser(session.user);

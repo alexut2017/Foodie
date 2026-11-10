@@ -1,6 +1,7 @@
 // Pay-first sign-up: the account is created only after Stripe confirms the payment.
 // finishSignup is idempotent, so the webhook, the finish page and the reconcile job can all call it safely.
 import { admin, stripe, audit } from './clients.ts';
+import { recordReferral } from './referrals.ts';
 
 export type SignupDetails = {
   first_name: string; last_name: string; phone: string;
@@ -87,6 +88,7 @@ export async function finishSignup(session: {
     await stripe.customers.update(customerId, { metadata: { user_id: userId } });
   }
   if (p.purchase_id) await admin.from('purchases').update({ user_id: userId }).eq('id', p.purchase_id).is('user_id', null);
+  if (p.referred_by) await recordReferral(userId, p.referred_by); // months are granted once the membership is synced
 
   if (p.status !== 'completed' || p.user_id !== userId) {
     await admin.from('pending_signups').update({ user_id: userId, status: 'completed', updated_at: new Date().toISOString() }).eq('id', pendingId);

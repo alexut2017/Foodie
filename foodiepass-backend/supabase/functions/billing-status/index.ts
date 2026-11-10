@@ -3,6 +3,7 @@
 import { admin, stripe, requireUser } from '../_shared/clients.ts';
 import { json, fail, preflight, logError } from '../_shared/http.ts';
 import { handleCheckoutSession } from '../_shared/billing.ts';
+import { rewardReferralQuietly } from '../_shared/referrals.ts';
 
 Deno.serve(async (req) => {
   const pre = preflight(req); if (pre) return pre;
@@ -20,6 +21,8 @@ Deno.serve(async (req) => {
         if (s.status === 'complete') { await handleCheckoutSession(s.id); attemptStatus = 'completed'; }
       }
     }
+    // A code added after paying (claim_referral) is rewarded the next time the member's status loads.
+    await rewardReferralQuietly(user.id);
 
     const [ent, subs, gifts, purchases] = await Promise.all([
       admin.from('entitlements').select('source, access_expires_at, grace_expires_at').eq('user_id', user.id).eq('feature', 'membership'),

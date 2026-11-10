@@ -3,6 +3,7 @@
 import { admin, stripe, audit, type Stripe } from './clients.ts';
 import { membershipAccess, giftAccessEnd, sec } from './entitlements.ts';
 import { finishSignup } from './signup.ts';
+import { rewardReferralQuietly } from './referrals.ts';
 
 const iso = (ms: number | null) => (ms === null ? null : new Date(ms).toISOString());
 
@@ -90,7 +91,7 @@ function newGiftCode(): string {
 export async function handleCheckoutSession(sessionId: string): Promise<void> {
   const session = await stripe.checkout.sessions.retrieve(sessionId);
   const attemptId = session.metadata?.attempt_id ?? session.client_reference_id ?? null;
-  await finishSignup(session); // pay-first sign-up: create the account before granting access
+  const signupUser = await finishSignup(session); // pay-first sign-up: create the account before granting access
 
   if (session.mode === 'subscription' && session.subscription) {
     const subId = typeof session.subscription === 'string' ? session.subscription : session.subscription.id;
@@ -107,6 +108,9 @@ export async function handleCheckoutSession(sessionId: string): Promise<void> {
       }
     }
   }
+
+  // A referred friend's first payment: grant the referral months (never fails the checkout).
+  if (session.status === 'complete') await rewardReferralQuietly(signupUser ?? session.metadata?.user_id ?? null);
 
   if (attemptId && session.status === 'complete') {
     await admin.from('checkout_attempts').update({ status: 'completed', updated_at: new Date().toISOString() }).eq('id', attemptId);
