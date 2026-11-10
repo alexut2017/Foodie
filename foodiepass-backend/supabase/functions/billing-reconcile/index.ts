@@ -47,7 +47,18 @@ Deno.serve(async (req) => {
       report.attempts_closed++;
     }
 
-    // 4. Retention.
+    // 3b. Pay-first sign-ups past their checkout expiry: create the account if Stripe was paid, otherwise close.
+    const { data: staleSignups } = await admin.from('pending_signups').select('id, stripe_session_id').eq('status', 'open').lt('expires_at', new Date().toISOString()).limit(100);
+    for (const p of staleSignups ?? []) {
+      if (p.stripe_session_id) {
+        try { await handleCheckoutSession(p.stripe_session_id); } catch (err) { report.errors++; logError('reconcile.signup', err); }
+      }
+      await admin.from('pending_signups').update({ status: 'expired', updated_at: new Date().toISOString() }).eq('id', p.id).eq('status', 'open');
+      report.attempts_closed++;
+    }
+
+    // 4. Retention. Unpaid sign-up forms hold names and addresses, so they go after 30 days.
+    await admin.from('pending_signups').delete().eq('status', 'expired').lt('created_at', new Date(Date.now() - 30 * 86400_000).toISOString());
     await admin.from('audit_log').delete().lt('created_at', new Date(Date.now() - 400 * 86400_000).toISOString());
     await admin.from('billing_events').delete().in('status', ['processed', 'ignored']).lt('received_at', new Date(Date.now() - 90 * 86400_000).toISOString());
   } catch (e) {

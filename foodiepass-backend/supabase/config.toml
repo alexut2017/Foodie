@@ -34,3 +34,9 @@ otp_length = 6
 
 [functions.admin-customer-delete]
 verify_jwt = true
+
+[functions.signup-checkout]
+verify_jwt = false   # public: no account exists yet; limited per email and per hour
+
+[functions.signup-finish]
+verify_jwt = false   # public: needs the random sign-up id from the Stripe return link

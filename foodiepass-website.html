@@ -425,6 +425,67 @@ function joinDetailsBottom() {
       <label class="f" style="min-width: 0">Zip<input id="jdZip" required maxlength="10" inputmode="numeric" autocomplete="postal-code" value="${esc(d.zip || '')}" ${JOIN_HALF}></label>
     </div>`;
 }
+// Pay-first Join form for visitors without an account: details, then straight to Stripe. The account is made after payment.
+function payFirstForm(plan) {
+  if (billing.live === null) return '<button class="btn pri" style="align-self:flex-start" disabled>Loading payment options…</button>';
+  if (!offeringLive(plan)) return '<div class="note">Online payment opens at launch. Check back soon.</div>';
+  return `<form class="stack" id="payJoinForm" novalidate>
+      ${joinDetailsTop()}
+      <label class="f">Email<input id="authEmail" type="email" required autocomplete="email" maxlength="254" value="${esc(auth.email)}"><span class="small muted" style="font-weight:400">We’ll email your sign-in code here, so check it’s right.</span></label>
+      ${joinDetailsBottom()}
+      <label style="display:flex; gap:10px; align-items:flex-start; font-size:15px"><input type="checkbox" id="authMarketing" style="width:20px; height:20px; margin-top:2px"${auth.marketing ? ' checked' : ''}> Send me new restaurants and member offers (optional)</label>
+      <label aria-hidden="true" style="position:absolute; left:-9999px">Leave this empty<input id="jdWebsite" tabindex="-1" autocomplete="off"></label>
+      <div class="note" id="payJoinMsg" role="alert" style="background:#FCE7DF; color:#8F3215" hidden></div>
+      <button class="btn pri" type="submit" id="payJoinBtn" style="align-self:flex-start"${billing.busy ? ' disabled' : ''}>Continue To Payment · $30</button>
+      <p class="small muted">${plan === 'gift' ? 'A gift is a one-time $30 payment.' : 'Your membership renews automatically at $30 a year until you cancel.'} Payments are non-refundable except where the law requires otherwise. By continuing you agree to the <a href="#terms" data-go="terms">Terms Of Use</a> and <a href="#privacy" data-go="privacy">Privacy Policy</a>. You’ll pay on our payment provider’s secure page; LocalScout never sees your card details.</p>
+      <p class="small">Already a member? <a href="#pass" data-go="pass">Sign in</a></p>
+    </form>`;
+}
+// A stable id per filled-in form, so a double click or a retry reuses the same checkout, but edited details start a new one.
+function signupIdFor(offering, email, details) {
+  const text = JSON.stringify([offering, email, details]); let h = 0;
+  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) | 0;
+  return attemptFor('signup-' + (h >>> 0).toString(36));
+}
+async function startSignupCheckout() {
+  if (billing.busy) return;
+  const email = $('#authEmail').value.trim().toLowerCase(); auth.email = email;
+  const problem = readJoinDetails() || (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? '' : 'Enter a valid email address, like name@example.com.');
+  const box = $('#payJoinMsg'), btn = $('#payJoinBtn');
+  const show = (text) => { if (!box) return; box.textContent = text; box.hidden = !text; if (text) box.scrollIntoView({ block: 'center', behavior: 'smooth' }); };
+  if (problem) return show(problem);
+  show('');
+  const offering = OFFERING[ui.plan] || OFFERING.member;
+  billing.busy = true; if (btn) { btn.disabled = true; btn.textContent = 'Opening secure checkout…'; }
+  try {
+    const r = await api('signup-checkout', { method: 'POST', body: {
+      offeringId: offering, signupId: signupIdFor(offering, email, auth.details), email, details: auth.details,
+      marketing: auth.marketing, termsVersion: AUTH_CONFIG.termsVersion, referredBy: pendingRef(), hp: ($('#jdWebsite') || {}).value || '',
+    } });
+    location.assign(r.url);
+  } catch (e) {
+    billing.busy = false; if (btn) { btn.disabled = false; btn.textContent = 'Continue To Payment · $30'; }
+    show(errText(e));
+  }
+}
+// Back from Stripe after a pay-first sign-up: wait for the payment to be confirmed, then email the sign-in code.
+async function finishPaidSignup(signupId) {
+  ui.signup = { state: 'checking' }; go('pass');
+  let r = null; const t0 = Date.now();
+  while (Date.now() - t0 < 30000) {
+    try { r = await api('signup-finish', { method: 'POST', body: { signupId } }); } catch (e) { r = null; }
+    if (r && r.status !== 'pending') break;
+    await new Promise((res) => setTimeout(res, 2000));
+  }
+  if (!r || r.status !== 'paid') { ui.signup = { state: 'slow' }; return go('pass'); }
+  ui.passTab = r.offering_id === OFFERING.gift ? 'gifts' : 'pass';
+  if (member && member.email === r.email) { ui.signup = null; await loadStatus(); return go('pass'); }
+  if (member) { try { await sb.auth.signOut(); } catch (e) { /* ignore */ } member = null; refreshChrome(); }
+  ui.signup = { state: 'paid', email: r.email };
+  auth.step = 'email'; auth.email = r.email; go('pass');
+  await sendCode(r.email, null, false);
+  if (auth.step === 'code') { auth.msg = { text: 'We emailed a 6-digit code to ' + r.email + '. It expires in 10 minutes. Check spam if you don’t see it.' }; renderAuth(); }
+}
 // Reads the join fields into auth.details. Returns a message for the first problem, or '' when everything is filled in.
 function readJoinDetails() {
   const v = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
@@ -727,9 +788,10 @@ async function verifyCode(token) {
     auth.msg = { err: true, text: isRateLimited(error) ? 'Too many attempts. Wait a minute, then try again.' : 'That code is wrong or has expired. Check the latest email, or send a new code.' };
     return renderAuth();
   }
-  auth.step = 'email'; auth.msg = null;
+  auth.step = 'email'; auth.msg = null; ui.signup = null;
   member = memberFromUser(data.session.user);
   toast('You\u2019re signed in');
+  await loadStatus(); // so a paid member sees their pass straight away
   afterSignIn();
 }
 function afterSignIn() {
@@ -949,9 +1011,9 @@ function vJoin() {
         : billing.live === null ? '<button class="btn pri" style="align-self:flex-start" disabled>Loading payment options\u2026</button>'
         : `<div class="note ok"><b>Your account is ready.</b> Online payment opens at launch. We\u2019ll email ${esc(member.email)} as soon as you can ${p === 'gift' ? 'send a gift' : 'activate your membership'}.</div>`}
       <p class="small muted">You\u2019ll pay on our payment provider\u2019s secure page. LocalScout never sees or stores your card details.</p>`) : `
-      <h2 style="font-size:34px">Start Your Membership</h2>
-      <p>First, confirm your email. Then pay $30 to activate your membership.</p>
-      ${authPanel('join')}`) : ui.joined ? `<div class="note ok"><b>You\u2019re in.</b> Your pass is ready on the My pass page.</div><a class="btn pri" href="#pass" data-go="pass" style="align-self:flex-start">Open my pass</a>` : `
+      <h2 style="font-size:34px">${p === 'gift' ? 'Send A Gift Membership' : 'Start Your Membership'}</h2>
+      <p>${p === 'gift' ? 'Fill in your details and pay $30. Then enter the code we email you, and your gift code will be waiting in your account.' : 'Fill in your details and pay $30. Then enter the code we email you to open your pass.'}</p>
+      ${payFirstForm(p)}`) : ui.joined ? `<div class="note ok"><b>You\u2019re in.</b> Your pass is ready on the My pass page.</div><a class="btn pri" href="#pass" data-go="pass" style="align-self:flex-start">Open my pass</a>` : `
       <h2 style="font-size:34px">${p === 'gift' ? 'Send a gift membership' : 'Start your membership'}</h2>
       <form class="stack" id="joinForm">
         <label class="f">${p === 'gift' ? 'Your name' : 'Full name (shown on your pass)'}<input id="jName" required autocomplete="name"></label>
@@ -1031,6 +1093,15 @@ const CUSTOMER_PAGES = {
   },
 };
 function vPassBody(inShell) {
+  if (!member && ui.signup) {
+    // Just paid on Stripe as a new member: confirm the payment, then sign in with the emailed code.
+    const st = ui.signup.state;
+    return `<section><div class="wrap band">
+      <div class="sec-head" style="margin:0"><p class="eyebrow">Welcome to LocalScout</p><h1 style="font-size: clamp(40px, 5.4vw, 60px)">${st === 'paid' ? 'Payment received' : st === 'slow' ? 'Almost there' : 'Confirming your payment…'}</h1>
+        <p>${st === 'paid' ? 'Enter the 6-digit code we emailed you to open your pass.' : st === 'slow' ? 'Your payment is still being confirmed. You won’t be charged twice. In a minute, sign in with the email you used to open your pass.' : 'This usually takes a few seconds.'}</p></div>
+      <div class="card">${st === 'checking' ? '<p class="muted">Checking with our payment provider…</p>' : authPanel('signin')}</div>
+    </div></section>`;
+  }
   if (!member) {
     return `<section><div class="wrap band">
       <div class="sec-head" style="margin:0"><p class="eyebrow">My pass</p><h1 style="font-size: clamp(40px, 5.4vw, 60px)">Welcome back</h1><p>Sign in with the email you joined with. Not a member yet? <a href="#join" data-go="join">Join for $30</a>.</p></div>
@@ -1940,6 +2011,7 @@ document.addEventListener('submit', (e) => {
   if (f.id === 'signinForm') { member = { name: $('#sName').value.trim(), since: Date.now(), code: 'GS-' + Math.random().toString(36).slice(2, 7).toUpperCase() }; store.set('member', member); return go('pass'); }
   if (f.id === 'partnerForm') return submitPartner();
   if (f.id === 'adminForm') return adminSave();
+  if (f.id === 'payJoinForm') return startSignupCheckout();
   if (f.id === 'authEmailForm') {
     if (view === 'join') setReturnTo({ view: 'join', anchor: 'checkout', plan: ui.plan });
     if (view === 'admin') setReturnTo({ view: 'admin' });
@@ -1966,7 +2038,7 @@ if (AUTH_LIVE) {
   const qp = new URLSearchParams(location.search);
   if (qp.get('error_description') || qp.get('error')) { toast('Sign-in was cancelled or failed. Try again or use email.'); }
   // Returns from Stripe: ?checkout=success&attempt=<id>, ?checkout=canceled, ?portal=return
-  const checkoutResult = qp.get('checkout'), checkoutAttempt = qp.get('attempt'), portalReturn = qp.get('portal');
+  const checkoutResult = qp.get('checkout'), checkoutAttempt = qp.get('attempt'), portalReturn = qp.get('portal'), signupId = qp.get('signup');
   if (portalReturn) ui.passTab = 'membership'; // back from Manage Billing: show the Billing tab
   const configReady = loadBillingConfig();
   sb.auth.getSession().then(async ({ data }) => {
@@ -1974,6 +2046,7 @@ if (AUTH_LIVE) {
     const signedIn = !!(data && data.session);
     member = memberFromUser(signedIn ? data.session.user : null);
     if (location.search) { try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) { /* ignore */ } }
+    if (checkoutResult === 'success' && signupId) { view = 'pass'; return finishPaidSignup(signupId); }
     if (signedIn && checkoutResult === 'success') { view = 'pass'; ui.passTab = 'pass'; return confirmCheckout(checkoutAttempt); }
     if (checkoutResult === 'canceled') toast('Checkout cancelled. You weren\u2019t charged.');
     if (signedIn && (function () { try { return localStorage.getItem(RETURN_KEY); } catch (e) { return null; } })()) { await loadStatus(); return afterSignIn(); }

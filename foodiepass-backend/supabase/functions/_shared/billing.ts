@@ -2,6 +2,7 @@
 // Everything is re-read from Stripe and written idempotently (upserts keyed by Stripe ids).
 import { admin, stripe, audit, type Stripe } from './clients.ts';
 import { membershipAccess, giftAccessEnd, sec } from './entitlements.ts';
+import { finishSignup } from './signup.ts';
 
 const iso = (ms: number | null) => (ms === null ? null : new Date(ms).toISOString());
 
@@ -20,7 +21,11 @@ export async function syncSubscription(subscriptionId: string): Promise<void> {
   const sub = await stripe.subscriptions.retrieve(subscriptionId, { expand: ['latest_invoice'] });
   const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
   const userId = (sub.metadata?.user_id as string | undefined) ?? (await userIdForCustomer(customerId));
-  if (!userId) throw new Error('subscription has no known user');
+  if (!userId) {
+    // Pay-first sign-up whose account isn't created yet: the checkout handler creates it, then syncs this subscription.
+    if (sub.metadata?.pending_signup_id) return;
+    throw new Error('subscription has no known user');
+  }
 
   const priceId = sub.items.data[0]?.price?.id ?? '';
   const offeringId = (sub.metadata?.offering_id as string | undefined) ?? (await offeringForPrice(priceId));
@@ -85,6 +90,7 @@ function newGiftCode(): string {
 export async function handleCheckoutSession(sessionId: string): Promise<void> {
   const session = await stripe.checkout.sessions.retrieve(sessionId);
   const attemptId = session.metadata?.attempt_id ?? session.client_reference_id ?? null;
+  await finishSignup(session); // pay-first sign-up: create the account before granting access
 
   if (session.mode === 'subscription' && session.subscription) {
     const subId = typeof session.subscription === 'string' ? session.subscription : session.subscription.id;
