@@ -126,7 +126,7 @@ var CFG = {
   termsVersion: '2026-11-04',
   resendSeconds: 60,
   passMinutes: 15,
-  version: '0.4.0'
+  version: '0.5.0'
 };
 var sb = null;
 try {
@@ -196,7 +196,7 @@ async function loadPayOpen() {
 function memberFromUser(u) {
   var m = u.user_metadata || {};
   var name = String(m.full_name || m.name || (u.email || '').split('@')[0] || 'Member').trim();
-  var ph = String(u.phone || '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+  var ph = String(u.phone || m.phone || '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
   return { id: u.id, name: name, email: u.email || '', phone: ph ? fmtPhone(ph) : '', ref: 'GS-' + String(u.id).replace(/-/g, '').slice(0, 6).toUpperCase(), since: u.created_at };
 }
 async function statusFromEntitlements(uid) {
@@ -223,47 +223,82 @@ async function onSession(session) {
   R.status = st; R.isAdmin = adm;
   if (!st.active && S.visit) S.visit = null;
   save(); render();
+  loadReferrals(true);
+}
+// Referrals: credit the friend whose link brought this person here, then load this member's referral numbers.
+async function loadReferrals(claimPending) {
+  if (!sb || !R.user) return;
+  var pending = storedRef();
+  if (claimPending && pending) {
+    try {
+      var c = await sb.rpc('claim_referral', { p_code: pending });
+      if (!c.error) { try { localStorage.removeItem('gs-ref'); } catch (e) { /* storage off */ } }
+    } catch (e) { /* try again next sign-in */ }
+  }
+  try { var r = await sb.rpc('my_referrals'); if (!r.error && r.data) { R.refs = r.data; render(); } } catch (e) { /* stats are optional */ }
+}
+async function applyRef() {
+  var el = document.getElementById('refIn'), code = el ? el.value.trim().toUpperCase() : '';
+  if (!refOk(code)) return set({ refMsg: { kind: 'err', text: 'Referral codes look like GS-1A2B3C.' } });
+  var res; try { res = await sb.rpc('claim_referral', { p_code: code }); } catch (e) { res = { error: { message: 'network' } }; }
+  var out = res.error ? 'error' : res.data;
+  var text = { ok: 'Thanks! Your friend gets a free month once your membership starts.', invalid_code: 'We couldn’t find that code. Check it with your friend.', own_code: 'That’s your own code. Share it with friends instead.', already_referred: 'Your account already has a referral.', too_late: 'Referral codes can be added within 14 days of joining.' }[out] || 'We couldn’t save the code. Check your connection and try again.';
+  set({ refMsg: { kind: out === 'ok' ? 'ok' : 'err', text: text } });
+  if (out === 'ok') loadReferrals(false);
 }
 
-// ---------- Auth: phone + text code, or email + code (the email also carries a sign-in link) ----------
-var fmtPhone = function (d) { return d.length < 4 ? d : d.length < 7 ? '(' + d.slice(0, 3) + ') ' + d.slice(3) : '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6); };
-var phoneOk = function () { return S.phone.length === 10 && /^[2-9]/.test(S.phone); };
-var e164 = function () { return '+1' + S.phone; };
-function loginOk() {
-  var id = S.method === 'phone' ? phoneOk() : emailOk(S.email);
-  return id && (S.mode !== 'join' || (S.name.trim() && R.agree));
-}
+// ---------- Auth: same as the website. Join collects name, email, phone and address, then a 6-digit email code. ----------
+var fmtPhone = function (d) { d = String(d || '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, ''); return d.length === 10 ? d.slice(0, 3) + '-' + d.slice(3, 6) + '-' + d.slice(6) : d; };
+var US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
+var refOk = function (c) { return /^GS-[0-9A-F]{6}$/i.test(String(c || '').trim()); };
+var storedRef = function () { try { return localStorage.getItem('gs-ref') || ''; } catch (e) { return ''; } };
 function authErrText(err) { return (String(err.message || '') + ' ' + String(err.code || '') + ' ' + String(err.status || '')).toLowerCase(); }
+// Reads the join form into R.d. Returns the first problem, or '' when everything is filled in (same checks as the website).
+function readJoin() {
+  var v = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  var d = { first_name: v('jdFirst'), last_name: v('jdLast'), phone: v('jdPhone'), address_line1: v('jdAddress1'), address_line2: v('jdAddress2'), city: v('jdCity'), state: v('jdState'), zip: v('jdZip'), ref: v('jdRef').toUpperCase() };
+  var m = document.getElementById('mktIn'); R.marketing = !!(m && m.checked);
+  R.d = d; S.email = v('emailIn'); save();
+  if (!d.first_name || !d.last_name) return 'Enter your first and last name.';
+  if (!emailOk(S.email)) return 'Enter a valid email address, like name@example.com.';
+  var digits = d.phone.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+  if (!digits) return 'Enter your phone number.';
+  if (digits.length !== 10) return 'Enter a 10-digit phone number, like 555-555-5555.';
+  d.phone = fmtPhone(digits);
+  if (!d.address_line1 || !d.city || !d.state) return 'Enter your full address.';
+  if (!/^\d{5}(-\d{4})?$/.test(d.zip)) return 'Enter a 5-digit zip code.';
+  if (d.ref && !refOk(d.ref)) return 'Referral codes look like GS-1A2B3C. Check it, or leave it blank.';
+  return '';
+}
 async function sendCode(isResend) {
   if (!sb) return set({ msg: { kind: 'err', text: 'LocalScout could not load. Check your connection and reload.' } });
-  var phone = S.method === 'phone';
-  var opts = { shouldCreateUser: S.mode === 'join' };
-  if (S.mode === 'join') opts.data = { full_name: S.name.trim(), terms_version: CFG.termsVersion, terms_accepted_at: new Date().toISOString(), marketing_opt_in: !!R.marketing };
-  if (!phone) opts.emailRedirectTo = location.origin + location.pathname;
-  var args = phone ? { phone: e164(), options: opts } : { email: S.email.trim().toLowerCase(), options: opts };
-  set({ busy: true, msg: null });
-  var res; try { res = await sb.auth.signInWithOtp(args); } catch (e) { res = { error: { message: 'network' } }; }
-  var err = res && res.error, t = err ? authErrText(err) : '';
-  if (err && S.mode === 'signin' && /otp_disabled|signups? not allowed|user not found/.test(t)) err = null; // don't reveal whether an account exists
-  if (err) {
-    var m;
-    if (phone && /provider|phone.*(disabled|not enabled)|unsupported|sms/.test(t)) m = 'Text sign-in isn’t switched on yet. Use email for now.';
-    else if (/rate|too many|429|seconds/.test(t)) m = 'Too many tries. Wait a minute, then try again.';
-    else if (phone && /invalid.*phone|phone.*invalid/.test(t)) m = 'Check the mobile number. We can only text US numbers right now.';
-    else m = phone ? 'We couldn’t text a code just now. Check the number, or use email.' : 'We couldn’t send the email just now. Check the address and your connection, then try again.';
-    return set({ busy: false, msg: { kind: 'err', text: m, toEmail: phone } });
+  var join = S.mode === 'join';
+  if (!isResend) {
+    var problem = join ? readJoin() : (function () { var el = document.getElementById('emailIn'); S.email = el ? el.value.trim() : S.email; save(); return emailOk(S.email) ? '' : 'Enter a valid email address, like name@example.com.'; })();
+    if (problem) return set({ msg: { kind: 'err', text: problem } });
   }
-  set({ busy: false, screen: 'code', code: '', sentAt: Date.now(), msg: isResend ? { kind: 'ok', text: phone ? 'New code sent.' : 'Sent again. Check your inbox and spam folder.' } : null }, 'codeIn');
+  var d = R.d || {};
+  var opts = { shouldCreateUser: join, emailRedirectTo: location.origin + location.pathname };
+  if (join) opts.data = {
+    full_name: (d.first_name + ' ' + d.last_name).trim(), first_name: d.first_name, last_name: d.last_name, phone: d.phone,
+    address_line1: d.address_line1, address_line2: d.address_line2 || undefined, city: d.city, state: d.state, zip: d.zip,
+    terms_version: CFG.termsVersion, terms_accepted_at: new Date().toISOString(), marketing_opt_in: !!R.marketing,
+    referred_by: d.ref || undefined
+  };
+  set({ busy: true, msg: null });
+  var res; try { res = await sb.auth.signInWithOtp({ email: S.email.trim().toLowerCase(), options: opts }); } catch (e) { res = { error: { message: 'network' } }; }
+  var err = res && res.error, t = err ? authErrText(err) : '';
+  if (err && !join && /otp_disabled|signups? not allowed|user not found/.test(t)) err = null; // don't reveal whether an account exists
+  if (err) return set({ busy: false, msg: { kind: 'err', text: /rate|too many|429|seconds/.test(t) ? 'Too many code requests. Wait a minute, then try again.' : 'We couldn’t send the code just now. Check the address and try again in a minute.' } });
+  set({ busy: false, screen: 'code', code: '', sentAt: Date.now(), msg: isResend ? { kind: 'ok', text: 'New code sent. Check your inbox and spam folder.' } : null }, 'codeIn');
 }
 async function verifyCode() {
   if (R.busy || R.code.length < 6) return;
-  var phone = S.method === 'phone';
-  var args = phone ? { phone: e164(), token: R.code, type: 'sms' } : { email: S.email.trim().toLowerCase(), token: R.code, type: 'email' };
   set({ busy: true, msg: null });
-  var res; try { res = await sb.auth.verifyOtp(args); } catch (e) { res = { error: { message: 'network' } }; }
+  var res; try { res = await sb.auth.verifyOtp({ email: S.email.trim().toLowerCase(), token: R.code, type: 'email' }); } catch (e) { res = { error: { message: 'network' } }; }
   if (res.error || !res.data || !res.data.session) {
     var t = res.error ? authErrText(res.error) : '';
-    var m = /expired|invalid|token/.test(t) ? 'That code didn’t work. It may have expired. Check it or send a new one.' : /rate|too many|429/.test(t) ? 'Too many tries. Wait a minute, then try again.' : 'We couldn’t check the code. Check your connection and try again.';
+    var m = /rate|too many|429/.test(t) ? 'Too many attempts. Wait a minute, then try again.' : 'That code is wrong or has expired. Check the latest email, or send a new code.';
     return set({ busy: false, code: '', msg: { kind: 'err', text: m } }, 'codeIn');
   }
   R.busy = false; R.code = '';
@@ -273,7 +308,7 @@ async function signOut(all) {
   set({ busy: true });
   try { await sb.auth.signOut({ scope: all ? 'global' : 'local' }); } catch (e) { /* still clear locally */ }
   S.visit = null; save();
-  set({ busy: false, screen: 'welcome', user: null, member: null, status: { active: false }, isAdmin: false, msg: { kind: 'ok', text: all ? 'Signed out on all devices.' : 'Signed out.' } });
+  set({ busy: false, screen: 'welcome', refs: null, refMsg: null, user: null, member: null, status: { active: false }, isAdmin: false, msg: { kind: 'ok', text: all ? 'Signed out on all devices.' : 'Signed out.' } });
 }
 
 // ---------- Screens ----------
@@ -288,34 +323,40 @@ function vWelcome() {
     '<p style="color:var(--mint);font-size:14px;text-align:center">Restaurants join free. Members pay $30 a year.</p></div></div>';
 }
 function vLogin() {
-  var join = S.mode === 'join', phone = S.method === 'phone';
-  var seg = function (m, label) { return '<button class="chip' + (S.method === m ? ' on' : '') + '" style="flex:1" data-act="method" data-id="' + m + '" aria-pressed="' + (S.method === m) + '">' + label + '</button>'; };
+  var join = S.mode === 'join', d = R.d || {};
+  var f = function (id, label, val, attrs) { return '<label class="f">' + label + '<input id="' + id + '" class="in" ' + (attrs || '') + ' value="' + esc(val || '') + '"></label>'; };
+  var two = function (a, b) { return '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">' + a + b + '</div>'; };
+  var states = '<label class="f">State<select id="jdState" class="in" autocomplete="address-level1"><option value=""></option>' + US_STATES.map(function (x) { return '<option' + ((d.state || 'TX') === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>';
+  var email = f('emailIn', 'Email', S.email, 'type="email" inputmode="email" autocomplete="email" autocapitalize="off" maxlength="254"');
   return '<div class="screen"><div class="stack"><button class="back" data-act="toWelcome" aria-label="Back">←</button>' +
-    '<h1>' + (join ? 'Create your account' : 'Welcome back') + '</h1>' +
-    '<p class="lede">' + (phone ? 'No password. We’ll text you a 6-digit code.' : 'No password. We’ll email you a 6-digit code.') + (join ? ' Your name goes on your member pass.' : '') + '</p>' +
-    '<div style="display:flex;gap:8px" role="group" aria-label="Sign in with">' + seg('phone', 'Phone') + seg('email', 'Email') + '</div>' +
-    (join ? '<label class="f">Full name<input id="nameIn" class="in" autocomplete="name" value="' + esc(S.name) + '"></label>' : '') +
-    (phone
-      ? '<label class="f">Mobile number<span style="display:flex;gap:10px"><span style="border:1.5px solid #CFC7B8;border-radius:14px;padding:0 14px;display:flex;align-items:center;background:var(--card);font-size:18px;font-weight:600">+1</span><input id="phoneIn" class="in" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="(713) 555-0123" value="' + esc(fmtPhone(S.phone)) + '"></span></label>'
-      : '<label class="f">Email<input id="emailIn" class="in" type="email" inputmode="email" autocomplete="email" autocapitalize="off" value="' + esc(S.email) + '"></label>') +
-    (join ? '<label class="check"><input id="agreeIn" type="checkbox"' + (R.agree ? ' checked' : '') + '> <span>I agree to the <a href="' + CFG.site + '#terms" target="_blank" rel="noopener">Terms</a> and <a href="' + CFG.site + '#privacy" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>' +
-      '<label class="check"><input id="mktIn" type="checkbox"' + (R.marketing ? ' checked' : '') + '> <span>Email me new restaurants and member offers (optional).</span></label>' : '') +
-    msgHtml() + (R.msg && R.msg.toEmail ? '<button class="btn ghost" data-act="method" data-id="email">Use email instead</button>' : '') + '</div>' +
-    '<div class="stack" style="gap:12px"><button class="btn" id="sendBtn" data-act="send"' + (loginOk() && !R.busy ? '' : ' disabled') + '>' + (R.busy ? 'Sending…' : phone ? 'Text me a code' : 'Email me a code') + '</button>' +
-    (phone ? '<p class="small" style="text-align:center;font-size:13px">Message and data rates may apply. We only text sign-in codes.</p>' : '') +
-    '<button class="btn link" data-act="' + (join ? 'signin' : 'join') + '">' + (join ? 'I already have an account' : 'New here? Create an account') + '</button></div></div>';
+    '<h1>' + (join ? 'Join LocalScout' : 'Sign in') + '</h1>' +
+    '<p class="lede">' + (join ? 'Your name goes on your member pass. We’ll email you a 6-digit code to confirm your account.' : 'Enter the email on your LocalScout account and we’ll send you a 6-digit code.') + '</p>' +
+    '<form id="authForm" class="stack" novalidate>' +
+    (join ? two(f('jdFirst', 'First name', d.first_name, 'maxlength="59" autocomplete="given-name"'), f('jdLast', 'Last name', d.last_name, 'maxlength="60" autocomplete="family-name"')) : '') +
+    email +
+    (join ? f('jdPhone', 'Phone', d.phone, 'type="tel" inputmode="tel" maxlength="20" autocomplete="tel" placeholder="555-555-5555"') +
+      f('jdAddress1', 'Address line 1', d.address_line1, 'maxlength="120" autocomplete="address-line1"') +
+      f('jdAddress2', 'Address line 2', d.address_line2, 'maxlength="80" autocomplete="address-line2"') +
+      f('jdCity', 'City', d.city || 'Houston', 'maxlength="80" autocomplete="address-level2"') +
+      two(states, f('jdZip', 'Zip', d.zip, 'inputmode="numeric" maxlength="10" autocomplete="postal-code"')) +
+      f('jdRef', 'Referral code (optional)', d.ref != null ? d.ref : storedRef(), 'maxlength="9" autocapitalize="characters" placeholder="GS-1A2B3C"') +
+      '<label class="check"><input id="mktIn" type="checkbox"' + (R.marketing ? ' checked' : '') + '> <span>Send me new restaurants and member offers (optional)</span></label>' : '') +
+    msgHtml() +
+    '<button class="btn" id="sendBtn" type="submit"' + (R.busy ? ' disabled' : '') + '>' + (R.busy ? 'Sending…' : 'Continue with email') + '</button>' +
+    '<p class="small">We’ll email you a one-time code. No password needed. ' + (join ? 'Next, you’ll activate your $30 membership. ' : 'Sign-in is for existing members. ') +
+    'By continuing you agree to the <a href="' + CFG.site + '#terms" target="_blank" rel="noopener">Terms of Use</a> and <a href="' + CFG.site + '#privacy" target="_blank" rel="noopener">Privacy Policy</a>.</p></form></div>' +
+    '<button class="btn link" data-act="' + (join ? 'signin' : 'join') + '">' + (join ? 'I already have an account' : 'New here? Join LocalScout') + '</button></div>';
 }
 function vCode() {
-  var phone = S.method === 'phone';
   var wait = Math.max(0, Math.ceil((R.sentAt + CFG.resendSeconds * 1000 - Date.now()) / 1000));
-  var to = phone ? fmtPhone(S.phone) : S.email.trim();
+  var who = esc(S.email.trim());
   return '<div class="screen"><div class="stack"><button class="back" data-act="toLogin" aria-label="Back">←</button>' +
-    '<h1>Enter the code</h1><p class="lede">' + (S.mode === 'signin' && !phone ? 'If there’s an account for ' : 'We sent a code to ') + '<strong>' + esc(to) + '</strong>' + (S.mode === 'signin' && !phone ? ', a code is on its way.' : '.') + '</p>' +
-    '<label class="f">' + (phone ? 'Code from the text' : 'Code from the email') + '<input id="codeIn" class="in" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456" value="' + esc(R.code) + '" style="letter-spacing:8px;font-size:24px;text-align:center"></label>' +
-    (phone ? '' : '<p class="small">Or tap the sign-in link in the email on this phone. Check spam if you don’t see it.</p>') + msgHtml() + '</div>' +
-    '<div class="stack" style="gap:12px"><button class="btn" id="verifyBtn" data-act="verify"' + (R.code.length >= 6 && !R.busy ? '' : ' disabled') + '>' + (R.busy ? 'Checking…' : 'Verify') + '</button>' +
-    '<button class="btn ghost" id="resendBtn" data-act="resend"' + (wait > 0 || R.busy ? ' disabled' : '') + '>' + (wait > 0 ? 'Resend in ' + wait + 's' : 'Resend code') + '</button>' +
-    '<button class="btn link" data-act="method" data-id="' + (phone ? 'email' : 'phone') + '">' + (phone ? 'Use email instead' : 'Use phone instead') + '</button></div></div>';
+    '<h1>Check your email</h1><p class="lede">' + (S.mode === 'signin' ? 'If there’s a LocalScout account for <strong>' + who + '</strong>, a code is on its way.' : 'We sent a 6-digit code to <strong>' + who + '</strong>.') + ' It expires in 1 hour. Check spam if you don’t see it.</p>' +
+    '<label class="f">6-digit code from your email<input id="codeIn" class="in" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456" value="' + esc(R.code) + '" style="letter-spacing:8px;font-size:24px;text-align:center"></label>' +
+    msgHtml() + '</div>' +
+    '<div class="stack" style="gap:12px"><button class="btn" id="verifyBtn" data-act="verify"' + (R.code.length >= 6 && !R.busy ? '' : ' disabled') + '>' + (R.busy ? 'Checking…' : 'Verify and continue') + '</button>' +
+    '<button class="btn ghost" id="resendBtn" data-act="resend"' + (wait > 0 || R.busy ? ' disabled' : '') + '>' + (wait > 0 ? 'Resend code in ' + wait + 's' : 'Resend code') + '</button>' +
+    '<button class="btn link" data-act="toLogin">Use a different email</button></div></div>';
 }
 // Status badges, same as the website: New, Founding partner, plus Popular for featured partners.
 function badgesHtml(r) {
@@ -551,7 +592,13 @@ function inviteHtml(m) {
   var mail = 'mailto:?subject=' + encodeURIComponent(t.subject) + '&body=' + encodeURIComponent(t.body);
   return '<div class="card"><h2>Invite friends</h2><p class="small">Your referral code</p><p style="font-family:var(--display);font-size:24px;font-weight:800">' + esc(m.ref) + '</p>' +
     '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><a class="btn" href="' + esc(sms) + '">Text a friend</a><a class="btn ghost" href="' + esc(mail) + '">Email a friend</a></div>' +
-    '<button class="btn link" data-act="copyRef">' + (navigator.share ? 'Share another way' : 'Copy my referral link') + '</button></div>';
+    '<button class="btn link" data-act="copyRef">' + (navigator.share ? 'Share another way' : 'Copy my referral link') + '</button>' +
+    '<p class="small">You get 1 free month for each friend who joins with your code and starts a membership (up to 12 a year).</p>' +
+    (R.refs ? '<div class="kv"><span class="small">Friends who joined</span><span class="v">' + R.refs.joined + '</span></div><div class="kv"><span class="small">Free months earned this year</span><span class="v">' + R.refs.months_this_year + ' of 12</span></div>' : '') +
+    (R.refs && !R.refs.referred_by && m.since && Date.now() - new Date(m.since).getTime() < 14 * DAY
+      ? '<label class="f" style="margin-top:6px">Invited by a friend? Enter their code<span style="display:flex;gap:8px"><input id="refIn" class="in" maxlength="9" autocapitalize="characters" placeholder="GS-1A2B3C" style="min-width:0"><button class="pill" data-act="applyRef">Apply</button></span></label>' : '') +
+    (R.refs && R.refs.referred_by ? '<p class="small">You joined with code ' + esc(R.refs.referred_by) + '.</p>' : '') +
+    (R.refMsg ? '<p class="note ' + R.refMsg.kind + '">' + esc(R.refMsg.text) + '</p>' : '') + '</div>';
 }
 function tabsHtml() {
   return '<nav class="tabs" aria-label="Main">' + [['explore', 'Explore', ICON.fork], ['pass', 'My pass', ICON.card], ['account', 'Account', ICON.user]].map(function (t) {
@@ -625,12 +672,11 @@ document.addEventListener('click', function (e) {
   if (t.tagName === 'A' && t.getAttribute('href') === '#') e.preventDefault();
   var id = t.getAttribute('data-id');
   switch (t.getAttribute('data-act')) {
-    case 'join': return set({ screen: 'login', mode: 'join', detail: null, msg: null }, S.name ? idField() : 'nameIn');
-    case 'signin': return set({ screen: 'login', mode: 'signin', detail: null, msg: null }, idField());
-    case 'method': S.method = id; return set({ screen: 'login', code: '', msg: null }, idField());
+    case 'join': return set({ screen: 'login', mode: 'join', detail: null, msg: null }, (R.d && R.d.first_name) ? 'emailIn' : 'jdFirst');
+    case 'signin': return set({ screen: 'login', mode: 'signin', detail: null, msg: null }, 'emailIn');
     case 'browse': return set({ screen: 'app', tab: 'explore', msg: null });
     case 'toWelcome': return set({ screen: R.user ? 'app' : 'welcome', msg: null });
-    case 'toLogin': return set({ screen: 'login', code: '', msg: null }, idField());
+    case 'toLogin': return set({ screen: 'login', code: '', msg: null }, 'emailIn');
     case 'send': return sendCode(false);
     case 'resend': return sendCode(true);
     case 'verify': return verifyCode();
@@ -655,6 +701,7 @@ document.addEventListener('click', function (e) {
       if (navigator.share) return navigator.share({ title: it.subject, text: it.body }).catch(function () {});
       if (navigator.clipboard) return navigator.clipboard.writeText(link).then(done, function () { set({ msg: { kind: 'ok', text: link } }); });
       return set({ msg: { kind: 'ok', text: link } });
+    case 'applyRef': return applyRef();
     case 'report': return set({ msg: { kind: 'ok', text: 'Thanks. A short report form opens at launch, and we follow up with the restaurant.' } });
     case 'partnerOpen': return set({ partnerOpen: true }, 'pName');
     case 'partnerClose': return set({ partnerOpen: false });
@@ -662,26 +709,26 @@ document.addEventListener('click', function (e) {
     case 'signOutAll': return signOut(true);
   }
 });
-document.addEventListener('submit', function (e) { if (e.target.id === 'partnerForm') { e.preventDefault(); submitPartner(); } });
-function idField() { return S.method === 'phone' ? 'phoneIn' : 'emailIn'; }
-function syncSend() { var b = document.getElementById('sendBtn'); if (b) b.disabled = R.busy || !loginOk(); }
+document.addEventListener('submit', function (e) {
+  if (e.target.id === 'partnerForm') { e.preventDefault(); submitPartner(); }
+  else if (e.target.id === 'authForm') { e.preventDefault(); sendCode(false); }
+});
+var JD = { jdFirst: 'first_name', jdLast: 'last_name', jdPhone: 'phone', jdAddress1: 'address_line1', jdAddress2: 'address_line2', jdCity: 'city', jdState: 'state', jdZip: 'zip', jdRef: 'ref' };
 document.addEventListener('input', function (e) {
   var el = e.target;
-  if (el.id === 'emailIn') { S.email = el.value; save(); syncSend(); }
-  else if (el.id === 'phoneIn') { S.phone = el.value.replace(/\D/g, '').replace(/^1(?=\d{10})/, '').slice(0, 10); save(); el.value = fmtPhone(S.phone); syncSend(); }
+  if (el.id === 'emailIn') { S.email = el.value; save(); }
   else if (el.id === 'codeIn') { R.code = el.value.replace(/\D/g, '').slice(0, 8); el.value = R.code; var vb = document.getElementById('verifyBtn'); if (vb) vb.disabled = R.busy || R.code.length < 6; if (R.code.length === 6 && e.inputType !== 'insertText') verifyCode(); }
-  else if (el.id === 'nameIn') { S.name = el.value; save(); syncSend(); }
+  else if (JD[el.id]) { R.d = R.d || {}; R.d[JD[el.id]] = el.value; }
   else if (el.id === 'qIn') { S.q = el.value; save(); refreshResults(); }
   else if (el.id === 'passQIn') { S.passQ = el.value; save(); document.getElementById('passList').innerHTML = passItems().map(passRow).join(''); }
   else if (el.id === 'swipe') { if (Number(el.value) >= 92) confirmVisit(); }
   else if (el.classList.contains('pf')) { R.partner = R.partner || {}; R.partner[el.id] = el.value; }
 });
 document.addEventListener('change', function (e) {
-  if (e.target.id === 'agreeIn') { R.agree = e.target.checked; syncSend(); }
-  else if (e.target.id === 'mktIn') { R.marketing = e.target.checked; }
+  if (e.target.id === 'mktIn') { R.marketing = e.target.checked; }
+  else if (JD[e.target.id]) { R.d = R.d || {}; R.d[JD[e.target.id]] = e.target.value; }
 });
 document.addEventListener('keydown', function (e) {
-  if (e.key === 'Enter' && (e.target.id === 'emailIn' || e.target.id === 'nameIn' || e.target.id === 'phoneIn')) { var b = document.getElementById('sendBtn'); if (b && !b.disabled) sendCode(false); }
   if (e.key === 'Enter' && e.target.id === 'codeIn') verifyCode();
   if (e.target.id === 'swipe' && e.key === 'Enter') confirmVisit();
 });
@@ -700,6 +747,8 @@ setInterval(function () {
 (async function start() {
   render();
   var qs = new URLSearchParams(location.search + '&' + location.hash.replace(/^#/, ''));
+  var refParam = qs.get('ref'); // referral link: remember it for sign-up on this device
+  if (refOk(refParam)) { try { localStorage.setItem('gs-ref', refParam.trim().toUpperCase()); } catch (e) { /* storage off */ } }
   var linkErr = qs.get('error_description');
   loadDirectory(); loadPayOpen();
   if (!sb) { R.screen = 'welcome'; R.msg = { kind: 'err', text: 'LocalScout could not load. Check your connection and reload.' }; return render(); }

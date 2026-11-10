@@ -392,6 +392,9 @@ const AUTH_CONFIG = {
   termsVersion: '2026-11-04',
   resendSeconds: 60,
 };
+// Referral link (?ref=GS-XXXXXX): remember it on this device so the new account credits the member who invited them.
+try { const rq = new URLSearchParams(location.search).get('ref'); if (rq && /^GS-[0-9A-F]{6}$/i.test(rq)) localStorage.setItem('gs-ref', rq.toUpperCase()); } catch (e) { /* storage off */ }
+const pendingRef = () => { try { return localStorage.getItem('gs-ref') || undefined; } catch (e) { return undefined; } };
 let sb = null;
 try {
   if (AUTH_CONFIG.supabaseUrl && AUTH_CONFIG.supabaseAnonKey && window.supabase && window.supabase.createClient) {
@@ -701,7 +704,7 @@ async function sendCode(email, details, marketing) {
   try {
     ({ error } = await sb.auth.signInWithOtp({ email, options: signingIn
       ? { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname }
-      : { shouldCreateUser: true, emailRedirectTo: location.origin + location.pathname, data: { full_name: fullName || undefined, first_name: details.first_name || undefined, last_name: details.last_name || undefined, phone: details.phone || undefined, address_line1: details.address_line1 || undefined, address_line2: details.address_line2 || undefined, city: details.city || undefined, state: details.state || undefined, zip: details.zip || undefined, terms_version: AUTH_CONFIG.termsVersion, terms_accepted_at: new Date().toISOString(), marketing_opt_in: !!marketing } } }));
+      : { shouldCreateUser: true, emailRedirectTo: location.origin + location.pathname, data: { full_name: fullName || undefined, first_name: details.first_name || undefined, last_name: details.last_name || undefined, phone: details.phone || undefined, address_line1: details.address_line1 || undefined, address_line2: details.address_line2 || undefined, city: details.city || undefined, state: details.state || undefined, zip: details.zip || undefined, terms_version: AUTH_CONFIG.termsVersion, terms_accepted_at: new Date().toISOString(), marketing_opt_in: !!marketing, referred_by: pendingRef() } } }));
   } catch (e) { error = { message: 'network' }; }
   auth.busy = false;
   // No account for this email: answer the same way as a real one, so the form doesn't reveal who is a member.

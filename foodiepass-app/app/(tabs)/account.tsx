@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSession } from '../../src/session';
+import { supabase } from '../../src/supabase';
 import { manageBilling } from '../../src/checkout';
 import { deleteAccount, errText } from '../../src/billing';
 import { CONFIG, siteLink } from '../../src/config';
@@ -27,6 +28,23 @@ export default function Account() {
   const textFriend = () => openOr(`sms:${Platform.OS === 'ios' ? '&' : '?'}body=${encodeURIComponent(inviteBody)}`);
   const emailFriend = () => openOr(`mailto:?subject=${encodeURIComponent('Join me on LocalScout')}&body=${encodeURIComponent(inviteBody)}`);
   const invite = () => { Share.share({ message: inviteBody }).catch(() => undefined); };
+
+  // Referrals: this member's numbers, plus a code box for new members who joined without the link.
+  const [refs, setRefs] = useState<{ joined: number; months_this_year: number; referred_by: string | null } | null>(null);
+  const [refCode, setRefCode] = useState('');
+  const [refMsg, setRefMsg] = useState<{ err?: boolean; text: string } | null>(null);
+  const loadRefs = () => { supabase.rpc('my_referrals').then(({ data, error }) => { if (!error && data) setRefs(data); }, () => undefined); };
+  useEffect(loadRefs, [session?.user.id]);
+  const isNew = !!session?.user.created_at && Date.now() - Date.parse(session.user.created_at) < 14 * 86400000;
+  async function applyRef() {
+    const code = refCode.trim().toUpperCase();
+    if (!/^GS-[0-9A-F]{6}$/.test(code)) return setRefMsg({ err: true, text: 'Referral codes look like GS-1A2B3C.' });
+    const { data, error } = await supabase.rpc('claim_referral', { p_code: code });
+    const out = error ? 'error' : String(data);
+    const text: Record<string, string> = { ok: 'Thanks! Your friend gets a free month once your membership starts.', invalid_code: 'We couldn’t find that code. Check it with your friend.', own_code: 'That’s your own code. Share it with friends instead.', already_referred: 'Your account already has a referral.', too_late: 'Referral codes can be added within 14 days of joining.' };
+    setRefMsg({ err: out !== 'ok', text: text[out] ?? 'We couldn’t save the code. Check your connection and try again.' });
+    if (out === 'ok') loadRefs();
+  }
 
   function confirmDelete() {
     Alert.alert(
@@ -78,6 +96,24 @@ export default function Account() {
               <Button title="Email a friend" kind="ghost" onPress={emailFriend} style={{ flex: 1, paddingHorizontal: 10 }} />
             </View>
             <Button title="Share another way" kind="ghost" style={{ borderColor: 'transparent' }} onPress={invite} />
+            <Small>You get 1 free month for each friend who joins with your code and starts a membership (up to 12 a year).</Small>
+            {refs ? (
+              <>
+                <Row k="Friends who joined" v={String(refs.joined)} />
+                <Row k="Free months earned this year" v={`${refs.months_this_year} of 12`} />
+                {refs.referred_by ? <Small>You joined with code {refs.referred_by}.</Small> : null}
+              </>
+            ) : null}
+            {refs && !refs.referred_by && isNew ? (
+              <View style={{ gap: 6, marginTop: 4 }}>
+                <Small>Invited by a friend? Enter their code</Small>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TextInput style={s.refIn} value={refCode} onChangeText={(t) => { setRefCode(t); setRefMsg(null); }} placeholder="GS-1A2B3C" placeholderTextColor="#9AA3A2" autoCapitalize="characters" autoCorrect={false} maxLength={9} accessibilityLabel="Referral code" />
+                  <Button title="Apply" onPress={applyRef} style={{ paddingHorizontal: 18 }} />
+                </View>
+              </View>
+            ) : null}
+            {refMsg ? <Note tone={refMsg.err ? 'err' : 'ok'}>{refMsg.text}</Note> : null}
           </Card>
           <PartnerForm />
           {isAdmin ? <Button title="Open admin dashboard" kind="dark" onPress={() => Linking.openURL(siteLink('admin'))} /> : null}
@@ -110,4 +146,5 @@ const s = StyleSheet.create({
   h: { fontSize: 20, fontWeight: '800', color: C.bayou },
   code: { fontSize: 24, fontWeight: '800', color: C.bayou, letterSpacing: 1 },
   link: { fontSize: 16, fontWeight: '600', color: C.brick, paddingVertical: 10, textAlign: 'center' },
+  refIn: { flex: 1, minHeight: 52, borderWidth: 1.5, borderColor: '#CFC7B8', borderRadius: 14, paddingHorizontal: 14, fontSize: 17, backgroundColor: C.card, color: C.bayou },
 });
