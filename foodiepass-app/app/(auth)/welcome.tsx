@@ -12,7 +12,7 @@ export default function Welcome() {
     <SafeAreaView style={s.wrap}>
       <View style={s.top}>
         <Logo size={72} />
-        <Text style={s.brand}>Grub<Text style={{ color: C.chili }}>Scout</Text></Text>
+        <Text style={s.brand}>Local<Text style={{ color: C.chili }}>Scout</Text></Text>
         <Text style={s.h1}>One $30 pass.{'\n'}<Text style={{ color: C.mustard }}>Every great local table in Houston.</Text></Text>
         <Text style={s.lede}>Show your pass, save on the check. Pays for itself in about five dinners.</Text>
       </View>

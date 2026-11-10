@@ -48,7 +48,7 @@ export default function Explore() {
   async function locateMe() {
     setLocMsg(null);
     const p = await Location.requestForegroundPermissionsAsync().catch(() => null);
-    if (!p?.granted) { setLocMsg('Location is off for GrubScout. Turn it on in Settings to sort by distance.'); return; }
+    if (!p?.granted) { setLocMsg('Location is off for LocalScout. Turn it on in Settings to sort by distance.'); return; }
     const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).catch(() => null);
     if (!pos) { setLocMsg('We couldn’t find your location. Try again in a moment.'); return; }
     setHere({ lat: pos.coords.latitude, lng: pos.coords.longitude });
@@ -89,7 +89,7 @@ export default function Explore() {
     <View style={{ gap: 14 }}>
       <View style={s.hero}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><Logo size={28} /><Eyebrow style={{ color: C.mustard }}>Partner restaurants</Eyebrow></View>
-        <H1 style={{ fontSize: 28, lineHeight: 32, color: C.linen }}>Find a GrubScout restaurant</H1>
+        <H1 style={{ fontSize: 28, lineHeight: 32, color: C.linen }}>Find a LocalScout restaurant</H1>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <TextInput style={s.search} value={q} onChangeText={setQ} placeholder="Search by name or cuisine" placeholderTextColor="#7E8B89" accessibilityLabel="Search restaurants" returnKeyType="search" onSubmitEditing={() => Keyboard.dismiss()} clearButtonMode="while-editing" />
           <Pressable style={s.searchBtn} onPress={() => Keyboard.dismiss()} accessibilityRole="button"><Text style={{ fontWeight: '800', color: C.bayou }}>Search</Text></Pressable>

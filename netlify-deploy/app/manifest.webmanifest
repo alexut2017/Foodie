@@ -1,6 +1,6 @@
 {
-  "name": "GrubScout",
-  "short_name": "GrubScout",
+  "name": "LocalScout",
+  "short_name": "LocalScout",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

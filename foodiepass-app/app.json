@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "GrubScout",
+    "name": "LocalScout",
     "slug": "grubscout",
     "owner": "wuemilyy",
     "version": "0.3.0",
@@ -14,7 +14,7 @@
       "supportsTablet": false,
       "usesAppleSignIn": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "GrubScout uses your location to show partner restaurants near you.",
+        "NSLocationWhenInUseUsageDescription": "LocalScout uses your location to show partner restaurants near you.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -33,7 +33,7 @@
       ],
       [
         "expo-location",
-        { "locationWhenInUsePermission": "GrubScout uses your location to show partner restaurants near you." }
+        { "locationWhenInUsePermission": "LocalScout uses your location to show partner restaurants near you." }
       ]
     ],
     "experiments": { "typedRoutes": false },

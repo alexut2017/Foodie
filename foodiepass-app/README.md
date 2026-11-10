@@ -1,4 +1,4 @@
-# GrubScout mobile app (iOS + Android)
+# LocalScout mobile app (iOS + Android)
 
 One React Native codebase (Expo SDK 56) for both stores. It uses the same Supabase project, data and rules as the website and the web app at `/Foodie/app/`. Version 0.3.0.
 
@@ -52,4 +52,4 @@ You can also start builds from expo.dev by connecting the GitHub repo (base dire
 
 ## Payments in the app
 
-Membership checkout opens Stripe's hosted page in the in-app browser, and the server grants access. GrubScout sells a real-world dining service, which Apple generally allows outside in-app purchase (App Review Guideline 3.1.3(e)); confirm at review. Payments show "opens at launch" until Stripe and the server functions are live.
+Membership checkout opens Stripe's hosted page in the in-app browser, and the server grants access. LocalScout sells a real-world dining service, which Apple generally allows outside in-app purchase (App Review Guideline 3.1.3(e)); confirm at review. Payments show "opens at launch" until Stripe and the server functions are live.

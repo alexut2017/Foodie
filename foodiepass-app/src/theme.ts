@@ -1,4 +1,4 @@
-// GrubScout brand tokens (same as the website and brand kit).
+// LocalScout brand tokens (same as the website and brand kit).
 export const C = {
   linen: '#F6F4EF',
   sand: '#EDE8DE',

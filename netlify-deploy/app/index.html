@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="GrubScout">
-<title>GrubScout</title>
+<meta name="apple-mobile-web-app-title" content="LocalScout">
+<title>LocalScout</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
@@ -117,7 +117,7 @@ textarea.in { padding: 12px 16px; min-height: 96px; resize: vertical; font-size:
 </div>
 <script>
 'use strict';
-// GrubScout phone app (installable web app). Same Supabase project, data and rules as the website.
+// LocalScout phone app (installable web app). Same Supabase project, data and rules as the website.
 // Only the project URL and publishable key belong here. Secrets stay in Supabase.
 var CFG = {
   url: 'https://mroiimqqklitidpzaqnk.supabase.co',
@@ -152,7 +152,7 @@ var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, f
 var emailOk = function (e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || '').trim()); };
 var safeUrl = function (u) { return /^https?:\/\//i.test(String(u || '')) ? String(u) : ''; };
 var fmtDate = function (d) { return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); };
-var LOGO = '<svg width="SIZE" height="SIZE" viewBox="240 148 840 840" role="img" aria-label="GrubScout"><path d="M552 795 A239 98 0 1 0 770 795 L751 821 A177 58 0 1 1 570 821 Z" fill="#E34C19"/><path d="M660 157 C515 157 398 275 398 420 C398 470 410 515 430 555 C480 660 590 800 653 881 Q660 888 667 881 C730 800 840 660 890 547 C910 505 920 470 920 420 C920 275 805 157 660 157 Z" fill="#E34C19"/><path d="M567 283 A21 21 0 0 1 609 283 V407 A16 16 0 0 0 641 407 V283 A21.5 21.5 0 0 1 684 283 V407 A16 16 0 0 0 716 407 V283 A21 21 0 0 1 758 283 L764 435 C764 478 735 506 702 507 C697 507 694 510 694 516 V550 L698 670 C698 692 682 708 662 708 C642 708 626 692 626 670 L630 550 V516 C630 510 627 507 622 507 C589 506 561 478 561 435 Z" fill="#FFFFFF"/></svg>';
+var LOGO = '<svg width="SIZE" height="SIZE" viewBox="240 148 840 840" role="img" aria-label="LocalScout"><path d="M552 795 A239 98 0 1 0 770 795 L751 821 A177 58 0 1 1 570 821 Z" fill="#E34C19"/><path d="M660 157 C515 157 398 275 398 420 C398 470 410 515 430 555 C480 660 590 800 653 881 Q660 888 667 881 C730 800 840 660 890 547 C910 505 920 470 920 420 C920 275 805 157 660 157 Z" fill="#E34C19"/><path d="M567 283 A21 21 0 0 1 609 283 V407 A16 16 0 0 0 641 407 V283 A21.5 21.5 0 0 1 684 283 V407 A16 16 0 0 0 716 407 V283 A21 21 0 0 1 758 283 L764 435 C764 478 735 506 702 507 C697 507 694 510 694 516 V550 L698 670 C698 692 682 708 662 708 C642 708 626 692 626 670 L630 550 V516 C630 510 627 507 622 507 C589 506 561 478 561 435 Z" fill="#FFFFFF"/></svg>';
 var logo = function (n) { return LOGO.replace(/SIZE/g, String(n)); };
 var ICON = {
   fork: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 2-2 6 0 8v10"/></svg>',
@@ -235,7 +235,7 @@ function loginOk() {
 }
 function authErrText(err) { return (String(err.message || '') + ' ' + String(err.code || '') + ' ' + String(err.status || '')).toLowerCase(); }
 async function sendCode(isResend) {
-  if (!sb) return set({ msg: { kind: 'err', text: 'GrubScout could not load. Check your connection and reload.' } });
+  if (!sb) return set({ msg: { kind: 'err', text: 'LocalScout could not load. Check your connection and reload.' } });
   var phone = S.method === 'phone';
   var opts = { shouldCreateUser: S.mode === 'join' };
   if (S.mode === 'join') opts.data = { full_name: S.name.trim(), terms_version: CFG.termsVersion, terms_accepted_at: new Date().toISOString(), marketing_opt_in: !!R.marketing };
@@ -280,7 +280,7 @@ async function signOut(all) {
 function vLoading() { return '<div class="screen dark"><div class="center">' + logo(72) + '</div></div>'; }
 function vWelcome() {
   return '<div class="screen dark"><div class="stack" style="gap:18px; margin-top:32px">' + logo(72) +
-    '<p style="font-family:var(--display);font-size:28px;font-weight:800;letter-spacing:-.5px">Grub<span style="color:var(--chili)">Scout</span></p>' +
+    '<p style="font-family:var(--display);font-size:28px;font-weight:800;letter-spacing:-.5px">Local<span style="color:var(--chili)">Scout</span></p>' +
     '<h1 style="font-size:40px;color:var(--linen)">One $30 pass. <span style="color:var(--mustard)">Every great local table in Houston.</span></h1>' +
     '<p style="color:var(--mint);font-size:19px;line-height:1.4">Show your pass, save on the check. Pays for itself in about five dinners.</p>' + msgHtml() + '</div>' +
     '<div class="stack" style="gap:12px"><button class="btn" data-act="join">Get started</button><button class="btn ghost-light" data-act="signin">I already have an account</button>' +
@@ -379,7 +379,7 @@ function vExplore() {
     '<button class="btn ghost" data-act="clearFilters" style="min-height:44px">Clear filters</button></div>';
   return '<div class="main">' +
     '<div class="finder"><div style="display:flex;align-items:center;gap:10px">' + logo(28) + '<p class="eyebrow" style="color:var(--mustard)">Partner restaurants</p></div>' +
-    '<h1 style="font-size:28px;color:var(--linen)">Find a GrubScout restaurant</h1>' +
+    '<h1 style="font-size:28px;color:var(--linen)">Find a LocalScout restaurant</h1>' +
     '<div style="display:flex;gap:8px"><label class="sr" for="qIn">Search restaurants</label><input id="qIn" class="in search" type="search" placeholder="Search by name or cuisine" value="' + esc(S.q) + '" style="border:0">' +
     '<button class="pill" data-act="searchGo">Search</button></div>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="gbtn" data-act="locate">' + (R.here ? '◉ Near me' : '◎ Use my location') + '</button>' +
@@ -388,7 +388,7 @@ function vExplore() {
     '<div id="map" class="mapbox" role="region" aria-label="Map of partner restaurants"></div>' +
     '<div id="countLine" style="display:flex;justify-content:space-between;align-items:center">' + countHtml() + '</div>' +
     '<div id="exploreList" class="stack" style="gap:14px">' + listHtml() + '</div>' +
-    (R.member ? '' : '<button class="btn" data-act="join">Join GrubScout · $30 a year</button>') + '</div>';
+    (R.member ? '' : '<button class="btn" data-act="join">Join LocalScout · $30 a year</button>') + '</div>';
 }
 // Leaflet map (same map tiles as the website). Rebuilt after each render of Explore; markers follow the filters.
 function drawMap() {
@@ -524,7 +524,7 @@ function vAccountSignedOut() {
 function linksHtml() {
   return '<div class="card" style="gap:4px"><a class="btn link" href="' + CFG.site + '#how" target="_blank" rel="noopener">How it works</a><a class="btn link" href="' + CFG.site + '#faq" target="_blank" rel="noopener">FAQ</a><a class="btn link" href="' + CFG.site + '#conduct" target="_blank" rel="noopener">Member code of conduct</a>' +
     '<a class="btn link" href="' + CFG.site + '#terms" target="_blank" rel="noopener">Terms</a><a class="btn link" href="' + CFG.site + '#privacy" target="_blank" rel="noopener">Privacy</a></div>' +
-    '<p class="small" style="text-align:center;font-size:13px">GrubScout app v' + CFG.version + '</p>';
+    '<p class="small" style="text-align:center;font-size:13px">LocalScout app v' + CFG.version + '</p>';
 }
 function vAccount() {
   var m = R.member, st = R.status;
@@ -543,7 +543,7 @@ function vAccount() {
 // Invite friends straight from the phone's Messages or Mail app, prefilled with the member's referral link.
 function inviteText(m) {
   var link = new URL(CFG.site, location.href).href.replace(/#.*$/, '') + '?ref=' + encodeURIComponent(m.ref);
-  return { link: link, subject: 'Join me on GrubScout', body: 'I use GrubScout: one $30 pass that saves on the check at great local Houston restaurants. Join with my link: ' + link };
+  return { link: link, subject: 'Join me on LocalScout', body: 'I use LocalScout: one $30 pass that saves on the check at great local Houston restaurants. Join with my link: ' + link };
 }
 function inviteHtml(m) {
   var t = inviteText(m), ios = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
@@ -591,8 +591,8 @@ async function confirmVisit() {
   set({ visit: v });
   try {
     var res = await sb.from('redemptions').insert({ restaurant_id: v.rid, restaurant_name: v.name || null, offer: v.offer || null, code: v.code, opened_at: new Date(v.openedAt).toISOString(), confirmed_at: new Date(v.confirmedAt).toISOString() });
-    if (res.error) console.warn('GrubScout: visit not recorded', res.error.message);
-  } catch (e) { console.warn('GrubScout: visit not recorded'); }
+    if (res.error) console.warn('LocalScout: visit not recorded', res.error.message);
+  } catch (e) { console.warn('LocalScout: visit not recorded'); }
 }
 
 // ---------- Partner application (same RPC as the website) ----------
@@ -702,7 +702,7 @@ setInterval(function () {
   var qs = new URLSearchParams(location.search + '&' + location.hash.replace(/^#/, ''));
   var linkErr = qs.get('error_description');
   loadDirectory(); loadPayOpen();
-  if (!sb) { R.screen = 'welcome'; R.msg = { kind: 'err', text: 'GrubScout could not load. Check your connection and reload.' }; return render(); }
+  if (!sb) { R.screen = 'welcome'; R.msg = { kind: 'err', text: 'LocalScout could not load. Check your connection and reload.' }; return render(); }
   var s = null;
   try { s = (await sb.auth.getSession()).data.session; } catch (e) { s = null; }
   if (location.search || /access_token|error/.test(location.hash)) history.replaceState(null, '', location.pathname);

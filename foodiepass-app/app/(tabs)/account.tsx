@@ -22,10 +22,10 @@ export default function Account() {
 
   // Invite friends straight from Messages or Mail, prefilled with the member's referral link.
   const inviteLink = CONFIG.siteUrl.replace(/#.*$/, '') + '?ref=' + encodeURIComponent(ref);
-  const inviteBody = `I use GrubScout: one $30 pass that saves on the check at great local Houston restaurants. Join with my link: ${inviteLink}`;
+  const inviteBody = `I use LocalScout: one $30 pass that saves on the check at great local Houston restaurants. Join with my link: ${inviteLink}`;
   const openOr = (url: string) => Linking.openURL(url).catch(() => setMsg({ err: true, text: 'This phone couldn’t open that app. Use “Share another way” instead.' }));
   const textFriend = () => openOr(`sms:${Platform.OS === 'ios' ? '&' : '?'}body=${encodeURIComponent(inviteBody)}`);
-  const emailFriend = () => openOr(`mailto:?subject=${encodeURIComponent('Join me on GrubScout')}&body=${encodeURIComponent(inviteBody)}`);
+  const emailFriend = () => openOr(`mailto:?subject=${encodeURIComponent('Join me on LocalScout')}&body=${encodeURIComponent(inviteBody)}`);
   const invite = () => { Share.share({ message: inviteBody }).catch(() => undefined); };
 
   function confirmDelete() {
@@ -92,7 +92,7 @@ export default function Account() {
               <Text key={hash} accessibilityRole="link" onPress={() => Linking.openURL(siteLink(hash))} style={s.link}>{label}</Text>
             ))}
           </Card>
-          <Small style={{ textAlign: 'center' }}>GrubScout app v{CONFIG.version}</Small>
+          <Small style={{ textAlign: 'center' }}>LocalScout app v{CONFIG.version}</Small>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

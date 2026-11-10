@@ -38,7 +38,7 @@ export default function SignIn() {
     // Signing in: don't reveal whether an account exists for this number or address.
     if (error && !(signin && /otp_disabled|signups? not allowed|user not found/.test(t))) {
       if (error.status === 429 || /rate|too many|security purposes/.test(t)) setErr({ text: 'Too many code requests. Wait a minute, then try again.' });
-      else if (/verified tester|21608/.test(t)) setErr({ text: 'GrubScout texting is in test mode, so this number can’t get codes yet. Use email for now.', offerEmail: true });
+      else if (/verified tester|21608/.test(t)) setErr({ text: 'LocalScout texting is in test mode, so this number can’t get codes yet. Use email for now.', offerEmail: true });
       else if (/phone_provider_disabled|unsupported phone provider/.test(t)) setErr({ text: 'Text sign-in isn’t switched on yet. Use email for now.', offerEmail: true });
       else setErr({ text: method === 'phone' ? 'We couldn’t text a code to that number. Check it, or use email.' : 'We couldn’t email a code. Check the address and your connection.', offerEmail: method === 'phone' });
       return;
@@ -131,7 +131,7 @@ export default function SignIn() {
               />
             ) : null}
             <Small style={{ textAlign: 'center' }}>
-              By continuing you agree to the GrubScout{' '}
+              By continuing you agree to the LocalScout{' '}
               <Text style={s.link} onPress={() => Linking.openURL(siteLink('terms'))}>Terms</Text> and{' '}
               <Text style={s.link} onPress={() => Linking.openURL(siteLink('privacy'))}>Privacy Policy</Text>.
             </Small>

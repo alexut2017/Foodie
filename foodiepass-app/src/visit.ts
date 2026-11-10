@@ -38,6 +38,6 @@ export async function confirmVisit(v: Visit): Promise<Visit> {
     restaurant_id: v.rid, restaurant_name: v.name || null, offer: v.offer || null, code: done.code,
     opened_at: new Date(v.openedAt).toISOString(), confirmed_at: new Date(done.confirmedAt!).toISOString(),
   });
-  if (error) console.warn('GrubScout: visit not recorded', error.message);
+  if (error) console.warn('LocalScout: visit not recorded', error.message);
   return done;
 }
