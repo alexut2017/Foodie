@@ -7,7 +7,7 @@ const extra = (Constants.expoConfig?.extra ?? {}) as Record<string, unknown>;
 export const CONFIG = {
   supabaseUrl: String(extra.supabaseUrl ?? ''),
   supabaseKey: String(extra.supabasePublishableKey ?? ''),
-  siteUrl: String(extra.siteUrl ?? 'https://wuemilyy-stack.github.io/Foodie/'),
+  siteUrl: String(extra.siteUrl ?? 'https://joinlocalscout.com/'),
   termsVersion: String(extra.termsVersion ?? '2026-11-04'),
   appleSignIn: extra.appleSignIn === true,
   resendSeconds: 60,

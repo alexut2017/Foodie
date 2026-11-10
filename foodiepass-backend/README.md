@@ -30,7 +30,7 @@ This is the server half of `login-and-payments-spec.md`. It runs on Supabase (Po
 3. Go to **Authentication → Providers → Email**. Turn on Email and turn off "Confirm email" link mode. The site uses 6-digit codes.
 4. Until custom SMTP is set up (step 6), Supabase only sends its default email, which contains a sign-in link and no code. While that's the case, keep `AUTH_CONFIG.emailMode = 'link'` on the website. After SMTP is configured, go to **Authentication → Email Templates**. In both **Magic Link** and **Confirm signup**, put the code in the body, for example `Your FoodiePass code is {{ .Token }}. It expires in 10 minutes.`. Then set `emailMode: 'code'` on the website.
 5. Go to **Authentication → URL Configuration**:
-   - **Site URL:** your live site, for example `https://foodiespasses.netlify.app`
+   - **Site URL:** your live site, for example `https://joinlocalscout.com`
    - **Redirect URLs:** add the same URL, plus `http://localhost:*` for testing.
 6. Go to **Authentication → SMTP**. Add a real sender (Resend, Postmark or SES) before launch. Supabase's built-in mailer is limited to a few emails an hour.
 7. Optional: set up Google, Facebook or Apple under **Authentication → Providers**, then set each flag to `true` in `AUTH_CONFIG.providers` on the website.
@@ -61,8 +61,8 @@ This is the server half of `login-and-payments-spec.md`. It runs on Supabase (Po
 supabase secrets set \
   STRIPE_SECRET_KEY=sk_test_... \
   STRIPE_WEBHOOK_SECRET=whsec_... \
-  SITE_URL=https://foodiespasses.netlify.app \
-  ALLOWED_ORIGINS=https://foodiespasses.netlify.app,http://localhost:8080 \
+  SITE_URL=https://joinlocalscout.com \
+  ALLOWED_ORIGINS=https://joinlocalscout.com,https://www.joinlocalscout.com,http://localhost:8080 \
   CRON_SECRET=$(openssl rand -hex 24) \
   CHECKOUT_ENABLED=true
 
@@ -106,7 +106,7 @@ supabase secrets set ACCOUNT_CLEANUP_ENABLED=true
 
 ### 5. Website
 
-In `foodiepass-website.html`, fill in `AUTH_CONFIG.supabaseUrl` and `AUTH_CONFIG.supabaseAnonKey` (Project Settings → API). Then run `python3 tools/build_site.py` from the Foodie folder. It escapes characters and rebuilds `netlify-deploy/` and the zip.
+In `foodiepass-website.html`, fill in `AUTH_CONFIG.supabaseUrl` and `AUTH_CONFIG.supabaseAnonKey` (Project Settings → API). Cloudflare Pages runs `python3 tools/build_site.py` on every push to `main` and publishes the `netlify-deploy/` folder to https://joinlocalscout.com (the folder name is left over from an earlier host).
 
 ## Test plan (Stripe test mode)
 
