@@ -429,7 +429,9 @@ function joinDetailsBottom() {
 function payFirstForm(plan) {
   if (billing.live === null) return '<button class="btn pri" style="align-self:flex-start" disabled>Loading payment options…</button>';
   if (!offeringLive(plan)) return '<div class="note">Online payment opens at launch. Check back soon.</div>';
+  const ref = plan === 'member' ? pendingRef() : null;
   return `<form class="stack" id="payJoinForm" novalidate>
+      ${ref ? `<div class="note ok"><b>Friend’s referral applied (${esc(ref)}).</b> You’ll get 13 months for the price of 12.</div>` : ''}
       ${joinDetailsTop()}
       <label class="f">Email<input id="authEmail" type="email" required autocomplete="email" maxlength="254" value="${esc(auth.email)}"><span class="small muted" style="font-weight:400">We’ll email your sign-in code here, so check it’s right.</span></label>
       ${joinDetailsBottom()}
@@ -2135,7 +2137,10 @@ document.addEventListener('submit', (e) => {
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#drawerRoot').innerHTML) closeDrawer(); });
 
 const start = (location.hash || '').replace('#', '');
-go(VIEWS[start] ? start : 'home');
+// A referral link (?ref=GS-XXXXXX, from the website or the apps) opens the membership Join form straight away.
+const fromReferral = /^GS-[0-9A-F]{6}$/i.test(new URLSearchParams(location.search).get('ref') || '');
+if (fromReferral && !start) { ui.plan = 'member'; go('join', 'checkout'); }
+else go(VIEWS[start] ? start : 'home');
 loadDirectory();
 
 if (AUTH_LIVE) {
@@ -2160,7 +2165,7 @@ if (AUTH_LIVE) {
     refreshChrome();
     if (signedIn) await loadStatus();
     if (portalReturn) toast('Billing updated.');
-    if (view === 'pass' || view === 'join' || view === 'admin') go(view, view === 'join' && member ? 'checkout' : null);
+    if (view === 'pass' || view === 'join' || view === 'admin') go(view, view === 'join' && (member || fromReferral) ? 'checkout' : null);
   });
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') { member = null; ui.passTab = 'pass'; ui.refs = undefined; ui.refMsg = null; billing.status = null; resetAdmin(); refreshChrome(); if (view === 'admin' || view === 'pass') go(view); return; }
