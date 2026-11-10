@@ -55,6 +55,15 @@ Deno.serve(async (req) => {
     });
     if (error) throw error;
 
+    // The profile sync keeps an old phone or address when a field arrives empty (so app updates can't wipe them).
+    // An admin clearing a field means it, so write the exact values here, blanks included.
+    const blank = (v: string) => v || null;
+    const { error: profErr } = await admin.from('profiles').update({
+      phone: blank(phone), address_line1: blank(d.address_line1), address_line2: blank(d.address_line2),
+      city: blank(d.city), state: blank(d.state), zip: blank(d.zip), updated_at: new Date().toISOString(),
+    }).eq('id', userId);
+    if (profErr) throw profErr;
+
     // Marketing emails: record a new consent row only when the choice changes.
     if (typeof b.marketing === 'boolean') {
       const { data: last } = await admin.from('consents').select('granted').eq('user_id', userId).eq('kind', 'marketing')
