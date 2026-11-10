@@ -3,7 +3,9 @@ import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSh
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../src/supabase';
-import { CONFIG, siteLink } from '../../src/config';
+import { siteLink } from '../../src/config';
+import { payToJoin } from '../../src/checkout';
+import { errText } from '../../src/billing';
 import { Body, Button, H1, Note, Small } from '../../src/ui';
 import { C } from '../../src/theme';
 
@@ -45,28 +47,35 @@ export default function Register() {
     setBusy(true); setErr(null);
     const email = f.email.trim().toLowerCase();
     const digits = f.phone.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: join
-        ? {
-            shouldCreateUser: true,
-            data: {
-              full_name: `${t('first')} ${t('last')}`, first_name: t('first'), last_name: t('last'), phone: fmtPhone(digits),
-              address_line1: t('address1'), address_line2: t('address2') || undefined, city: t('city'), state: t('state').toUpperCase(), zip: t('zip'),
-              terms_version: CONFIG.termsVersion, terms_accepted_at: new Date().toISOString(), marketing_opt_in: marketing,
-              referred_by: t('ref') ? t('ref').toUpperCase() : undefined,
-            },
-          }
-        : { shouldCreateUser: false },
-    });
+    if (join) {
+      // Pay first (same as the website): Stripe opens straight away and the account is created after payment.
+      let paid: 'paid' | 'pending';
+      try {
+        paid = await payToJoin(email, {
+          first_name: t('first'), last_name: t('last'), phone: fmtPhone(digits),
+          address_line1: t('address1'), address_line2: t('address2'), city: t('city'), state: t('state').toUpperCase(), zip: t('zip'),
+        }, marketing, t('ref') ? t('ref').toUpperCase() : undefined);
+      } catch (e) {
+        setBusy(false);
+        return setErr(errText(e));
+      }
+      if (paid !== 'paid') {
+        setBusy(false);
+        return setErr('We didn’t see a payment yet. If you paid, wait a minute and sign in with your email; you won’t be charged twice. Otherwise, tap Continue to payment to try again.');
+      }
+    }
+    // Paid (or signing in): email the 6-digit code. The account exists now, so never create one here.
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
     setBusy(false);
     const msg = `${error?.message ?? ''} ${error?.code ?? ''}`.toLowerCase();
     // Signing in: answer the same way whether or not an account exists.
     if (error && !(!join && /otp_disabled|signups? not allowed|user not found/.test(msg))) {
-      setErr(error.status === 429 || /rate|too many|security purposes/.test(msg) ? 'Too many code requests. Wait a minute, then try again.' : 'We couldn’t send the code just now. Check the address and try again in a minute.');
+      setErr(join
+        ? 'Your payment went through, but we couldn’t email your code. Tap “I already have an account” and sign in with your email.'
+        : error.status === 429 || /rate|too many|security purposes/.test(msg) ? 'Too many code requests. Wait a minute, then try again.' : 'We couldn’t send the code just now. Check the address and try again in a minute.');
       return;
     }
-    router.push({ pathname: '/verify', params: { email, mode: join ? 'join' : 'signin' } });
+    router.push({ pathname: '/verify', params: { email, mode: join ? 'paid' : 'signin' } });
   }
 
   const In = (k: Field, label: string, p: TextInputProps = {}, grow = false) => (
@@ -82,7 +91,7 @@ export default function Register() {
         <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
           <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} hitSlop={12}><Text style={s.back}>{'←'}</Text></Pressable>
           <H1>{join ? 'Join LocalScout' : 'Sign in'}</H1>
-          <Body>{join ? 'Your name goes on your member pass. We’ll email you a 6-digit code to confirm your account.' : 'Enter the email on your LocalScout account and we’ll send you a 6-digit code.'}</Body>
+          <Body>{join ? 'Your name goes on your member pass. Fill in your details and pay $30, then enter the code we email you to open your pass.' : 'Enter the email on your LocalScout account and we’ll send you a 6-digit code.'}</Body>
           {join ? <View style={s.row}>{In('first', 'First name', { textContentType: 'givenName', autoComplete: 'name-given', maxLength: 59 }, true)}{In('last', 'Last name', { textContentType: 'familyName', autoComplete: 'name-family', maxLength: 60 }, true)}</View> : null}
           {In('email', 'Email', { keyboardType: 'email-address', autoCapitalize: 'none', autoCorrect: false, textContentType: 'emailAddress', autoComplete: 'email', maxLength: 254, autoFocus: !join })}
           {join ? (
@@ -100,9 +109,9 @@ export default function Register() {
             </>
           ) : null}
           {err ? <Note tone="err">{err}</Note> : null}
-          <Button title="Continue with email" onPress={send} busy={busy} />
+          <Button title={join ? 'Continue to payment · $30' : 'Continue with email'} onPress={send} busy={busy} />
           <Small>
-            We{'’'}ll email you a one-time code. No password needed. {join ? 'Next, you’ll activate your $30 membership. ' : 'Sign-in is for existing members. '}By continuing you agree to the{' '}
+            {join ? 'Your membership renews at $30 a year until you cancel. You’ll pay on Stripe’s secure page. ' : 'We’ll email you a one-time code. No password needed. Sign-in is for existing members. '}By continuing you agree to the{' '}
             <Text style={s.link} onPress={() => Linking.openURL(siteLink('terms'))}>Terms of Use</Text> and{' '}
             <Text style={s.link} onPress={() => Linking.openURL(siteLink('privacy'))}>Privacy Policy</Text>.
           </Small>

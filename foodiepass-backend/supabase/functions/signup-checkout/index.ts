@@ -1,4 +1,5 @@
-// POST /api/signup/checkout — public (no account yet). Body: { offeringId, signupId, email, details, marketing, termsVersion, referredBy, hp }.
+// POST /api/signup/checkout — public (no account yet). Body: { offeringId, signupId, email, details, marketing, termsVersion, referredBy, returnTo?, hp }.
+// returnTo: 'site' (default), 'webapp' (the phone web app at /app/) or 'app' (the Expo app, which checks the payment itself).
 // Saves the Join form and opens Stripe Checkout straight away. The account is created after payment (see _shared/signup.ts).
 import { admin, stripe, SITE_URL, CHECKOUT_ENABLED } from '../_shared/clients.ts';
 import { json, fail, preflight, logError } from '../_shared/http.ts';
@@ -24,7 +25,8 @@ Deno.serve(async (req) => {
   if (!UUID.test(signupId) || !offeringId) return fail(req, 'bad_request');
   if (!EMAIL.test(email) || email.length > 254) return err(req, 'invalid_email', 'Enter a valid email address, like name@example.com.', 400);
   if (!details) return err(req, 'invalid_details', 'Fill in your name, phone and full address.', 400);
-  const referredBy = /^GS-[0-9A-F]{6}$/i.test(String(body.referredBy ?? '')) ? String(body.referredBy).toUpperCase() : null;
+  const returnTo = ['app', 'webapp'].includes(String(body.returnTo)) ? String(body.returnTo) : 'site';
+  const referredBy =/^GS-[0-9A-F]{6}$/i.test(String(body.referredBy ?? '')) ? String(body.referredBy).toUpperCase() : null;
 
   try {
     // Same form submitted twice (double click, back button): reuse its open checkout.
@@ -83,8 +85,10 @@ Deno.serve(async (req) => {
       ...(offering.kind === 'one_time' && !customerId ? { customer_creation: 'always' as const } : {}),
       client_reference_id: signupId,
       line_items: [{ price: offering.stripe_price_id, quantity: 1 }],
-      success_url: `${SITE_URL}/?checkout=success&signup=${signupId}#pass`,
-      cancel_url: `${SITE_URL}/?checkout=canceled#join`,
+      // Where Stripe sends the buyer back: the website, the phone web app (/app/), or a page that says to return to the phone app.
+      success_url: returnTo === 'webapp' ? `${SITE_URL}/app/?checkout=success&signup=${signupId}`
+        : `${SITE_URL}/?checkout=success&signup=${signupId}${returnTo === 'app' ? '&app=1' : ''}#pass`,
+      cancel_url: returnTo === 'webapp' ? `${SITE_URL}/app/?checkout=canceled` : `${SITE_URL}/?checkout=canceled${returnTo === 'app' ? '&app=1' : ''}#join`,
       metadata: { ...metadata, ...(purchaseId ? { purchase_id: purchaseId } : {}) },
       ...(offering.kind === 'membership'
         ? { subscription_data: { metadata } }

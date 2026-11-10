@@ -46,7 +46,7 @@ export default function Verify() {
       <View style={{ gap: 14 }}>
         <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} hitSlop={12}><Text style={s.back}>{'←'}</Text></Pressable>
         <H1>Check your email</H1>
-        <Body>{mode === 'signin' ? `If there’s a LocalScout account for ${email}, a code is on its way.` : `We sent a 6-digit code to ${email}.`} It expires in 1 hour. Check spam if you don’t see it.</Body>
+        <Body>{mode === 'signin' ? `If there’s a LocalScout account for ${email}, a code is on its way.` : mode === 'paid' ? `Payment received! We sent a 6-digit code to ${email} to open your pass.` : `We sent a 6-digit code to ${email}.`} It expires in 1 hour. Check spam if you don’t see it.</Body>
         {/* One hidden input drives six boxes, so paste and autofill both work. */}
         <Pressable onPress={() => input.current?.focus()} style={s.boxes} accessibilityLabel={`Verification code, ${code.length} of 6 digits entered`}>
           {Array.from({ length: 6 }, (_, i) => (

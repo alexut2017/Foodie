@@ -126,7 +126,7 @@ var CFG = {
   termsVersion: '2026-11-04',
   resendSeconds: 60,
   passMinutes: 15,
-  version: '0.5.0'
+  version: '0.6.0'
 };
 var sb = null;
 try {
@@ -270,9 +270,58 @@ function readJoin() {
   if (d.ref && !refOk(d.ref)) return 'Referral codes look like GS-1A2B3C. Check it, or leave it blank.';
   return '';
 }
+// Server functions shared with the website (foodiepass-backend/supabase/functions).
+async function fn(path, body) {
+  var res; try {
+    res = await fetch(CFG.url + '/functions/v1/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: CFG.key }, body: JSON.stringify(body) });
+  } catch (e) { throw { code: 'network', message: 'We couldn’t reach LocalScout. Check your connection and try again.' }; }
+  var j = null; try { j = await res.json(); } catch (e) { /* empty */ }
+  if (!res.ok) throw (j && j.error) || { code: 'server_error', message: 'Something went wrong on our side. Please try again.' };
+  return j;
+}
+var newId = function () {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  var b = crypto.getRandomValues(new Uint8Array(16)); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+  var h = Array.from(b, function (x) { return x.toString(16).padStart(2, '0'); }).join('');
+  return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
+};
+// Join pays first (same as the website): the form goes straight to Stripe, the account is made after payment,
+// then the emailed code opens the pass.
+async function payToJoin() {
+  var problem = readJoin();
+  if (problem) return set({ msg: { kind: 'err', text: problem } });
+  if (!R.payOpen) return set({ msg: { kind: 'err', text: 'Online payment opens at launch. Check back soon.' } });
+  var d = R.d || {};
+  set({ busy: true, msg: null });
+  try {
+    var r = await fn('signup-checkout', {
+      offeringId: 'membership_annual', signupId: newId(), email: S.email.trim().toLowerCase(), returnTo: 'webapp',
+      details: { first_name: d.first_name, last_name: d.last_name, phone: d.phone, address_line1: d.address_line1, address_line2: d.address_line2 || '', city: d.city, state: d.state, zip: d.zip },
+      marketing: !!R.marketing, termsVersion: CFG.termsVersion, referredBy: d.ref || storedRef() || undefined, hp: ''
+    });
+    location.assign(r.url);
+  } catch (e) { set({ busy: false, msg: { kind: 'err', text: (e && e.message) || 'We couldn’t open checkout. Try again.' } }); }
+}
+// Back from Stripe: wait for the payment to be confirmed, then email the sign-in code.
+async function finishPaidJoin(signupId) {
+  set({ screen: 'login', mode: 'join', busy: true, msg: { kind: 'ok', text: 'Payment received. Confirming it with our payment provider…' } });
+  var r = null, t0 = Date.now();
+  while (Date.now() - t0 < 30000) {
+    try { r = await fn('signup-finish', { signupId: signupId }); } catch (e) { r = null; }
+    if (r && r.status !== 'pending') break;
+    await new Promise(function (res) { setTimeout(res, 2000); });
+  }
+  if (!r || r.status !== 'paid') return set({ busy: false, mode: 'signin', msg: { kind: 'err', text: 'Your payment is still being confirmed. You won’t be charged twice. In a minute, sign in with the email you used.' } });
+  S.email = r.email; S.mode = 'paid'; save();
+  var res; try { res = await sb.auth.signInWithOtp({ email: r.email, options: { shouldCreateUser: false } }); } catch (e) { res = { error: { message: 'network' } }; }
+  if (res.error) return set({ busy: false, mode: 'signin', msg: { kind: 'err', text: 'Your payment went through, but we couldn’t email your code. Sign in with ' + r.email + ' to get a new one.' } });
+  set({ busy: false, screen: 'code', code: '', sentAt: Date.now(), msg: null }, 'codeIn');
+}
 async function sendCode(isResend) {
   if (!sb) return set({ msg: { kind: 'err', text: 'LocalScout could not load. Check your connection and reload.' } });
+  if (S.mode === 'paid') S.mode = 'signin'; // the account exists once paid; a resend just signs in
   var join = S.mode === 'join';
+  if (join && !isResend) return payToJoin();
   if (!isResend) {
     var problem = join ? readJoin() : (function () { var el = document.getElementById('emailIn'); S.email = el ? el.value.trim() : S.email; save(); return emailOk(S.email) ? '' : 'Enter a valid email address, like name@example.com.'; })();
     if (problem) return set({ msg: { kind: 'err', text: problem } });
@@ -330,7 +379,7 @@ function vLogin() {
   var email = f('emailIn', 'Email', S.email, 'type="email" inputmode="email" autocomplete="email" autocapitalize="off" maxlength="254"');
   return '<div class="screen"><div class="stack"><button class="back" data-act="toWelcome" aria-label="Back">←</button>' +
     '<h1>' + (join ? 'Join LocalScout' : 'Sign in') + '</h1>' +
-    '<p class="lede">' + (join ? 'Your name goes on your member pass. We’ll email you a 6-digit code to confirm your account.' : 'Enter the email on your LocalScout account and we’ll send you a 6-digit code.') + '</p>' +
+    '<p class="lede">' + (join ? 'Your name goes on your member pass. Fill in your details and pay $30, then enter the code we email you to open your pass.' : 'Enter the email on your LocalScout account and we’ll send you a 6-digit code.') + '</p>' +
     '<form id="authForm" class="stack" novalidate>' +
     (join ? two(f('jdFirst', 'First name', d.first_name, 'maxlength="59" autocomplete="given-name"'), f('jdLast', 'Last name', d.last_name, 'maxlength="60" autocomplete="family-name"')) : '') +
     email +
@@ -342,8 +391,8 @@ function vLogin() {
       f('jdRef', 'Referral code (optional)', d.ref != null ? d.ref : storedRef(), 'maxlength="9" autocapitalize="characters" placeholder="GS-1A2B3C"') +
       '<label class="check"><input id="mktIn" type="checkbox"' + (R.marketing ? ' checked' : '') + '> <span>Send me new restaurants and member offers (optional)</span></label>' : '') +
     msgHtml() +
-    '<button class="btn" id="sendBtn" type="submit"' + (R.busy ? ' disabled' : '') + '>' + (R.busy ? 'Sending…' : 'Continue with email') + '</button>' +
-    '<p class="small">We’ll email you a one-time code. No password needed. ' + (join ? 'Next, you’ll activate your $30 membership. ' : 'Sign-in is for existing members. ') +
+    '<button class="btn" id="sendBtn" type="submit"' + (R.busy ? ' disabled' : '') + '>' + (R.busy ? (join ? 'Opening secure checkout…' : 'Sending…') : (join ? 'Continue to payment · $30' : 'Continue with email')) + '</button>' +
+    '<p class="small">' + (join ? 'Your membership renews at $30 a year until you cancel. You’ll pay on Stripe’s secure page. ' : 'We’ll email you a one-time code. No password needed. Sign-in is for existing members. ') +
     'By continuing you agree to the <a href="' + CFG.site + '#terms" target="_blank" rel="noopener">Terms of Use</a> and <a href="' + CFG.site + '#privacy" target="_blank" rel="noopener">Privacy Policy</a>.</p></form></div>' +
     '<button class="btn link" data-act="' + (join ? 'signin' : 'join') + '">' + (join ? 'I already have an account' : 'New here? Join LocalScout') + '</button></div>';
 }
@@ -351,7 +400,7 @@ function vCode() {
   var wait = Math.max(0, Math.ceil((R.sentAt + CFG.resendSeconds * 1000 - Date.now()) / 1000));
   var who = esc(S.email.trim());
   return '<div class="screen"><div class="stack"><button class="back" data-act="toLogin" aria-label="Back">←</button>' +
-    '<h1>Check your email</h1><p class="lede">' + (S.mode === 'signin' ? 'If there’s a LocalScout account for <strong>' + who + '</strong>, a code is on its way.' : 'We sent a 6-digit code to <strong>' + who + '</strong>.') + ' It expires in 1 hour. Check spam if you don’t see it.</p>' +
+    '<h1>Check your email</h1><p class="lede">' + (S.mode === 'paid' ? 'Payment received! We sent a 6-digit code to <strong>' + who + '</strong> to open your pass.' : S.mode === 'signin' ? 'If there’s a LocalScout account for <strong>' + who + '</strong>, a code is on its way.' : 'We sent a 6-digit code to <strong>' + who + '</strong>.') + ' It expires in 1 hour. Check spam if you don’t see it.</p>' +
     '<label class="f">6-digit code from your email<input id="codeIn" class="in" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456" value="' + esc(R.code) + '" style="letter-spacing:8px;font-size:24px;text-align:center"></label>' +
     msgHtml() + '</div>' +
     '<div class="stack" style="gap:12px"><button class="btn" id="verifyBtn" data-act="verify"' + (R.code.length >= 6 && !R.busy ? '' : ' disabled') + '>' + (R.busy ? 'Checking…' : 'Verify and continue') + '</button>' +
@@ -757,6 +806,10 @@ setInterval(function () {
   if (location.search || /access_token|error/.test(location.hash)) history.replaceState(null, '', location.pathname);
   if (!s && linkErr) R.msg = { kind: 'err', text: 'That sign-in link didn’t work (' + linkErr.replace(/\+/g, ' ') + '). Links expire and work once. Request a new one.' };
   await onSession(s);
+  // Back from Stripe after paying to join (or after cancelling).
+  var paidSignup = qs.get('checkout') === 'success' ? qs.get('signup') : null;
+  if (!s && paidSignup) finishPaidJoin(paidSignup);
+  else if (!s && qs.get('checkout') === 'canceled') set({ screen: 'login', mode: 'join', msg: { kind: 'err', text: 'Checkout cancelled. You weren’t charged.' } });
   sb.auth.onAuthStateChange(function (evt, session) {
     if (evt === 'SIGNED_IN' && (!R.user || R.user.id !== session.user.id)) onSession(session);
     else if (evt === 'SIGNED_OUT') onSession(null);

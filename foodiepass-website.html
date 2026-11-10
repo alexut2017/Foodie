@@ -1097,9 +1097,9 @@ function vPassBody(inShell) {
     // Just paid on Stripe as a new member: confirm the payment, then sign in with the emailed code.
     const st = ui.signup.state;
     return `<section><div class="wrap band">
-      <div class="sec-head" style="margin:0"><p class="eyebrow">Welcome to LocalScout</p><h1 style="font-size: clamp(40px, 5.4vw, 60px)">${st === 'paid' ? 'Payment received' : st === 'slow' ? 'Almost there' : 'Confirming your payment…'}</h1>
-        <p>${st === 'paid' ? 'Enter the 6-digit code we emailed you to open your pass.' : st === 'slow' ? 'Your payment is still being confirmed. You won’t be charged twice. In a minute, sign in with the email you used to open your pass.' : 'This usually takes a few seconds.'}</p></div>
-      <div class="card">${st === 'checking' ? '<p class="muted">Checking with our payment provider…</p>' : authPanel('signin')}</div>
+      <div class="sec-head" style="margin:0"><p class="eyebrow">Welcome to LocalScout</p><h1 style="font-size: clamp(40px, 5.4vw, 60px)">${st === 'paid' || st === 'app' ? 'Payment received' : st === 'slow' ? 'Almost there' : 'Confirming your payment…'}</h1>
+        <p>${st === 'app' ? 'Close this page to go back to the LocalScout app. We’ll email you a 6-digit code there to open your pass.' : st === 'paid' ? 'Enter the 6-digit code we emailed you to open your pass.' : st === 'slow' ? 'Your payment is still being confirmed. You won’t be charged twice. In a minute, sign in with the email you used to open your pass.' : 'This usually takes a few seconds.'}</p></div>
+      ${st === 'app' ? '' : `<div class="card">${st === 'checking' ? '<p class="muted">Checking with our payment provider…</p>' : authPanel('signin')}</div>`}
     </div></section>`;
   }
   if (!member) {
@@ -2046,6 +2046,8 @@ if (AUTH_LIVE) {
     const signedIn = !!(data && data.session);
     member = memberFromUser(signedIn ? data.session.user : null);
     if (location.search) { try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) { /* ignore */ } }
+    // Paid in the LocalScout phone app's browser: the app checks the payment and emails the code itself.
+    if (checkoutResult === 'success' && signupId && qp.get('app')) { view = 'pass'; ui.signup = { state: 'app' }; return go('pass'); }
     if (checkoutResult === 'success' && signupId) { view = 'pass'; return finishPaidSignup(signupId); }
     if (signedIn && checkoutResult === 'success') { view = 'pass'; ui.passTab = 'pass'; return confirmCheckout(checkoutAttempt); }
     if (checkoutResult === 'canceled') toast('Checkout cancelled. You weren\u2019t charged.');

@@ -55,6 +55,13 @@ export async function getStatusOrEntitlements(userId: string): Promise<BillingSt
   try { return await getStatus(); } catch { return statusFromEntitlements(userId); }
 }
 
+// Pay-first join (same as the website): no account until Stripe confirms the payment.
+export type SignupDetails = { first_name: string; last_name: string; phone: string; address_line1: string; address_line2: string; city: string; state: string; zip: string };
+export const startSignupCheckout = (body: { offeringId: string; signupId: string; email: string; details: SignupDetails; marketing: boolean; termsVersion: string; referredBy?: string }) =>
+  api<{ url: string }>('signup-checkout', { method: 'POST', body: { ...body, returnTo: 'app', hp: '' }, auth: false });
+export const finishSignup = (signupId: string) =>
+  api<{ status: 'paid' | 'pending' | 'expired'; email: string; offering_id?: string }>('signup-finish', { method: 'POST', body: { signupId }, auth: false });
+
 export const startCheckout = (offeringId: string, attemptId: string) => api<{ url: string }>('billing-checkout', { method: 'POST', body: { offeringId, attemptId } });
 export const openPortal = () => api<{ url: string }>('billing-portal', { method: 'POST' });
 export const redeemGift = (code: string) => api<{ access_until: string }>('gift-redeem', { method: 'POST', body: { code } });

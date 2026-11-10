@@ -1,6 +1,23 @@
 import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getStatus, newId, startCheckout, openPortal, type BillingStatus } from './billing';
+import { getStatus, newId, startCheckout, openPortal, startSignupCheckout, finishSignup, type BillingStatus, type SignupDetails } from './billing';
+import { CONFIG } from './config';
+
+// Join: pay on Stripe first; the server creates the account once the payment is confirmed.
+// Returns 'paid' (the caller then emails the sign-in code) or 'pending' (closed without paying, or still confirming).
+export async function payToJoin(email: string, details: SignupDetails, marketing: boolean, referredBy?: string): Promise<'paid' | 'pending'> {
+  const signupId = newId();
+  const { url } = await startSignupCheckout({ offeringId: 'membership_annual', signupId, email, details, marketing, termsVersion: CONFIG.termsVersion, referredBy });
+  await WebBrowser.openBrowserAsync(url, { dismissButtonStyle: 'done' });
+  // Back in the app: the server checks with Stripe directly, so this is usually done on the first try.
+  for (let i = 0; i < 8; i++) {
+    const r = await finishSignup(signupId).catch(() => null);
+    if (r?.status === 'paid') return 'paid';
+    if (r?.status === 'expired') return 'pending';
+    await new Promise((res) => setTimeout(res, 2000));
+  }
+  return 'pending';
+}
 
 // Membership checkout opens Stripe's hosted page in the in-app browser (a real-world dining service, not a
 // digital good; confirm App Store guideline 3.1.3(e) at review time). Access is granted only by the server.
