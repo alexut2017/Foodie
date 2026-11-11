@@ -176,6 +176,11 @@ select.inp { width: 100%; min-height: 44px; padding: 8px 12px; border-radius: 12
 .rc-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
 .rc-name { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
 .rc h3 { font-size: 23px; }
+/* Home page tiles are narrower (3 across): keep the New / Founding partner badges beside the name, a little smaller. */
+.rc-feature .rc-name { flex-wrap: nowrap; gap: 6px; }
+.rc-feature .rc-name h3 { font-size: 21px; min-width: 0; }
+.rc-feature .rc-name .badges { flex: 0 0 auto; flex-wrap: nowrap; gap: 4px; }
+.rc-feature .rc-name .badge { font-size: 12px; padding: 3px 8px; gap: 4px; }
 .rc .meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
 .rc .meta span { display: inline-flex; align-items: center; gap: 6px; }
 .offer { display: inline-flex; align-self: flex-start; gap: 8px; align-items: center; background: var(--sand); border-radius: 12px; padding: 8px 12px; font-weight: 700; font-size: 15px; }
@@ -842,7 +847,7 @@ const COLLAGE = [1, 2, 3, 4, 5, 6].map((n) => `https://mroiimqqklitidpzaqnk.supa
 // One restaurant tile, used on the Restaurants page and in the home page's Featured Restaurants (which adds the photo).
 function restaurantCard(r, withPhoto) {
   const flags = r.isNew || r.founding ? `<div class="badges">${r.isNew ? `<span class="badge new">${I.star}New</span>` : ''}${r.founding ? `<span class="badge fp">${I.star}Founding partner</span>` : ''}</div>` : '';
-  return `<article class="rc${ui.hl === r.id ? ' hl' : ''}" data-rid="${r.id}">
+  return `<article class="rc${withPhoto ? ' rc-feature' : ''}${ui.hl === r.id ? ' hl' : ''}" data-rid="${r.id}">
     ${withPhoto ? `<div class="rc-photo">${r.photo ? `<img src="${esc(r.photo)}" alt="${esc(r.name)}" loading="lazy">` : I.fork}</div>` : ''}
     <div class="rc-top"><div class="rc-name"><h3>${esc(r.name)}</h3>${flags}</div></div>
     <div class="meta">${r.cuisine ? `<span>${I.fork}${esc(r.cuisine)}</span>` : ''}${r.place ? `<span>${I.pin}${esc(r.place)}</span>` : ''}</div>
