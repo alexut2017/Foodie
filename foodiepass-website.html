@@ -432,7 +432,7 @@ function joinDetailsBottom() {
 }
 // Pay-first Join form for visitors without an account: details, then straight to Stripe. The account is made after payment.
 function payFirstForm(plan) {
-  if (billing.live === null) return '<button class="btn pri" style="align-self:flex-start" disabled>Loading payment options…</button>';
+  if (billing.live === null) return '<button class="btn pri" style="align-self:flex-start" disabled>Loading Payment Options…</button>';
   if (!offeringLive(plan)) return '<div class="note">Online payment opens at launch. Check back soon.</div>';
   const ref = plan === 'member' ? pendingRef() : null;
   return `<form class="stack" id="payJoinForm" novalidate>
@@ -463,7 +463,7 @@ async function startSignupCheckout() {
   if (problem) return show(problem);
   show('');
   const offering = OFFERING[ui.plan] || OFFERING.member;
-  billing.busy = true; if (btn) { btn.disabled = true; btn.textContent = 'Opening secure checkout…'; }
+  billing.busy = true; if (btn) { btn.disabled = true; btn.textContent = 'Opening Secure Checkout…'; }
   try {
     const r = await api('signup-checkout', { method: 'POST', body: {
       offeringId: offering, signupId: signupIdFor(offering, email, auth.details), email, details: auth.details,
@@ -589,12 +589,12 @@ async function startCheckout() {
   if (!AUTH_LIVE || !member || billing.busy) return;
   const offering = OFFERING[ui.plan] || OFFERING.member;
   const btn = document.getElementById('checkoutBtn');
-  billing.busy = true; if (btn) { btn.disabled = true; btn.textContent = 'Opening secure checkout\u2026'; }
+  billing.busy = true; if (btn) { btn.disabled = true; btn.textContent = 'Opening Secure Checkout\u2026'; }
   try {
     const r = await api('billing-checkout', { method: 'POST', body: { offeringId: offering, attemptId: attemptFor(offering) } });
     location.assign(r.url);
   } catch (e) {
-    billing.busy = false; if (btn) { btn.disabled = false; btn.textContent = 'Continue to payment \u00b7 $30'; }
+    billing.busy = false; if (btn) { btn.disabled = false; btn.textContent = 'Continue To Payment \u00b7 $30'; }
     if (e && (e.code === 'invalid_plan' || e.code === 'bad_request')) clearAttempts();
     if (e && e.code === 'already_subscribed') { await loadStatus(); toast(e.message); return go('pass'); }
     toast(errText(e));
@@ -677,12 +677,12 @@ function accountPanel() {
     <div class="card" style="display:grid; gap:14px">
       <p class="eyebrow">Account</p><h2 style="font-size:30px">Membership and billing</h2>
       ${state}
-      ${s && s.can_manage_billing ? '<div><button class="btn dark" data-act="portal">Manage billing</button><p class="small muted" style="margin-top:6px">Update your card, see receipts or turn off renewal on our payment provider\u2019s secure page.</p></div>' : ''}
+      ${s && s.can_manage_billing ? '<div><button class="btn dark" data-act="portal">Manage Billing</button><p class="small muted" style="margin-top:6px">Update your card, see receipts or turn off renewal on our payment provider\u2019s secure page.</p></div>' : ''}
       ${gifts}
     </div>
     ${billing.fnOk ? `<div class="card" style="display:grid; gap:14px">
       <h3>Redeem a gift</h3>${giftMsg}
-      <form class="stack" id="giftForm" novalidate><label class="f">Gift code<input id="giftCode" placeholder="FP-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" required></label><button class="btn" type="submit">Add to my membership</button></form>
+      <form class="stack" id="giftForm" novalidate><label class="f">Gift code<input id="giftCode" placeholder="FP-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" required></label><button class="btn" type="submit">Add To My Membership</button></form>
       <h3 style="margin-top:12px">Delete account</h3>${del}
     </div>` : `<div class="card" style="display:grid; gap:14px">
       <h3>Your account</h3>
@@ -707,7 +707,7 @@ function takeReturnTo() {
 const isAppleDevice = /iPhone|iPad|Macintosh/.test(navigator.userAgent);
 function providerButtons() {
   const P = AUTH_CONFIG.providers;
-  const list = [['google', 'Continue with Google'], ['facebook', 'Continue with Facebook'], ['apple', 'Continue with Apple']].filter(([id]) => P[id]);
+  const list = [['google', 'Continue With Google'], ['facebook', 'Continue With Facebook'], ['apple', 'Continue With Apple']].filter(([id]) => P[id]);
   if (isAppleDevice) list.sort((a, b) => (b[0] === 'apple') - (a[0] === 'apple'));
   if (!list.length) return '';
   return `<div style="display:grid; gap:10px">${list.map(([id, label]) => `<button type="button" class="btn" data-act="oauth" data-provider="${id}" style="width:100%">${label}</button>`).join('')}</div><p class="small muted" style="text-align:center">or</p>`;
@@ -715,7 +715,7 @@ function providerButtons() {
 function authInner(mode) {
   if (!AUTH_LIVE) {
     return `<div class="note"><b>Email sign-in isn\u2019t connected yet.</b> Site owner: add your Supabase project URL and key in <code>AUTH_CONFIG</code> to turn on real accounts with emailed codes.</div>
-      <form class="stack" id="signinForm"><label class="f">Email<input id="sEmail" type="email" required autocomplete="email"></label><label class="f">Name on your pass<input id="sName" required autocomplete="name"></label><button class="btn dark" type="submit">Preview sign-in</button><p class="small muted">Preview only: this signs you in on this device without checking your email.</p></form>`;
+      <form class="stack" id="signinForm"><label class="f">Email<input id="sEmail" type="email" required autocomplete="email"></label><label class="f">Name on your pass<input id="sName" required autocomplete="name"></label><button class="btn dark" type="submit">Preview Sign-In</button><p class="small muted">Preview only: this signs you in on this device without checking your email.</p></form>`;
   }
   const msg = auth.msg ? `<div class="note ${auth.msg.err ? '' : 'ok'}" role="${auth.msg.err ? 'alert' : 'status'}" ${auth.msg.err ? 'style="background:#FCE7DF; color:#8F3215"' : ''}>${esc(auth.msg.text)}</div>` : '';
   if (auth.step === 'code') {
@@ -723,17 +723,17 @@ function authInner(mode) {
     if (AUTH_CONFIG.emailMode === 'link') return `${msg}
       <p class="small muted">Open the email on this device and tap <b>Sign in</b>. You\u2019ll come straight back here, signed in.</p>
       <div style="display:flex; gap:10px; flex-wrap:wrap">
-        <button type="button" class="btn sm" data-act="resendCode" id="resendBtn" ${wait > 0 || auth.busy ? 'disabled' : ''}>${wait > 0 ? 'Resend email in ' + wait + 's' : 'Resend email'}</button>
-        <button type="button" class="btn sm" data-act="changeEmail">Use a different email</button>
+        <button type="button" class="btn sm" data-act="resendCode" id="resendBtn" ${wait > 0 || auth.busy ? 'disabled' : ''}>${wait > 0 ? 'Resend Email In ' + wait + 's' : 'Resend Email'}</button>
+        <button type="button" class="btn sm" data-act="changeEmail">Use A Different Email</button>
       </div>`;
     return `${msg}
       <form class="stack" id="authCodeForm" novalidate>
         <label class="f">6-digit code from your email<input id="authCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" required placeholder="123456" style="font-size:24px; letter-spacing:6px"></label>
-        <button class="btn pri" type="submit" ${auth.busy ? 'disabled' : ''}>${auth.busy ? 'Checking\u2026' : 'Verify and continue'}</button>
+        <button class="btn pri" type="submit" ${auth.busy ? 'disabled' : ''}>${auth.busy ? 'Checking\u2026' : 'Verify And Continue'}</button>
       </form>
       <div style="display:flex; gap:10px; flex-wrap:wrap">
-        <button type="button" class="btn sm" data-act="resendCode" id="resendBtn" ${wait > 0 || auth.busy ? 'disabled' : ''}>${wait > 0 ? 'Resend code in ' + wait + 's' : 'Resend code'}</button>
-        <button type="button" class="btn sm" data-act="changeEmail">Use a different email</button>
+        <button type="button" class="btn sm" data-act="resendCode" id="resendBtn" ${wait > 0 || auth.busy ? 'disabled' : ''}>${wait > 0 ? 'Resend Code In ' + wait + 's' : 'Resend Code'}</button>
+        <button type="button" class="btn sm" data-act="changeEmail">Use A Different Email</button>
       </div>`;
   }
   return `${msg}${providerButtons()}
@@ -755,7 +755,7 @@ function renderAuth() {
     auth.timer = setInterval(() => {
       const b = document.getElementById('resendBtn'); const wait = Math.ceil((auth.cooldownUntil - Date.now()) / 1000);
       if (!b) return clearInterval(auth.timer);
-      const noun = AUTH_CONFIG.emailMode === 'link' ? 'email' : 'code'; if (wait <= 0) { b.disabled = false; b.textContent = 'Resend ' + noun; clearInterval(auth.timer); } else b.textContent = 'Resend ' + noun + ' in ' + wait + 's';
+      const noun = AUTH_CONFIG.emailMode === 'link' ? 'Email' : 'Code'; if (wait <= 0) { b.disabled = false; b.textContent = 'Resend ' + noun; clearInterval(auth.timer); } else b.textContent = 'Resend ' + noun + ' In ' + wait + 's';
     }, 1000);
   }
 }
@@ -866,7 +866,7 @@ function insider() {
     <form id="insiderForm" aria-label="Newsletter sign-up">
       <label for="insiderEmail" class="sr" style="position:absolute; left:-9999px">Email address</label>
       <input id="insiderEmail" type="email" required placeholder="you@example.com" autocomplete="email">
-      <button class="btn dark" type="submit">Sign me up</button>
+      <button class="btn dark" type="submit">Sign Me Up</button>
     </form>
   </div>`;
 }
@@ -907,7 +907,7 @@ function vHome() {
   </div></section>` : ''}
 
   <section class="dark on-dark"><div class="wrap band">
-    <div class="sec-head" style="margin:0"><p class="eyebrow" style="color: var(--mustard)">For restaurant owners</p><h2 style="color: var(--linen)">Join for free<br><span style="color: var(--mustard)">Grow your brand</span></h2><p>No fees, no commissions, no new hardware.<br>You choose the offer and the days it runs.</p><div style="margin-top:14px"><a class="btn pri" href="#partners" data-go="partners">Become a Partner</a></div></div>
+    <div class="sec-head" style="margin:0"><p class="eyebrow" style="color: var(--mustard)">For restaurant owners</p><h2 style="color: var(--linen)">Join for free<br><span style="color: var(--mustard)">Grow your brand</span></h2><p>No fees, no commissions, no new hardware.<br>You choose the offer and the days it runs.</p><div style="margin-top:14px"><a class="btn pri" href="#partners" data-go="partners">Become A Partner</a></div></div>
     <div class="collage" aria-hidden="true">${COLLAGE.map((src) => `<img src="${src}" alt="" width="420" height="420" loading="lazy">`).join('')}</div>
   </div></section>
 
@@ -947,19 +947,19 @@ function vRestaurants() {
       <label for="q" style="position:absolute; left:-9999px">Search restaurants</label>
       <input id="q" value="${esc(ui.q)}" placeholder="Search by name or cuisine" autocomplete="off">
       <button class="btn pri" type="submit">Search</button>
-      <button class="btn ghost-light" type="button" data-act="locate">${I.pin} Use my location</button>
+      <button class="btn ghost-light" type="button" data-act="locate">${I.pin} Use My Location</button>
       <button class="btn ghost-light filters-toggle" type="button" data-act="toggleFilters">Filters</button>
     </form>
     <aside class="panel${ui.filtersOpen ? '' : ' collapsed'}" aria-label="Filters">
-      <div class="filter fit"><h3>Service</h3><div class="seg" role="group" aria-label="Service type"><button class="${ui.mode === 'dine' ? 'on' : ''}" data-mode="dine" aria-pressed="${ui.mode === 'dine'}">Dine-in</button><button class="${ui.mode === 'pickup' ? 'on' : ''}" data-mode="pickup" aria-pressed="${ui.mode === 'pickup'}">Pickup</button></div></div>
+      <div class="filter fit"><h3>Service</h3><div class="seg" role="group" aria-label="Service type"><button class="${ui.mode === 'dine' ? 'on' : ''}" data-mode="dine" aria-pressed="${ui.mode === 'dine'}">Dine-In</button><button class="${ui.mode === 'pickup' ? 'on' : ''}" data-mode="pickup" aria-pressed="${ui.mode === 'pickup'}">Pickup</button></div></div>
       <div class="filter"><h3><label for="cuisineSel">Cuisine</label></h3><select id="cuisineSel" class="inp"><option value="">All cuisines</option>${CUISINES.map((c) => `<option${c === ui.cuisine ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
       <div class="filter"><h3><label for="sortSel">Sort by</label></h3><select id="sortSel" class="inp"><option value="new"${ui.sort === 'new' ? ' selected' : ''}>New first</option><option value="az"${ui.sort === 'az' ? ' selected' : ''}>Alphabetical</option><option value="near"${ui.sort === 'near' ? ' selected' : ''}>Nearest${ui.here ? '' : ' (use my location)'}</option></select></div>
-      <button class="btn sm" data-act="clear">Clear filters</button>
+      <button class="btn sm" data-act="clear">Clear Filters</button>
     </aside>
   </div></section>
   <div class="wrap finder">
     <div>
-      <div class="results-head"><p><b class="tabular">${n}</b> restaurant${n === 1 ? '' : 's'} ${ui.here ? 'near you' : 'found'}</p>${(ui.cuisine || ui.q || ui.mode !== 'dine') ? '<button class="btn sm" data-act="clear">Reset filters</button>' : ''}</div>
+      <div class="results-head"><p><b class="tabular">${n}</b> restaurant${n === 1 ? '' : 's'} ${ui.here ? 'near you' : 'found'}</p>${(ui.cuisine || ui.q || ui.mode !== 'dine') ? '<button class="btn sm" data-act="clear">Reset Filters</button>' : ''}</div>
       <div class="list" id="list">${renderList()}</div>
     </div>
     <div class="mapbox"><div id="map" role="region" aria-label="Map of partner restaurants"></div><p class="map-note" id="mapNote" hidden>Simplified map \u00B7 open the full site for street maps</p></div>
@@ -972,7 +972,7 @@ function renderList() {
   if (directory.error) return '<div class="card"><h3>We couldn’t load the restaurants</h3><p>Check your connection and refresh this page.</p></div>';
   if (!RESTAURANTS.length) return '<div class="card"><h3>Partners are being added now</h3><p>Our first restaurants will appear here soon. <a href="#partners" data-go="partners">Own a restaurant? Join free.</a></p></div>';
   if (!items.length) {
-    return `<div class="card"><h3>No results</h3><p>Try another search or clear your filters.</p><button class="btn sm" data-act="clear" style="align-self:flex-start">Clear filters</button></div>`;
+    return `<div class="card"><h3>No results</h3><p>Try another search or clear your filters.</p><button class="btn sm" data-act="clear" style="align-self:flex-start">Clear Filters</button></div>`;
   }
   return items.map((r) => restaurantCard(r)).join('');
 }
@@ -992,8 +992,8 @@ function dist(r) { const dl = r.lat - ui.here.lat, dg = (r.lng - ui.here.lng) * 
 function vJoin() {
   const p = ui.plan;
   const plans = [
-    ['member', 'Membership', '$30', '/year', ['Offers at every partner restaurant', 'Active the minute you pay', 'Renews at $30 a year until you cancel', 'Renewal reminder 30 days before each charge'], 'Join now'],
-    ['gift', 'Gift', '$30', '/year', ['A year of LocalScout for someone else', 'Delivered as a code by email or text', 'Starts when they redeem it'], 'Give a gift'],
+    ['member', 'Membership', '$30', '/year', ['Offers at every partner restaurant', 'Active the minute you pay', 'Renews at $30 a year until you cancel', 'Renewal reminder 30 days before each charge'], 'Join Now'],
+    ['gift', 'Gift', '$30', '/year', ['A year of LocalScout for someone else', 'Delivered as a code by email or text', 'Starts when they redeem it'], 'Give A Gift'],
   ];
   return `
   <section class="hero on-dark page-banner"><div class="wrap hero-in" style="grid-template-columns: minmax(0, 1fr)">
@@ -1007,22 +1007,22 @@ function vJoin() {
       ${AUTH_LIVE && (p === 'member' || p === 'gift') ? (member ? (p === 'member' && member.membershipActive ? `
       <h2 style="font-size:34px">You\u2019re already a member</h2>
       <p>Your membership is active through ${fmtDate(billing.status && billing.status.membership.access_until)}. Want to treat someone? <a href="#join" data-go="join" data-plan="gift">Send a gift</a>.</p>
-      <a class="btn pri" href="#pass" data-go="pass" style="align-self:flex-start">Open my pass</a>` : `
+      <a class="btn pri" href="#pass" data-go="pass" style="align-self:flex-start">Open My Pass</a>` : `
       <h2 style="font-size:34px">${p === 'gift' ? 'Send a gift membership' : 'Activate your membership'}</h2>
       <p>Signed in as <b>${esc(member.email)}</b>.${p === 'gift' ? ' After payment you\u2019ll get a gift code on your My pass page to send however you like.' : ' It renews automatically at $30 a year until you cancel. Cancel any time in Manage billing to stop future charges. Payments are non-refundable except where the law requires otherwise. See the <a href="#terms" data-go="terms">Terms Of Use</a>.'}</p>
-      ${offeringLive(p) ? `<button class="btn pri" id="checkoutBtn" data-act="checkout" style="align-self:flex-start" ${billing.busy ? 'disabled' : ''}>Continue to payment \u00b7 $30</button>`
-        : billing.live === null ? '<button class="btn pri" style="align-self:flex-start" disabled>Loading payment options\u2026</button>'
+      ${offeringLive(p) ? `<button class="btn pri" id="checkoutBtn" data-act="checkout" style="align-self:flex-start" ${billing.busy ? 'disabled' : ''}>Continue To Payment \u00b7 $30</button>`
+        : billing.live === null ? '<button class="btn pri" style="align-self:flex-start" disabled>Loading Payment Options\u2026</button>'
         : `<div class="note ok"><b>Your account is ready.</b> Online payment opens at launch. We\u2019ll email ${esc(member.email)} as soon as you can ${p === 'gift' ? 'send a gift' : 'activate your membership'}.</div>`}
       <p class="small muted">You\u2019ll pay on our payment provider\u2019s secure page. LocalScout never sees or stores your card details.</p>`) : `
       <h2 style="font-size:34px">${p === 'gift' ? 'Send A Gift Membership' : 'Start Your Membership'}</h2>
       <p>${p === 'gift' ? 'Fill in your details and pay $30. Then enter the code we email you, and your gift code will be waiting in your account.' : 'Fill in your details and pay $30. Then enter the code we email you to open your pass.'}</p>
-      ${payFirstForm(p)}`) : ui.joined ? `<div class="note ok"><b>You\u2019re in.</b> Your pass is ready on the My pass page.</div><a class="btn pri" href="#pass" data-go="pass" style="align-self:flex-start">Open my pass</a>` : `
+      ${payFirstForm(p)}`) : ui.joined ? `<div class="note ok"><b>You\u2019re in.</b> Your pass is ready on the My pass page.</div><a class="btn pri" href="#pass" data-go="pass" style="align-self:flex-start">Open My Pass</a>` : `
       <h2 style="font-size:34px">${p === 'gift' ? 'Send a gift membership' : 'Start your membership'}</h2>
       <form class="stack" id="joinForm">
         <label class="f">${p === 'gift' ? 'Your name' : 'Full name (shown on your pass)'}<input id="jName" required autocomplete="name"></label>
         <label class="f">Email<input id="jEmail" type="email" required autocomplete="email"></label>
         ${p === 'gift' ? '<label class="f">Recipient\u2019s name<input id="jRecipient" required></label>' : ''}
-        <button class="btn pri" type="submit">Continue to payment \u00B7 $30</button>
+        <button class="btn pri" type="submit">Continue To Payment \u00B7 $30</button>
         <p class="small muted">Preview only: no payment is taken and nothing is sent. Card details will be handled by our payment provider and never stored by LocalScout.</p>
       </form>`}
     </div>
@@ -1145,7 +1145,7 @@ function vPassBody(inShell) {
   const notice = billing.confirming ? '<div class="note" role="status" style="margin-top:14px"><b>Confirming your membership\u2026</b> This usually takes a few seconds.</div>'
     : billing.msg ? `<div class="note" role="status" style="margin-top:14px">${esc(billing.msg)}</div>` : '';
   // In the customer side menu, sign-out lives in the menu and the Account tab, and billing has its own tab.
-  const tools = `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px">${paid ? '' : '<a class="btn pri" href="#join" data-go="join" data-plan="member">Activate membership</a>'}<button class="btn" data-act="share">Copy my referral link</button>${inShell ? '' : `<button class="btn" data-act="signout">Sign out</button>${member.live ? '<button class="btn" data-act="signoutAll">Sign out on all devices</button>' : ''}`}</div>`;
+  const tools = `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px">${paid ? '' : '<a class="btn pri" href="#join" data-go="join" data-plan="member">Activate Membership</a>'}<button class="btn" data-act="share">Copy My Referral Link</button>${inShell ? '' : `<button class="btn" data-act="signout">Sign Out</button>${member.live ? '<button class="btn" data-act="signoutAll">Sign Out On All Devices</button>' : ''}`}</div>`;
   const panel = inShell ? '' : accountPanel();
   // No pass until the membership is paid.
   if (!paid) {
@@ -1165,7 +1165,7 @@ function vPassBody(inShell) {
       <p class="small muted" style="text-align:center"><span data-date></span> \u00b7 This clock keeps moving, so a screenshot won\u2019t pass.</p>
       <div class="pass-row"><div><p class="k">Annual dues</p><p class="v">Paid</p></div><div style="text-align:right"><p class="k">Member through</p><p class="v tabular">${esc(until.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }))}</p></div></div>
     </div>
-    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:18px"><a class="btn" href="#restaurants" data-go="restaurants">See restaurants and offers</a><button class="btn" data-act="report">Report a problem</button></div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:18px"><a class="btn" href="#restaurants" data-go="restaurants">See Restaurants And Offers</a><button class="btn" data-act="report">Report A Problem</button></div>
     ${tools}
   </div></section>${panel}`;
 }
@@ -1307,7 +1307,7 @@ function restaurantDraft(r) {
 const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 function adminPhotoPreview(r) {
   const src = r.photoPreview || (/^https?:\/\//i.test(r.photo_url || '') ? r.photo_url : null);
-  return src ? `<img src="${esc(src)}" alt="" style="width:100%; max-width:320px; aspect-ratio:16/10; object-fit:cover; border-radius:12px; display:block"><div style="margin-top:8px"><button class="btn sm" type="button" data-act="adminPhotoRemove">Remove photo</button></div>` : '<p class="small muted">No photo yet. The card shows a placeholder until you add one.</p>';
+  return src ? `<img src="${esc(src)}" alt="" style="width:100%; max-width:320px; aspect-ratio:16/10; object-fit:cover; border-radius:12px; display:block"><div style="margin-top:8px"><button class="btn sm" type="button" data-act="adminPhotoRemove">Remove Photo</button></div>` : '<p class="small muted">No photo yet. The card shows a placeholder until you add one.</p>';
 }
 function adminPhotoChosen(input) {
   const file = input.files && input.files[0]; if (!file) return;
@@ -1561,8 +1561,8 @@ function adminApps() {
     <p class="small muted">Received ${esc(fmtDate(a.created_at))}</p>
     ${row('Contact', a.first_name ? `${a.first_name} ${a.last_name || ''}`.trim() : a.contact_name)}${a.phone || a.email ? row('Business phone', formatPhone(a.phone) || a.phone) + row('Email', a.email) : row('Reach them at', a.contact_reach)}${row('Public phone', formatPhone(a.public_phone) || a.public_phone)}${row('Hours', a.hours)}${row('Address', a.address)}${row('Cuisine', a.cuisine)}${a.website_url ? `<p><b>Website:</b> <a href="${esc(websiteUrl(a.website_url))}" target="_blank" rel="noopener noreferrer">${esc(a.website_url)}</a></p>` : ''}${row('Description', a.description)}${row('Offer they suggested', a.proposed_offer)}${row('Slowest nights', a.slow_nights)}
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px">
-      ${a.status === 'added' ? '' : `<button class="btn sm pri" data-act="adminFromApp" data-id="${esc(a.id)}">Create listing</button>`}
-      ${a.status === 'new' ? `<button class="btn sm" data-act="adminAppStatus" data-id="${esc(a.id)}" data-status="contacted">Mark contacted</button>` : ''}
+      ${a.status === 'added' ? '' : `<button class="btn sm pri" data-act="adminFromApp" data-id="${esc(a.id)}">Create Listing</button>`}
+      ${a.status === 'new' ? `<button class="btn sm" data-act="adminAppStatus" data-id="${esc(a.id)}" data-status="contacted">Mark Contacted</button>` : ''}
       ${a.status === 'new' || a.status === 'contacted' ? `<button class="btn sm" data-act="adminAppStatus" data-id="${esc(a.id)}" data-status="declined">Decline</button>` : ''}
       ${adminState.confirmApp === a.id ? '' : `<button class="btn sm" data-act="appDeleteAsk" data-id="${esc(a.id)}" style="border-color:#8F3215; color:#8F3215">Delete</button>`}
     </div>
@@ -1616,7 +1616,7 @@ function adminForm() {
       <label class="f">Describe Your Restaurant<textarea id="aDesc" rows="3">${esc(r.description)}</textarea></label>
       <label class="f">The Offer You’d Like To Give Members<input id="aOffer" maxlength="120" value="${esc(r.offer_text)}" placeholder="10% Off Food, Every Day"></label>
       <p class="eyebrow" style="margin-top:14px">Listing Details</p>
-      <div><button class="btn sm" type="button" data-act="adminGeocode">Find this address on the map</button></div>
+      <div><button class="btn sm" type="button" data-act="adminGeocode">Find This Address On The Map</button></div>
       <div id="adminMap" role="region" aria-label="Click the map to place the restaurant" style="height:300px; border-radius:14px; border:1.5px solid var(--line)"></div>
       <p class="small muted">Click the map to place or move the pin.</p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
@@ -1979,7 +1979,7 @@ function openDrawer(id) {
     ${r.phone || /^https?:\/\//i.test(r.website || '') ? `<p class="small">${r.phone ? `<a href="tel:${esc(r.phone.replace(/[^\d+]/g, ''))}">${esc(formatPhone(r.phone) || r.phone)}</a>` : ''}${r.phone && r.website ? ' · ' : ''}${/^https?:\/\//i.test(r.website || '') ? `<a href="${esc(r.website)}" target="_blank" rel="noopener noreferrer">Website</a>` : ''}</p>` : ''}
     <div class="card" style="gap:8px"><p class="eyebrow">Member offer</p><p style="font-family: var(--f-display); font-weight:800; font-size:30px; line-height:1.1">${esc(r.offer)}</p><p class="small muted">Show your live pass before you pay. Alcohol excluded. Not combined with other offers.</p></div>
     <div class="badges">${r.isNew ? `<span class="badge new">${I.star}New</span>` : ''}${r.founding ? `<span class="badge fp">${I.star}Founding partner</span>` : ''}${r.dineIn ? `<span class="badge">${I.dine}Dine-in</span>` : ''}${r.pickup ? `<span class="badge">${I.pickup}Pickup</span>` : ''}</div>
-    <div style="display:flex; gap:10px; flex-wrap:wrap">${!member ? '<a class="btn pri" href="#join" data-go="join">Join to use this offer</a>' : isPaid() ? '<a class="btn pri" href="#pass" data-go="pass">Show my pass</a>' : '<a class="btn pri" href="#pass" data-go="pass">Activate my pass</a>'}<button class="btn" data-act="closeDrawer">Back to results</button></div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap">${!member ? '<a class="btn pri" href="#join" data-go="join">Join To Use This Offer</a>' : isPaid() ? '<a class="btn pri" href="#pass" data-go="pass">Show My Pass</a>' : '<a class="btn pri" href="#pass" data-go="pass">Activate My Pass</a>'}<button class="btn" data-act="closeDrawer">Back To Results</button></div>
   </div></div>`;
   highlight(id);
   const x = document.querySelector('.drawer .x'); if (x) x.focus();
