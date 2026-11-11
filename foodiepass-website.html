@@ -845,17 +845,14 @@ function heroOffers() {
 const COLLAGE = [1, 2, 3, 4, 5, 6].map((n) => `https://mroiimqqklitidpzaqnk.supabase.co/storage/v1/object/public/restaurant-photos/site/collage-${n}.jpg`);
 
 // One restaurant tile, used on the Restaurants page and in the home page's Featured Restaurants (which adds the photo).
+// Kept short on purpose: the description and Dine-in / Pickup are in the View Restaurant window.
 function restaurantCard(r, withPhoto) {
   const flags = r.isNew || r.founding ? `<div class="badges">${r.isNew ? `<span class="badge new">${I.star}New</span>` : ''}${r.founding ? `<span class="badge fp">${I.star}Founding partner</span>` : ''}</div>` : '';
   return `<article class="rc${withPhoto ? ' rc-feature' : ''}${ui.hl === r.id ? ' hl' : ''}" data-rid="${r.id}">
     ${withPhoto ? `<div class="rc-photo">${r.photo ? `<img src="${esc(r.photo)}" alt="${esc(r.name)}" loading="lazy">` : I.fork}</div>` : ''}
     <div class="rc-top"><div class="rc-name"><h3>${esc(r.name)}</h3>${flags}</div></div>
     <div class="meta">${r.cuisine ? `<span>${I.fork}${esc(r.cuisine)}</span>` : ''}${r.place ? `<span>${I.pin}${esc(r.place)}</span>` : ''}</div>
-    <p style="color: var(--ink-2)">${esc(r.desc)}</p>
     <span class="offer">${I.spark}${esc(r.offer)}</span>
-    <div class="rc-actions">
-      <div class="badges">${r.dineIn ? `<span class="badge">${I.dine}Dine-in</span>` : ''}${r.pickup ? `<span class="badge">${I.pickup}Pickup</span>` : ''}</div>
-    </div>
     <button class="btn sm dark" data-open="${r.id}" style="align-self: flex-start">View Restaurant</button>
   </article>`;
 }
