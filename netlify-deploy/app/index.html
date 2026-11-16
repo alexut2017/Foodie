@@ -65,7 +65,8 @@ textarea.in { padding: 12px 16px; min-height: 96px; resize: vertical; font-size:
 .badge.founding { background: var(--bayou); color: var(--linen); }
 .badge.featured { background: var(--chili); color: var(--bayou); }
 .pill { flex-shrink: 0; min-height: 44px; border-radius: 999px; border: 0; background: var(--chili); color: var(--bayou); font: inherit; font-weight: 800; padding: 0 16px; cursor: pointer; }
-.tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--card); border-top: 1px solid var(--line); padding: 6px 0 calc(8px + env(safe-area-inset-bottom)); }
+.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--card); border-top: 1px solid var(--line); padding: 6px 0 calc(8px + env(safe-area-inset-bottom)); }
+.tab span { font-size: 11px; line-height: 1.15; text-align: center; }
 .tab { border: 0; background: transparent; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; color: var(--muted); font: inherit; font-size: 12px; font-weight: 700; }
 .tab[aria-current="page"] { color: var(--brick); }
 .pass { background: var(--linen); border: 1px solid var(--line); border-radius: 28px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 12px 30px rgba(0,0,0,.18); }
@@ -127,7 +128,7 @@ var CFG = {
   termsVersion: '2026-11-04',
   resendSeconds: 60,
   passMinutes: 15,
-  version: '0.7.0'
+  version: '0.8.0'
 };
 var sb = null;
 try {
@@ -156,6 +157,7 @@ var fmtDate = function (d) { return new Date(d).toLocaleDateString('en-US', { mo
 var LOGO = '<svg width="SIZE" height="SIZE" viewBox="240 148 840 840" role="img" aria-label="LocalScout"><path d="M552 795 A239 98 0 1 0 770 795 L751 821 A177 58 0 1 1 570 821 Z" fill="#E34C19"/><path d="M660 157 C515 157 398 275 398 420 C398 470 410 515 430 555 C480 660 590 800 653 881 Q660 888 667 881 C730 800 840 660 890 547 C910 505 920 470 920 420 C920 275 805 157 660 157 Z" fill="#E34C19"/><path d="M567 283 A21 21 0 0 1 609 283 V407 A16 16 0 0 0 641 407 V283 A21.5 21.5 0 0 1 684 283 V407 A16 16 0 0 0 716 407 V283 A21 21 0 0 1 758 283 L764 435 C764 478 735 506 702 507 C697 507 694 510 694 516 V550 L698 670 C698 692 682 708 662 708 C642 708 626 692 626 670 L630 550 V516 C630 510 627 507 622 507 C589 506 561 478 561 435 Z" fill="#FFFFFF"/></svg>';
 var logo = function (n) { return LOGO.replace(/SIZE/g, String(n)); };
 var ICON = {
+  store: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l1.5-5h15L21 9M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0V9zM5 13v8h14v-8M10 21v-5h4v5"/></svg>',
   fork: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 2-2 6 0 8v10"/></svg>',
   card: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7h18v10H3zM3 11h18M7 15h4"/></svg>',
   user: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"/></svg>'
@@ -586,10 +588,10 @@ function vVisit() {
   return '<div class="main" style="padding-left:20px;padding-right:20px;gap:18px">' + head + body +
     '<button class="btn ghost" data-act="endVisit">' + (v.confirmedAt ? 'Done' : 'Choose a different restaurant') + '</button>' + msgHtml() + '<button class="btn link" data-act="report">Report a problem</button></div>';
 }
-function partnerFormHtml() {
+function partnerFormHtml(open) {
   var p = R.partner || {};
-  if (p.done) return '<div class="card"><h2>Thanks! Application received</h2><p class="lede" style="font-size:16px">We’ll reach out within a few business days.</p></div>';
-  if (!R.partnerOpen) return '<div class="card"><h2>Own or manage a restaurant?</h2><p class="lede" style="font-size:16px">Restaurants join free. Bring in new regulars with one simple member offer.</p><button class="btn ghost" data-act="partnerOpen">Apply to be a partner</button></div>';
+  if (p.done) return '<div class="card"><h2>Thanks! Application received</h2><p class="lede" style="font-size:16px">We just emailed you a confirmation. We’ll be in touch within two business days and add your restaurant to the map.</p></div>';
+  if (!R.partnerOpen && !open) return '<div class="card"><h2>Own or manage a restaurant?</h2><p class="lede" style="font-size:16px">Restaurants join free. Bring in new regulars with one simple member offer.</p><button class="btn ghost" data-act="partnerOpen">Apply to be a partner</button></div>';
   var f = function (id, label, attrs) { return '<label class="f">' + label + '<input id="' + id + '" class="in pf" ' + (attrs || '') + ' value="' + esc(p[id] || '') + '"></label>'; };
   return '<form class="card" id="partnerForm" novalidate><h2>Partner application</h2><p class="small">Restaurants join free. Fields marked * are required.</p>' +
     f('pName', 'Restaurant name *', 'autocomplete="organization"') +
@@ -607,7 +609,7 @@ function partnerFormHtml() {
 }
 function vAccountSignedOut() {
   return '<div class="main" style="padding-left:20px;padding-right:20px;gap:14px"><p class="eyebrow">Account</p><h1 style="font-size:32px">You’re browsing as a guest</h1>' +
-    msgHtml() + '<button class="btn" data-act="join">Create an account</button><button class="btn ghost" data-act="signin">Sign in</button>' + partnerFormHtml() + linksHtml() + '</div>';
+    msgHtml() + '<button class="btn" data-act="join">Create an account</button><button class="btn ghost" data-act="signin">Sign in</button>' + forRestaurantsCard() + linksHtml() + '</div>';
 }
 function linksHtml() {
   return '<div class="card" style="gap:4px"><a class="btn link" href="' + CFG.site + '#how" target="_blank" rel="noopener">How it works</a><a class="btn link" href="' + CFG.site + '#faq" target="_blank" rel="noopener">FAQ</a><a class="btn link" href="' + CFG.site + '#conduct" target="_blank" rel="noopener">Member code of conduct</a>' +
@@ -623,7 +625,7 @@ function vAccount() {
     (m.since ? '<div class="kv"><span class="small">Member since</span><span class="v">' + esc(fmtDate(m.since)) + '</span></div>' : '') + '</div>' +
     '<div class="card"><h2>Membership</h2><p class="note' + (st.active ? ' ok' : '') + '">' + esc(memb) + '</p></div>' +
     inviteHtml(m) +
-    partnerFormHtml() +
+    forRestaurantsCard() +
     (R.isAdmin ? '<a class="btn ghost" href="' + CFG.site + '#admin" target="_blank" rel="noopener">Open admin dashboard</a>' : '') +
     '<button class="btn ghost" data-act="signOut"' + (R.busy ? ' disabled' : '') + '>Sign out</button><button class="btn link" data-act="signOutAll"' + (R.busy ? ' disabled' : '') + '>Sign out on all devices</button>' +
     linksHtml() + '</div>';
@@ -647,8 +649,27 @@ function inviteHtml(m) {
     (R.refs && R.refs.referred_by ? '<p class="small">You joined with code ' + esc(R.refs.referred_by) + '.</p>' : '') +
     (R.refMsg ? '<p class="note ' + R.refMsg.kind + '">' + esc(R.refMsg.text) + '</p>' : '') + '</div>';
 }
+// For Restaurants: same content as the website's For Restaurants page (joinlocalscout.com/#partners).
+function vPartners() {
+  return '<div class="main" style="padding-left:20px;padding-right:20px;gap:14px">' +
+    '<div class="finder"><p class="eyebrow" style="color:var(--mustard)">For restaurant owners</p>' +
+    '<h1 style="font-size:32px;color:var(--linen)">Join for free. <span style="color:var(--mustard)">Grow your brand.</span></h1>' +
+    '<p style="color:var(--mint);font-size:17px;line-height:1.4">No fees, no commissions, no new hardware. You choose the offer and the days it runs.</p></div>' +
+    '<div class="card"><p class="eyebrow">What we ask</p><h2>Two things. We do the rest.</h2>' +
+    '<p class="lede" style="font-size:16px">1. Honor your offer for any member with a live pass.</p>' +
+    '<p class="lede" style="font-size:16px">2. Brief your staff on how LocalScout works. Our one-page staff guide covers it.</p>' +
+    '<p class="small">No passwords to keep track of. We set up your listing; then your owner page shows member visits each week and lets you update your offer, hours, photo and staff PIN. You sign in with a code we email you.</p>' +
+    '<p class="small"><b>Founding partners</b> get top placement on the map for 12 months.</p></div>' +
+    '<div class="card"><h2>Already a partner?</h2>' +
+    '<a class="btn" href="' + CFG.site + '#owner" target="_blank" rel="noopener">Open my owner page</a>' +
+    '<a class="btn ghost" href="' + CFG.site + '#staff-guide" target="_blank" rel="noopener">Staff guide: How to accept a pass</a></div>' +
+    partnerFormHtml(true) + '</div>';
+}
+function forRestaurantsCard() {
+  return '<div class="card"><h2>Own or manage a restaurant?</h2><p class="lede" style="font-size:16px">Restaurants join free. Bring in new regulars with one simple member offer.</p><button class="btn ghost" data-act="tab" data-id="partners">For Restaurants</button></div>';
+}
 function tabsHtml() {
-  return '<nav class="tabs" aria-label="Main">' + [['explore', 'Explore', ICON.fork], ['pass', 'My pass', ICON.card], ['account', 'Account', ICON.user]].map(function (t) {
+  return '<nav class="tabs" aria-label="Main">' + [['explore', 'Explore', ICON.fork], ['pass', 'My pass', ICON.card], ['partners', 'For Restaurants', ICON.store], ['account', 'Account', ICON.user]].map(function (t) {
     return '<button class="tab" data-act="tab" data-id="' + t[0] + '"' + (S.tab === t[0] && !R.detail ? ' aria-current="page"' : '') + '>' + t[2] + '<span>' + t[1] + '</span></button>';
   }).join('') + '</nav>';
 }
@@ -663,7 +684,7 @@ function render(keepFocusId) {
   else if (R.screen === 'welcome') html = vWelcome();
   else if (R.screen === 'login') html = vLogin();
   else if (R.screen === 'code') html = vCode();
-  else html = (R.detail ? vDetail() : S.tab === 'explore' ? vExplore() : S.tab === 'account' ? (R.member ? vAccount() : vAccountSignedOut()) : vPass()) + tabsHtml();
+  else html = (R.detail ? vDetail() : S.tab === 'explore' ? vExplore() : S.tab === 'account' ? (R.member ? vAccount() : vAccountSignedOut()) : S.tab === 'partners' ? vPartners() : vPass()) + tabsHtml();
   if (R.map) { try { R.map.remove(); } catch (e) { /* already gone */ } R.map = null; }
   document.getElementById('app').innerHTML = html;
   if (document.getElementById('map')) drawMap();
@@ -713,6 +734,7 @@ async function submitPartner() {
   p.busy = false;
   if (res.error) { p.err = /rate_limited/i.test(String(res.error.message || '')) ? 'We’ve received several applications from you recently. Please try again later.' : 'We couldn’t send your application. Check your connection and try again.'; return render(); }
   R.partner = { done: true }; render();
+  fetch(CFG.url + '/functions/v1/partner-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'received', email: t('pEmail') }) }).catch(function () {});
 }
 
 // ---------- Events ----------
