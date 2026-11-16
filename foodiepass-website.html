@@ -280,6 +280,12 @@ footer a:hover { color: var(--linen); text-decoration: underline; }
 
 /* Leaflet 1.9.4 core CSS (inlined; image-based rules removed) */
 .leaflet-image-layer,.leaflet-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane,.leaflet-pane>canvas,.leaflet-pane>svg,.leaflet-tile,.leaflet-tile-container,.leaflet-zoom-box{position:absolute;left:0;top:0}.leaflet-container{overflow:hidden}.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-user-drag:none}.leaflet-tile::selection{background:0 0}.leaflet-marker-icon,.leaflet-marker-shadow{display:block}.leaflet-container .leaflet-overlay-pane svg{max-width:none!important;max-height:none!important}.leaflet-container .leaflet-marker-pane img,.leaflet-container .leaflet-shadow-pane img,.leaflet-container .leaflet-tile,.leaflet-container .leaflet-tile-pane img,.leaflet-container img.leaflet-image-layer{max-width:none!important;max-height:none!important;width:auto;padding:0}.leaflet-container.leaflet-touch-zoom{touch-action:pan-x pan-y}.leaflet-container.leaflet-touch-drag{touch-action:pinch-zoom}.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{touch-action:none}.leaflet-container{-webkit-tap-highlight-color:transparent}.leaflet-tile{filter:inherit;visibility:hidden}.leaflet-tile-loaded{visibility:inherit}.leaflet-zoom-box{width:0;height:0;box-sizing:border-box;z-index:800}.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-shadow-pane{z-index:500}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}.leaflet-map-pane canvas{z-index:100}.leaflet-map-pane svg{z-index:200}.leaflet-control{position:relative;z-index:800;pointer-events:auto}.leaflet-bottom,.leaflet-top{position:absolute;z-index:1000;pointer-events:none}.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}.leaflet-control{float:left;clear:both}.leaflet-right .leaflet-control{float:right}.leaflet-top .leaflet-control{margin-top:10px}.leaflet-bottom .leaflet-control{margin-bottom:10px}.leaflet-left .leaflet-control{margin-left:10px}.leaflet-right .leaflet-control{margin-right:10px}.leaflet-zoom-animated{transform-origin:0 0}svg.leaflet-zoom-animated{will-change:transform}.leaflet-zoom-anim .leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)}.leaflet-pan-anim .leaflet-tile,.leaflet-zoom-anim .leaflet-tile{transition:none}.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}.leaflet-interactive{cursor:pointer}.leaflet-grab{cursor:grab}.leaflet-dragging .leaflet-grab,.leaflet-dragging .leaflet-grab .leaflet-interactive{cursor:grabbing}.leaflet-image-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane>svg path,.leaflet-tile-container{pointer-events:none}.leaflet-image-layer.leaflet-interactive,.leaflet-marker-icon.leaflet-interactive,.leaflet-pane>svg path.leaflet-interactive{pointer-events:auto}.leaflet-container{background:#EDE8DE;outline-offset:1px;font-family:var(--f-body)}.leaflet-bar{box-shadow:0 1px 5px rgba(0,0,0,.35);border-radius:10px}.leaflet-bar a{background-color:#FFFDF8;border-bottom:1px solid #E2DDD2;width:36px;height:36px;line-height:36px;display:block;text-align:center;text-decoration:none;color:#172A2A;font-weight:700}.leaflet-bar a:first-child{border-top-left-radius:10px;border-top-right-radius:10px}.leaflet-bar a:last-child{border-bottom-left-radius:10px;border-bottom-right-radius:10px;border-bottom:none}.leaflet-bar a:hover{background-color:#EDE8DE}.leaflet-control-zoom-in,.leaflet-control-zoom-out{font:bold 20px 'DM Sans',Arial,sans-serif}.leaflet-container .leaflet-control-attribution{background:rgba(255,253,248,.85);margin:0;font-size:11px}.leaflet-control-attribution{padding:0 5px;color:#4A5857}.leaflet-control-attribution a{color:#4A5857}.leaflet-tooltip{position:absolute;padding:4px 8px;background-color:#FFFDF8;border:1px solid #E2DDD2;border-radius:8px;color:#172A2A;white-space:nowrap;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.2)}.leaflet-tooltip-top:before,.leaflet-tooltip-bottom:before,.leaflet-tooltip-left:before,.leaflet-tooltip-right:before{position:absolute;pointer-events:none;border:6px solid transparent;background:0 0;content:""}
+/* Owner page, visit PIN and staff guide */
+.ow-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.ow-stats .k{font-size:13px;color:#5C6968}.ow-stats .v{font-size:28px;font-weight:800}
+.ow-chart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;align-items:end;height:150px}
+.ow-bar{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}.ow-bar span{display:block;width:100%;background:#E2552B;border-radius:6px 6px 0 0}.ow-bar small{font-size:10px;color:#5C6968;white-space:nowrap}.ow-bar b{font-size:11px}
+.sg-steps{display:grid;gap:12px;padding-left:22px;font-size:18px;line-height:1.5}.sg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+@media print{body>:not(#app){display:none!important}.no-print{display:none!important}.staff-guide{padding:0!important}.staff-guide .card{border:0!important;box-shadow:none!important}body{background:#fff!important}}
 </style>
 
 <header class="hdr">
@@ -584,7 +590,7 @@ async function loadStatus(attempt) {
   } catch (e) { return loadStatusFallback(); }
 }
 // Re-render the current page in place (no jump to the top).
-function rerender() { if (view !== 'pass' && view !== 'join') return; const y = window.scrollY; go(view); window.scrollTo(0, y); }
+function rerender() { if (view !== 'pass' && view !== 'join' && view !== 'owner') return; const y = window.scrollY; go(view); window.scrollTo(0, y); }
 async function startCheckout() {
   if (!AUTH_LIVE || !member || billing.busy) return;
   const offering = OFFERING[ui.plan] || OFFERING.member;
@@ -743,7 +749,7 @@ function authInner(mode) {
       ${mode === 'join' ? joinDetailsBottom() : ''}
       ${mode === 'join' ? `<label style="display:flex; gap:10px; align-items:flex-start; font-size:15px"><input type="checkbox" id="authMarketing" style="width:20px; height:20px; margin-top:2px"${auth.marketing ? ' checked' : ''}> Send me new restaurants and member offers (optional)</label>` : ''}
       <button class="btn pri" type="submit" ${auth.busy ? 'disabled' : ''}>${auth.busy ? 'Sending\u2026' : 'Continue With Email'}</button>
-      <p class="small muted">We\u2019ll email you a one-time ${AUTH_CONFIG.emailMode === 'link' ? 'sign-in link' : 'code'}. No password needed. ${mode === 'join' ? 'Next, you\u2019ll pay $30 to activate your membership. Accounts without a completed payment may be deleted after 2 days.' : 'Sign-in is for existing members.'} By continuing you agree to the <a href="#terms" data-go="terms">Terms Of Use</a> and <a href="#privacy" data-go="privacy">Privacy Policy</a>.</p>
+      <p class="small muted">We\u2019ll email you a one-time ${AUTH_CONFIG.emailMode === 'link' ? 'sign-in link' : 'code'}. No password needed. ${mode === 'join' ? 'Next, you\u2019ll pay $30 to activate your membership. Accounts without a completed payment may be deleted after 2 days.' : (mode === 'owner' ? 'For restaurant owners: use the email on your LocalScout listing.' : 'Sign-in is for existing members.')} By continuing you agree to the <a href="#terms" data-go="terms">Terms Of Use</a> and <a href="#privacy" data-go="privacy">Privacy Policy</a>.</p>
     </form>`;
 }
 function authPanel(mode) { return `<div id="authPanel" data-mode="${mode}" style="display:grid; gap:14px">${authInner(mode)}</div>`; }
@@ -807,6 +813,7 @@ function afterSignIn() {
   if (r) { if (r.plan) ui.plan = r.plan; return go(r.view, r.anchor); }
   if (view === 'join') return go('join', 'checkout');
   if (view === 'admin') return go('admin');
+  if (view === 'owner') { owner.loaded = false; return go('owner'); }
   return go('pass');
 }
 // Header account button: Sign In, My Pass for customers, or Admin for admins. Also starts the admin check once per account.
@@ -1165,6 +1172,7 @@ function vPassBody(inShell) {
       <p class="small muted" style="text-align:center"><span data-date></span> \u00b7 This clock keeps moving, so a screenshot won\u2019t pass.</p>
       <div class="pass-row"><div><p class="k">Annual dues</p><p class="v">Paid</p></div><div style="text-align:right"><p class="k">Member through</p><p class="v tabular">${esc(until.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }))}</p></div></div>
     </div>
+    ${passVisitHtml()}
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:18px"><a class="btn" href="#restaurants" data-go="restaurants">See Restaurants And Offers</a><button class="btn" data-act="report">Report A Problem</button></div>
     ${tools}
   </div></section>${panel}`;
@@ -1179,9 +1187,9 @@ function vPartners() {
     <div><p class="eyebrow">For restaurant owners</p><h1 style="margin-top:14px; font-size: clamp(40px, 5.4vw, 64px)">Join for free<br><span>Grow your brand</span></h1><p class="lede">No fees, no commissions, no new hardware.<br>You choose the offer and the days it runs.</p></div>
   </div></section>
   <section class="sand"><div class="wrap band" style="align-items: start">
-    <div class="sec-head" style="margin:0"><p class="eyebrow">What we ask</p><h2>Two things<br>We do the rest</h2><p>1. Honor your offer for any member with a live pass.<br>2. Brief your staff on how LocalScout works. We can provide reference materials for your team.</p><p style="margin-top:10px">No logins or passwords to keep track of. We set up your listing, and you can email us any time something changes.</p><p style="margin-top:10px"><b>Founding partners</b> get top placement on the map for 12 months.</p></div>
+    <div class="sec-head" style="margin:0"><p class="eyebrow">What we ask</p><h2>Two things<br>We do the rest</h2><p>1. Honor your offer for any member with a live pass.<br>2. Brief your staff on how LocalScout works. Our one-page <a href="#staff-guide" data-go="staff-guide">staff guide</a> covers it.</p><p style="margin-top:10px">No passwords to keep track of. We set up your listing; then your <a href="#owner" data-go="owner">owner page</a> shows member visits each week and lets you update your offer, hours and photo. You sign in with a code we email you.</p><p style="margin-top:10px">Already a partner? <a href="#owner" data-go="owner">Open your owner page</a> \u00b7 <a href="#staff-guide" data-go="staff-guide">Staff guide</a></p><p style="margin-top:10px"><b>Founding partners</b> get top placement on the map for 12 months.</p></div>
     <div class="card">
-      ${ui.partnerSent ? '<div class="note ok"><b>Thanks!</b> We have your details. We\u2019ll be in touch within two business days and add your restaurant to the map.</div>' : `<h3>Tell Us About Your Restaurant</h3>
+      ${ui.partnerSent ? '<div class="note ok"><b>Thanks!</b> We have your details and just emailed you a confirmation. We\u2019ll be in touch within two business days and add your restaurant to the map.</div>' : `<h3>Tell Us About Your Restaurant</h3>
       <form class="stack" id="partnerForm">
         <label class="f">Restaurant Name<input id="pName" required maxlength="120"></label>
         <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
@@ -1329,6 +1337,8 @@ async function loadAdminData() {
   ]);
   if (a.error || r.error) throw a.error || r.error;
   adminState.apps = a.data; adminState.restaurants = r.data;
+  // Which restaurants have a staff PIN (the PIN itself is never sent back).
+  try { const p = await sb.rpc('restaurants_with_pin'); adminState.pins = new Set(p.error ? [] : (p.data || []).map((x) => (typeof x === 'string' ? x : x.restaurants_with_pin))); } catch (e) { adminState.pins = new Set(); }
   // Contacts live in their own admin-only table; until it exists the form just starts them empty.
   adminState.contactsReady = !k.error;
   adminState.contacts = Object.fromEntries((k.error ? [] : k.data).map((x) => [x.restaurant_id, x]));
@@ -1581,7 +1591,7 @@ function rerenderAdmin() { const y = window.scrollY; go('admin'); window.scrollT
 function adminRestaurants() {
   const list = adminState.restaurants.length ? adminState.restaurants.map((r) => `<div class="card" style="flex-direction:row; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap">
     <div style="display:grid; gap:4px; min-width:0"><h3>${esc(r.name)}</h3><p class="small muted">${esc(r.status)}${r.offer_text ? ' · ' + esc(r.offer_text) : ''}</p></div>
-    <button class="btn sm" data-act="adminEdit" data-id="${esc(r.id)}">Edit</button>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">${adminState.pins && adminState.pins.has(r.id) ? '' : '<span class="small" style="color:#8F3215">No staff PIN</span>'}<button class="btn sm" data-act="emailOwner" data-id="${esc(r.id)}">Send Owner Email</button><button class="btn sm" data-act="adminEdit" data-id="${esc(r.id)}">Edit</button></div>
   </div>`).join('') : '<div class="card"><h3>No restaurants yet</h3><p>Add one here, or create a listing from an application.</p></div>';
   return `<div class="grid" style="gap:12px">${list}</div>`;
 }
@@ -1615,6 +1625,8 @@ function adminForm() {
       ${hoursEditor('a', r.hours_json)}
       <label class="f">Describe Your Restaurant<textarea id="aDesc" rows="3">${esc(r.description)}</textarea></label>
       <label class="f">The Offer You’d Like To Give Members<input id="aOffer" maxlength="120" value="${esc(r.offer_text)}" placeholder="10% Off Food, Every Day"></label>
+      <label class="f">Staff PIN (4 digits)<input id="aPin" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" placeholder="${r.id && adminState.pins && adminState.pins.has(r.id) ? 'Set. Type a new PIN to change it' : 'Not set yet'}"></label>
+      <p class="small muted">Servers type this PIN on the member’s phone to confirm each visit. The owner can change it on their owner page.</p>
       <p class="eyebrow" style="margin-top:14px">Listing Details</p>
       <div><button class="btn sm" type="button" data-act="adminGeocode">Find This Address On The Map</button></div>
       <div id="adminMap" role="region" aria-label="Click the map to place the restaurant" style="height:300px; border-radius:14px; border:1.5px solid var(--line)"></div>
@@ -1686,6 +1698,8 @@ async function adminGeocode() {
 }
 async function adminSave() {
   const v = (id) => $('#' + id).value.trim();
+  const pinVal = $('#aPin') ? $('#aPin').value.trim() : '';
+  if (pinVal && !/^\d{4}$/.test(pinVal)) { adminState.msg = 'The staff PIN must be exactly 4 digits.'; return go('admin'); }
   const num = (id) => (v(id) === '' ? null : Number(v(id)));
   const orNull = (id) => v(id) || null;
   const phone = (id) => { const f = formatPhone(v(id)); return f === null ? v(id) : f || null; }; // 555-555-5555, or as typed if it can't be
@@ -1731,9 +1745,16 @@ async function adminSave() {
       const c = await sb.from('restaurant_contacts').upsert({ restaurant_id: savedId, ...contact, updated_at: new Date().toISOString() });
       if (c.error) { contactSaved = false; console.warn('LocalScout: restaurant contact not saved', c.error); }
     }
+    let pinNote = '', mailNote = '';
+    if (pinVal) { const pr = await sb.rpc('set_restaurant_pin', { p_restaurant: savedId, p_pin: pinVal }); pinNote = pr.error ? ' The staff PIN wasn’t saved.' : ' Staff PIN set.'; }
+    // Approved from an application: email the owner their next steps (owner page, staff PIN, staff guide).
+    if (appId && contact.email) {
+      try { const m = await api('partner-email', { method: 'POST', body: { kind: 'approved', restaurantId: savedId } }); mailNote = ' Approval email sent to ' + m.to + '.'; }
+      catch (e) { mailNote = ' The approval email wasn’t sent: ' + (e.message || 'try Send Owner Email later.'); }
+    }
     adminState.draft = null; adminState.msg = null; adminState.tab = 'restaurants';
     await loadAdminData(); await loadDirectory();
-    toast(contactSaved ? 'Saved' : 'Listing saved, but the contact details weren’t. Edit the restaurant to try again.'); go('admin');
+    toast((contactSaved ? 'Saved.' : 'Listing saved, but the contact details weren’t. Edit the restaurant to try again.') + pinNote + mailNote); go('admin');
   } catch (e) {
     console.warn('LocalScout: restaurant not saved', e);
     const needsSql = e && (e.code === 'PGRST204' || /address_line1|column/i.test(e.message || ''));
@@ -1893,7 +1914,206 @@ async function submitPartner() {
     btn.disabled = false; btn.textContent = 'Send';
     return toast(error.message === 'rate_limited' ? 'We’re getting a lot of sign-ups. Please try again in a little while.' : 'That didn’t send. Check your connection and try again.');
   }
+  // Confirmation email to the applicant (sent at most once, only for an application made in the last few minutes).
+  fetch(FN_URL + '/partner-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'received', email: fields.p_email }) }).catch(() => {});
   ui.partnerSent = true; go('partners');
+}
+
+// ---------- Visit pass: the member picks the restaurant, staff confirm with the restaurant's 4-digit PIN ----------
+const VISIT_MIN = 15;
+function saveVisit(v) { ui.visit = v; try { if (v) sessionStorage.setItem('ls-visit', JSON.stringify(v)); else sessionStorage.removeItem('ls-visit'); } catch (e) { /* storage off */ } }
+function loadVisit() { try { return JSON.parse(sessionStorage.getItem('ls-visit') || 'null'); } catch (e) { return null; } }
+const fmtLeft = (ms) => { const t = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+function passVisitHtml() {
+  if (ui.visit === undefined) ui.visit = loadVisit();
+  const v = ui.visit;
+  if (!v) {
+    return `<div class="card" style="margin-top:18px; display:grid; gap:12px">
+      <h3>At The Restaurant?</h3>
+      <p>Choose where you’re eating when you’re ready to pay. Your server confirms the visit by typing the restaurant’s staff PIN on your phone.</p>
+      <label class="f">Where Are You Eating?<select id="visitPick"><option value="">Choose a restaurant</option>${RESTAURANTS.slice().sort((a, b) => a.name.localeCompare(b.name)).map((r) => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')}</select></label>
+      <button class="btn pri" data-act="visitOpen" style="justify-self:start">I’m Here</button>
+    </div>`;
+  }
+  const r = RESTAURANTS.find((x) => x.id === v.rid) || { name: v.name, offer: v.offer };
+  if (v.code) {
+    return `<div class="pass" style="max-width:none; margin-top:18px; background:#DDEFE3" role="status">
+      <div class="pass-top"><span class="eyebrow" style="color:#1F4D35">Confirmed by staff</span><span style="color:#1F4D35; font-weight:700">✓ Used</span></div>
+      <p class="pass-name">${esc(member.name)}</p>
+      <p style="font-size:20px; font-weight:700">${esc(r.name)}: ${esc(r.offer || '')}</p>
+      <div class="pass-row"><div><p class="k">Confirmed at</p><p class="v tabular">${new Date(v.confirmedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</p></div><div style="text-align:right"><p class="k">Visit code</p><p class="v tabular">${esc(v.code)}</p></div></div>
+      <p class="small" style="color:#1F4D35">Apply the offer to this check. Enjoy your meal!</p>
+      <button class="btn sm" data-act="visitDone" style="justify-self:start">Done</button>
+    </div>`;
+  }
+  const left = v.openedAt + VISIT_MIN * 60000 - Date.now();
+  if (left <= 0) {
+    return `<div class="card" style="margin-top:18px; display:grid; gap:12px"><h3>This pass timed out</h3><p>A visit pass stays open for ${VISIT_MIN} minutes. Open it again when you’re ready to pay.</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap"><button class="btn pri" data-act="visitAgain">Open Again</button><button class="btn" data-act="visitDone">Choose Another Restaurant</button></div></div>`;
+  }
+  return `<div class="pass" style="max-width:none; margin-top:18px">
+    <div class="pass-top"><span class="eyebrow">Visit pass</span><span class="pass-live"><span class="pulse"></span>Live</span></div>
+    <p class="pass-name">${esc(r.name)}</p>
+    <p style="font-size:20px; font-weight:700">${esc(r.offer || '')}</p>
+    <div class="pass-clock tabular" data-clock aria-label="Live clock">--:--:--</div>
+    <p class="small muted" style="text-align:center">${esc(member.name)} · Closes in <b data-visit-left>${fmtLeft(left)}</b></p>
+    <form class="stack" id="pinForm" novalidate>
+      <label class="f">Staff: Enter Your Restaurant PIN<input id="visitPin" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" placeholder="••••" style="font-size:28px; letter-spacing:12px; text-align:center"></label>
+      ${ui.visitMsg ? `<div class="note" role="alert" style="background:#FCE7DF; color:#8F3215">${esc(ui.visitMsg)}</div>` : ''}
+      <button class="btn pri" type="submit">Confirm Visit</button>
+    </form>
+    <p class="small muted">For restaurant staff. The PIN confirms the member showed this pass and records the visit. Never share the PIN with members.</p>
+    <button class="btn sm" data-act="visitDone" style="justify-self:start">Choose A Different Restaurant</button>
+  </div>`;
+}
+function visitOpen() {
+  const id = ($('#visitPick') || {}).value;
+  if (!id) return toast('Choose where you’re eating.');
+  const r = RESTAURANTS.find((x) => x.id === id);
+  saveVisit({ rid: id, name: r ? r.name : '', offer: r ? r.offer : '', openedAt: Date.now() });
+  ui.visitMsg = null; rerender();
+  const pin = $('#visitPin'); if (pin) pin.focus();
+}
+async function visitConfirm() {
+  const v = ui.visit; if (!v) return;
+  const pin = (($('#visitPin') || {}).value || '').trim();
+  if (!/^\d{4}$/.test(pin)) { ui.visitMsg = 'Enter the 4-digit staff PIN.'; return rerender(); }
+  const btn = $('#pinForm button[type=submit]'); if (btn) { btn.disabled = true; btn.textContent = 'Checking…'; }
+  let out;
+  try { const { data, error } = await sb.rpc('confirm_visit', { p_restaurant: v.rid, p_pin: pin, p_opened_at: new Date(v.openedAt).toISOString() }); out = error ? { status: 'error' } : data; } catch (e) { out = { status: 'error' }; }
+  if (out && out.status === 'ok') { saveVisit({ ...v, code: out.code, confirmedAt: Date.parse(out.confirmed_at) || Date.now() }); ui.visitMsg = null; return rerender(); }
+  ui.visitMsg = ({ wrong_pin: 'That PIN isn’t right.' + (out.tries_left ? ' ' + out.tries_left + ' tries left.' : ''), locked: 'Too many wrong PINs. This pass is locked for 15 minutes.', no_pin: 'This restaurant hasn’t set a staff PIN yet. Ask the manager to set one on their owner page.', not_member: 'Your membership isn’t active right now.', not_found: 'This restaurant isn’t taking LocalScout right now.' })[out && out.status] || 'We couldn’t confirm the visit. Check your connection and try again.';
+  rerender();
+}
+setInterval(() => {
+  const el = document.querySelector('[data-visit-left]');
+  if (!el || !ui.visit || ui.visit.code) return;
+  const left = ui.visit.openedAt + VISIT_MIN * 60000 - Date.now();
+  if (left <= 0) rerender(); else el.textContent = fmtLeft(left);
+}, 1000);
+
+// ---------- Owner page: owners sign in with the email on their listing ----------
+const owner = { loaded: false, loading: false, failed: false, list: [], msg: null, for: null };
+async function loadOwner() {
+  if (!member || !member.live || owner.loading) return;
+  owner.loading = true;
+  try {
+    await sb.rpc('claim_owner_restaurants'); // links this account to restaurants whose contact email matches
+    const { data, error } = await sb.rpc('owner_dashboard');
+    if (error) throw error;
+    owner.list = data || []; owner.failed = false;
+  } catch (e) { owner.failed = true; console.warn('LocalScout: owner page not loaded', e); }
+  owner.loading = false; owner.loaded = true; owner.for = member.id;
+  if (view === 'owner') rerender();
+}
+const ownerHero = `<section class="hero on-dark page-banner"><div class="wrap hero-in" style="grid-template-columns: minmax(0, 1fr)"><div style="max-width: 820px"><p class="eyebrow">For restaurants</p><h1 style="margin-top:14px; font-size: clamp(36px, 5vw, 56px)">Owner Page</h1><p class="lede" style="max-width:none">See your LocalScout visits and keep your listing up to date</p></div></div></section>`;
+function vOwner() {
+  const wrap = (inner) => `${ownerHero}<section><div class="wrap" style="max-width:860px; display:grid; gap:18px">${inner}</div></section>`;
+  if (!member || !member.live) {
+    return wrap(`<div class="card" style="display:grid; gap:14px"><h3>Sign In</h3><p>Use the email on your LocalScout listing. We’ll email you a 6-digit code. No password needed.</p>${authPanel('owner')}</div>
+      <p class="small muted">Not a partner yet? <a href="#partners" data-go="partners">Apply to join free</a>.</p>`);
+  }
+  if (!owner.loaded || owner.for !== member.id) { loadOwner(); return wrap('<div class="card"><p>Loading your restaurants…</p></div>'); }
+  if (owner.failed) return wrap('<div class="card" style="display:grid; gap:12px"><h3>We couldn’t load your owner page</h3><p>Check your connection and try again.</p><button class="btn" data-act="ownerReload" style="justify-self:start">Try Again</button></div>');
+  if (!owner.list.length) {
+    return wrap(`<div class="card" style="display:grid; gap:12px"><h3>No restaurant found for ${esc(member.email)}</h3>
+      <p>Sign in with the email we have on file for your restaurant (the one our approval email went to). If it has changed, email <a href="mailto:joinlocalscout@outlook.com">joinlocalscout@outlook.com</a> and we’ll update it.</p>
+      <p>Not a partner yet? <a href="#partners" data-go="partners">Apply to join free</a>.</p>
+      <button class="btn" data-act="signout" style="justify-self:start">Sign Out</button></div>`);
+  }
+  return wrap(owner.list.map(ownerCard).join('') + `<p class="small muted">Signed in as ${esc(member.email)}. <a href="#staff-guide" data-go="staff-guide">Staff guide</a> · <button class="link" data-act="signout" style="background:none; border:0; padding:0; color:inherit; text-decoration:underline; cursor:pointer">Sign out</button></p>`);
+}
+function ownerCard(r) {
+  const weeks = r.weeks || [];
+  const max = Math.max(1, ...weeks.map((w) => w.visits));
+  const thisWeek = weeks.length ? weeks[weeks.length - 1].visits : 0, lastWeek = weeks.length > 1 ? weeks[weeks.length - 2].visits : 0;
+  const bars = weeks.map((w) => { const d = new Date(w.week), label = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
+    return `<div class="ow-bar" title="Week of ${label}: ${w.visits} visit${w.visits === 1 ? '' : 's'}"><b class="tabular">${w.visits || ''}</b><span style="height:${w.visits ? Math.max(6, Math.round(w.visits / max * 100)) : 2}%"></span><small>${label}</small></div>`; }).join('');
+  const m = owner.msg && owner.msg.id === r.id ? `<div class="note${owner.msg.err ? '' : ' ok'}" role="status"${owner.msg.err ? ' style="background:#FCE7DF; color:#8F3215"' : ''}>${esc(owner.msg.text)}</div>` : '';
+  return `<div class="card" style="display:grid; gap:18px">
+    <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline"><h2 style="font-size:28px">${esc(r.name)}</h2><span class="small muted">${r.status === 'active' ? 'Live on LocalScout' : 'Not listed yet'}</span></div>
+    <div class="ow-stats"><div><p class="k">This week</p><p class="v tabular">${thisWeek}</p></div><div><p class="k">Last week</p><p class="v tabular">${lastWeek}</p></div><div><p class="k">All time</p><p class="v tabular">${r.visits_total}</p></div></div>
+    <div><p class="small muted" style="margin-bottom:8px">Member visits per week, last 12 weeks (confirmed with your staff PIN)</p><div class="ow-chart" role="img" aria-label="Member visits per week">${bars}</div></div>
+    ${m}
+    <form class="stack" data-owner-form="${esc(r.id)}" novalidate>
+      <h3>Your Listing</h3>
+      <label class="f">Member Offer<input name="offer" maxlength="140" required value="${esc(r.offer_text || '')}" placeholder="10% Off Food, Every Day"></label>
+      <label class="f">Hours<input name="hours" maxlength="300" value="${esc(r.hours || '')}" placeholder="Mon–Fri 11 AM – 9 PM · Sat–Sun 10 AM – 10 PM"></label>
+      <div class="f">Photo ${r.photo_url ? `<img src="${esc(r.photo_url)}" alt="" style="width:100%; max-width:360px; aspect-ratio:16/10; object-fit:cover; border-radius:12px">` : '<span class="small muted">No photo yet</span>'}<input name="photo" type="file" accept="image/jpeg,image/png,image/webp"><span class="small muted">JPG, PNG or WebP, up to 5 MB. A wide photo of your best dish or dining room works best.</span></div>
+      <button class="btn pri" type="submit" style="justify-self:start">Save Listing</button>
+    </form>
+    <form class="stack" data-owner-pin="${esc(r.id)}" novalidate>
+      <h3>Staff PIN</h3>
+      <p class="small">${r.has_pin ? 'A PIN is set. ' : '<b>No PIN yet.</b> Members can’t use their pass here until you set one. '}Servers type this 4-digit PIN on the member’s phone to confirm each visit. Share it with your staff only, and change it if someone leaves.</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:end"><label class="f" style="max-width:180px">${r.has_pin ? 'New PIN' : 'PIN'}<input name="pin" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" placeholder="4 digits"></label><button class="btn" type="submit">${r.has_pin ? 'Change PIN' : 'Set PIN'}</button></div>
+    </form>
+    <p><a href="#staff-guide" data-go="staff-guide">Print the staff guide: How to accept a LocalScout pass →</a></p>
+  </div>`;
+}
+async function ownerSave(form) {
+  const id = form.dataset.ownerForm, offer = form.offer.value.trim(), hours = form.hours.value.trim(), file = form.photo.files[0];
+  if (!offer) { owner.msg = { id, err: true, text: 'Enter your member offer.' }; return rerender(); }
+  const btn = form.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    let photo = null;
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) throw { message: 'photo_too_big' };
+      const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+      const path = `owners/${id}/${Date.now()}.${ext}`;
+      const up = await sb.storage.from('restaurant-photos').upload(path, file, { contentType: file.type, upsert: false });
+      if (up.error) throw up.error;
+      photo = sb.storage.from('restaurant-photos').getPublicUrl(path).data.publicUrl;
+    }
+    const { error } = await sb.rpc('owner_update_restaurant', { p_restaurant: id, p_offer: offer, p_hours: hours, p_photo_url: photo });
+    if (error) throw error;
+    owner.msg = { id, text: 'Saved. Your listing is updated on LocalScout.' };
+    owner.loaded = false; loadDirectory(); await loadOwner();
+  } catch (e) {
+    owner.msg = { id, err: true, text: e && e.message === 'photo_too_big' ? 'That photo is over 5 MB. Choose a smaller one.' : 'That didn’t save. Check your connection and try again.' };
+    rerender();
+  }
+}
+async function ownerPin(form) {
+  const id = form.dataset.ownerPin, pin = form.pin.value.trim();
+  if (!/^\d{4}$/.test(pin)) { owner.msg = { id, err: true, text: 'The staff PIN is 4 digits.' }; return rerender(); }
+  const { error } = await sb.rpc('set_restaurant_pin', { p_restaurant: id, p_pin: pin });
+  owner.msg = error ? { id, err: true, text: 'The PIN wasn’t saved. Try again.' } : { id, text: 'Staff PIN saved. Let your staff know the new PIN.' };
+  if (!error) { const r = owner.list.find((x) => x.id === id); if (r) r.has_pin = true; }
+  rerender();
+}
+document.addEventListener('submit', (e) => {
+  const f = e.target;
+  if (f.id === 'pinForm') { e.preventDefault(); visitConfirm(); }
+  else if (f.dataset && f.dataset.ownerForm) { e.preventDefault(); ownerSave(f); }
+  else if (f.dataset && f.dataset.ownerPin) { e.preventDefault(); ownerPin(f); }
+});
+async function emailOwner(id) {
+  try { const m = await api('partner-email', { method: 'POST', body: { kind: 'approved', restaurantId: id } }); toast('Owner email sent to ' + m.to); }
+  catch (e) { toast(e.message || 'The email wasn’t sent. Try again.'); }
+}
+
+// ---------- Staff guide: one printable page ----------
+function vStaffGuide() {
+  return `<section class="staff-guide" style="padding-block:40px 72px"><div class="wrap" style="max-width:780px">
+    <div class="card sg" style="display:grid; gap:18px">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap"><p style="font-size:26px; font-weight:800">Local<span style="color:var(--chili, #E2552B)">Scout</span></p><button class="btn sm no-print" data-act="printGuide">Print This Page</button></div>
+      <h1 style="font-size: clamp(30px, 4.6vw, 44px)">How to accept a LocalScout pass</h1>
+      <p class="lede" style="max-width:none">LocalScout members pay $30 a year for one offer at every partner restaurant. This is all your team needs to know.</p>
+      <ol class="sg-steps">
+        <li><b>The member opens their pass</b> on their phone and taps your restaurant. Ask for it <b>before you bring the check</b>.</li>
+        <li><b>Check the screen.</b> It shows <b>your restaurant’s name</b>, your offer, the member’s name, and a <b>clock that keeps moving</b>. If the clock is frozen, it’s a screenshot: don’t accept it.</li>
+        <li><b>Type your 4-digit staff PIN</b> on the member’s phone and tap Confirm Visit. Don’t say the PIN out loud or give it to the member.</li>
+        <li><b>The pass turns green</b> with “Confirmed by staff” and a 6-character visit code. Apply the offer to the check. Done!</li>
+      </ol>
+      <div class="note"><b>Don’t accept</b> a pass with another restaurant’s name, a clock that isn’t moving, or a pass that says it timed out. Ask the member to open it again.</div>
+      <div class="sg-grid">
+        <div><h3>Good to know</h3><p class="small">The offer is for the member’s own meal unless your offer says otherwise. Alcohol, tax and tip are excluded, and offers can’t be combined with other discounts.</p></div>
+        <div><h3>PIN not working?</h3><p class="small">After 5 wrong tries the pass locks for 15 minutes. Your owner or manager can change the PIN at joinlocalscout.com/#owner.</p></div>
+        <div><h3>Questions?</h3><p class="small">Email joinlocalscout@outlook.com and we’ll reply within one business day.</p></div>
+      </div>
+      <p class="small muted">Keep this sheet behind the counter. Staff PIN: ____________</p>
+    </div>
+  </div></section>`;
 }
 
 // ---------- Map ----------
@@ -1987,7 +2207,7 @@ function openDrawer(id) {
 function closeDrawer() { $('#drawerRoot').innerHTML = ''; }
 
 // ---------- Router ----------
-const VIEWS = { home: vHome, how: vHow, restaurants: vRestaurants, join: vJoin, pass: vPass, partners: vPartners, faq: vFaq, conduct: vConduct, terms: vTerms, privacy: vPrivacy, admin: vAdmin };
+const VIEWS = { home: vHome, how: vHow, restaurants: vRestaurants, join: vJoin, pass: vPass, partners: vPartners, faq: vFaq, conduct: vConduct, terms: vTerms, privacy: vPrivacy, admin: vAdmin, owner: vOwner, 'staff-guide': vStaffGuide };
 let view = 'home', clockTimer = null;
 function go(name, anchor) {
   view = VIEWS[name] ? name : 'home';
@@ -2042,6 +2262,12 @@ document.addEventListener('click', (e) => {
     case 'adminDeleteYes': return adminDelete();
     case 'hoursAdd': { const b = readHours(d.prefix, true); b.push({ days: [], open: '', close: '' }); return redrawHours(d.prefix, b); }
     case 'hoursRemove': { const b = readHours(d.prefix, true); b.splice(Number(d.i), 1); return redrawHours(d.prefix, b); }
+    case 'emailOwner': return emailOwner(d.id);
+    case 'visitOpen': return visitOpen();
+    case 'visitDone': saveVisit(null); ui.visitMsg = null; return rerender();
+    case 'visitAgain': saveVisit({ ...ui.visit, openedAt: Date.now() }); ui.visitMsg = null; return rerender();
+    case 'ownerReload': owner.loaded = false; return go('owner');
+    case 'printGuide': return window.print();
     case 'appDeleteAsk': adminState.confirmApp = d.id; return rerenderAdmin();
     case 'appDeleteNo': adminState.confirmApp = null; return rerenderAdmin();
     case 'appDeleteYes': return adminDeleteApp(d.id);
