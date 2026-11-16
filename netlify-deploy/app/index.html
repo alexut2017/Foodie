@@ -105,6 +105,7 @@ textarea.in { padding: 12px 16px; min-height: 96px; resize: vertical; font-size:
 .rdesc { font-size: 16px; line-height: 1.4; color: var(--ink2); }
 .roffer { align-self: flex-start; font-weight: 700; font-size: 15px; background: var(--sand); padding: 8px 12px; border-radius: 10px; }
 .svc { font-size: 13px; font-weight: 600; color: var(--ink2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
+.rmeta { display: flex; flex-wrap: wrap; gap: 6px 14px; } .rmeta span, .roffer { display: inline-flex; align-items: center; gap: 6px; }
 .rview { align-self: flex-start; background: var(--bayou); color: var(--linen); border-radius: 999px; padding: 10px 18px; font-weight: 700; font-size: 15px; }
 .badge.new { background: var(--errbg); color: var(--errfg); }
 .badge.popular { background: var(--okbg); color: var(--okfg); }
@@ -126,7 +127,7 @@ var CFG = {
   termsVersion: '2026-11-04',
   resendSeconds: 60,
   passMinutes: 15,
-  version: '0.6.0'
+  version: '0.7.0'
 };
 var sb = null;
 try {
@@ -256,17 +257,12 @@ function authErrText(err) { return (String(err.message || '') + ' ' + String(err
 // Reads the join form into R.d. Returns the first problem, or '' when everything is filled in (same checks as the website).
 function readJoin() {
   var v = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
-  var d = { first_name: v('jdFirst'), last_name: v('jdLast'), phone: v('jdPhone'), address_line1: v('jdAddress1'), address_line2: v('jdAddress2'), city: v('jdCity'), state: v('jdState'), zip: v('jdZip'), ref: v('jdRef').toUpperCase() };
+  // The app asks for name, email and an optional referral code only (phone and address are optional on the server).
+  var d = { first_name: v('jdFirst'), last_name: v('jdLast'), phone: '', address_line1: '', address_line2: '', city: '', state: '', zip: '', ref: v('jdRef').toUpperCase() };
   var m = document.getElementById('mktIn'); R.marketing = !!(m && m.checked);
   R.d = d; S.email = v('emailIn'); save();
   if (!d.first_name || !d.last_name) return 'Enter your first and last name.';
   if (!emailOk(S.email)) return 'Enter a valid email address, like name@example.com.';
-  var digits = d.phone.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
-  if (!digits) return 'Enter your phone number.';
-  if (digits.length !== 10) return 'Enter a 10-digit phone number, like 555-555-5555.';
-  d.phone = fmtPhone(digits);
-  if (!d.address_line1 || !d.city || !d.state) return 'Enter your full address.';
-  if (!/^\d{5}(-\d{4})?$/.test(d.zip)) return 'Enter a 5-digit zip code.';
   if (d.ref && !refOk(d.ref)) return 'Referral codes look like GS-1A2B3C. Check it, or leave it blank.';
   return '';
 }
@@ -379,16 +375,11 @@ function vLogin() {
   var email = f('emailIn', 'Email', S.email, 'type="email" inputmode="email" autocomplete="email" autocapitalize="off" maxlength="254"');
   return '<div class="screen"><div class="stack"><button class="back" data-act="toWelcome" aria-label="Back">←</button>' +
     '<h1>' + (join ? 'Join LocalScout' : 'Sign in') + '</h1>' +
-    '<p class="lede">' + (join ? 'Your name goes on your member pass. Fill in your details and pay $30, then enter the code we email you to open your pass.' : 'Enter the email on your LocalScout account and we’ll send you a 6-digit code.') + '</p>' +
+    '<p class="lede">' + (join ? 'Just your name and email. Your name goes on your member pass. Pay $30, then enter the code we email you to open your pass.' : 'Enter the email on your LocalScout account and we’ll send you a 6-digit code.') + '</p>' +
     '<form id="authForm" class="stack" novalidate>' +
     (join ? two(f('jdFirst', 'First name', d.first_name, 'maxlength="59" autocomplete="given-name"'), f('jdLast', 'Last name', d.last_name, 'maxlength="60" autocomplete="family-name"')) : '') +
     email +
-    (join ? f('jdPhone', 'Phone', d.phone, 'type="tel" inputmode="tel" maxlength="20" autocomplete="tel" placeholder="555-555-5555"') +
-      f('jdAddress1', 'Address line 1', d.address_line1, 'maxlength="120" autocomplete="address-line1"') +
-      f('jdAddress2', 'Address line 2', d.address_line2, 'maxlength="80" autocomplete="address-line2"') +
-      f('jdCity', 'City', d.city || 'Houston', 'maxlength="80" autocomplete="address-level2"') +
-      two(states, f('jdZip', 'Zip', d.zip, 'inputmode="numeric" maxlength="10" autocomplete="postal-code"')) +
-      f('jdRef', 'Referral code (optional)', d.ref != null ? d.ref : storedRef(), 'maxlength="9" autocapitalize="characters" placeholder="GS-1A2B3C"') +
+    (join ? f('jdRef', 'Referral code (optional)', d.ref != null ? d.ref : storedRef(), 'maxlength="9" autocapitalize="characters" placeholder="GS-1A2B3C"') +
       '<label class="check"><input id="mktIn" type="checkbox"' + (R.marketing ? ' checked' : '') + '> <span>Send me new restaurants and member offers (optional)</span></label>' : '') +
     msgHtml() +
     '<button class="btn" id="sendBtn" type="submit"' + (R.busy ? ' disabled' : '') + '>' + (R.busy ? (join ? 'Opening secure checkout…' : 'Sending…') : (join ? 'Continue to payment · $30' : 'Continue with email')) + '</button>' +
@@ -423,16 +414,21 @@ function miles(a, r) {
   var h = Math.pow(Math.sin(dLat / 2), 2) + Math.cos(rad(a.lat)) * Math.cos(rad(r.lat)) * Math.pow(Math.sin(dLng / 2), 2);
   return 3958.8 * 2 * Math.asin(Math.sqrt(h));
 }
+// Same card as the website's Restaurants page (joinlocalscout.com/#restaurants): name with New / Founding partner badges,
+// cuisine and city, the offer, and View Restaurant.
+var ICO = {
+  fork: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 2-2 6 0 8v10"/></svg>',
+  pin: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+  spark: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z"/></svg>'
+};
 function cardHtml(r) {
   var dist = S.sort === 'near' && R.here && miles(R.here, r) < Infinity ? miles(R.here, r).toFixed(1) + ' mi' : '';
+  var flags = (r.isNew ? '<span class="badge new">★ New</span>' : '') + (r.founding ? '<span class="badge founding">★ Founding partner</span>' : '');
   return '<button class="rcard" data-act="detail" data-id="' + esc(r.id) + '">' +
-    (r.photo ? '<img class="rphoto" src="' + esc(r.photo) + '" alt="" loading="lazy">' : '') +
-    '<span class="rtop"><span class="name">' + esc(r.name) + '</span>' + badgesHtml(r) + '</span>' +
-    '<span class="meta">' + esc([r.cuisine, placeOf(r), dist].filter(Boolean).join('  ·  ')) + '</span>' +
-    (r.desc ? '<span class="rdesc">' + esc(r.desc) + '</span>' : '') +
-    '<span class="roffer">' + esc(r.offer) + '</span>' +
-    '<span class="badges">' + (r.dineIn ? '<span class="svc">Dine-in</span>' : '') + (r.pickup ? '<span class="svc">Pickup</span>' : '') + '</span>' +
-    '<span class="rview">View restaurant</span></button>';
+    '<span class="rtop"><span class="name">' + esc(r.name) + '</span>' + (flags ? '<span class="badges">' + flags + '</span>' : '') + '</span>' +
+    '<span class="meta rmeta">' + (r.cuisine ? '<span>' + ICO.fork + esc(r.cuisine) + '</span>' : '') + (placeOf(r) ? '<span>' + ICO.pin + esc(placeOf(r)) + '</span>' : '') + (dist ? '<span>' + esc(dist) + '</span>' : '') + '</span>' +
+    '<span class="roffer">' + ICO.spark + esc(r.offer) + '</span>' +
+    '<span class="rview">View Restaurant</span></button>';
 }
 function exploreItems() {
   var list = R.list.filter(function (r) {
@@ -582,8 +578,10 @@ function vVisit() {
       '<p class="who">' + esc(R.member.name) + '</p><p style="font-size:20px;font-weight:700">' + esc(r.offer) + '</p>' +
       '<p class="clock" id="clock" aria-label="Live clock">' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) + '</p>' +
       '<div class="split"><div><p class="k">Member through</p><p class="v">' + esc(new Date(R.status.until).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })) + '</p></div><div style="text-align:right"><p class="k">Pass closes in</p><p class="v" id="countdown">' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0') + '</p></div></div>' +
-      '<div class="track"><span>Staff: swipe to confirm →</span><input id="swipe" class="range" type="range" min="0" max="100" step="1" value="0" aria-label="Staff: slide right to confirm this pass"></div>' +
-      '<p class="small" style="font-size:13px">For restaurant staff. Swiping confirms the member showed this pass, and closes it.</p></div>';
+      '<form id="pinForm" class="stack" novalidate><label class="f" style="color:var(--bayou)">Staff: enter your restaurant PIN<input id="pinIn" class="in" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" placeholder="••••" style="font-size:28px;letter-spacing:14px;text-align:center"></label>' +
+      (R.pinMsg ? '<p class="note err" role="alert">' + esc(R.pinMsg) + '</p>' : '') +
+      '<button class="btn" type="submit"' + (R.busy ? ' disabled' : '') + '>' + (R.busy ? 'Checking…' : 'Confirm visit') + '</button></form>' +
+      '<p class="small" style="font-size:13px">For restaurant staff. Your 4-digit PIN confirms the member showed this pass and records the visit. Never share it with members.</p></div>';
   }
   return '<div class="main" style="padding-left:20px;padding-right:20px;gap:18px">' + head + body +
     '<button class="btn ghost" data-act="endVisit">' + (v.confirmedAt ? 'Done' : 'Choose a different restaurant') + '</button>' + msgHtml() + '<button class="btn link" data-act="report">Report a problem</button></div>';
@@ -676,19 +674,21 @@ function render(keepFocusId) {
 function openPass(id) {
   if (!R.member || !R.status.active) return set({ tab: 'pass', detail: null });
   var r = find(id);
-  set({ tab: 'pass', detail: null, visit: { rid: id, name: r ? r.name : '', offer: r ? r.offer : '', openedAt: Date.now(), confirmedAt: null, code: null } });
+  set({ tab: 'pass', detail: null, pinMsg: null, visit: { rid: id, name: r ? r.name : '', offer: r ? r.offer : '', openedAt: Date.now(), confirmedAt: null, code: null } });
 }
+// Staff type the restaurant's 4-digit PIN on the member's phone. The server checks it, records the visit and returns the code.
 async function confirmVisit() {
-  if (!S.visit || S.visit.confirmedAt) return;
-  var a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', c = '', b = crypto.getRandomValues(new Uint8Array(6));
-  for (var i = 0; i < 6; i++) c += a[b[i] % a.length];
-  if (navigator.vibrate) navigator.vibrate(60);
-  var v = Object.assign({}, S.visit, { confirmedAt: Date.now(), code: c });
-  set({ visit: v });
-  try {
-    var res = await sb.from('redemptions').insert({ restaurant_id: v.rid, restaurant_name: v.name || null, offer: v.offer || null, code: v.code, opened_at: new Date(v.openedAt).toISOString(), confirmed_at: new Date(v.confirmedAt).toISOString() });
-    if (res.error) console.warn('LocalScout: visit not recorded', res.error.message);
-  } catch (e) { console.warn('LocalScout: visit not recorded'); }
+  if (!S.visit || S.visit.confirmedAt || R.busy) return;
+  var el = document.getElementById('pinIn'), pin = el ? el.value.trim() : '';
+  if (!/^\d{4}$/.test(pin)) return set({ pinMsg: 'Enter the 4-digit staff PIN.' }, 'pinIn');
+  set({ busy: true, pinMsg: null });
+  var out; try { var r = await sb.rpc('confirm_visit', { p_restaurant: S.visit.rid, p_pin: pin, p_opened_at: new Date(S.visit.openedAt).toISOString() }); out = r.error ? { status: 'error' } : r.data; } catch (e) { out = { status: 'error' }; }
+  if (out && out.status === 'ok') {
+    if (navigator.vibrate) navigator.vibrate(60);
+    return set({ busy: false, visit: Object.assign({}, S.visit, { confirmedAt: Date.parse(out.confirmed_at) || Date.now(), code: out.code }) });
+  }
+  var msg = { wrong_pin: 'That PIN isn’t right.' + (out && out.tries_left ? ' ' + out.tries_left + ' tries left.' : ''), locked: 'Too many wrong PINs. This pass is locked for 15 minutes.', no_pin: 'This restaurant hasn’t set a staff PIN yet. Ask the manager to set one on their owner page.', not_member: 'Your membership isn’t active right now.', not_found: 'This restaurant isn’t taking LocalScout right now.' }[out && out.status] || 'We couldn’t confirm the visit. Check your connection and try again.';
+  set({ busy: false, pinMsg: msg }, 'pinIn');
 }
 
 // ---------- Partner application (same RPC as the website) ----------
@@ -761,6 +761,7 @@ document.addEventListener('click', function (e) {
 document.addEventListener('submit', function (e) {
   if (e.target.id === 'partnerForm') { e.preventDefault(); submitPartner(); }
   else if (e.target.id === 'authForm') { e.preventDefault(); sendCode(false); }
+  else if (e.target.id === 'pinForm') { e.preventDefault(); confirmVisit(); }
 });
 var JD = { jdFirst: 'first_name', jdLast: 'last_name', jdPhone: 'phone', jdAddress1: 'address_line1', jdAddress2: 'address_line2', jdCity: 'city', jdState: 'state', jdZip: 'zip', jdRef: 'ref' };
 document.addEventListener('input', function (e) {
@@ -770,7 +771,6 @@ document.addEventListener('input', function (e) {
   else if (JD[el.id]) { R.d = R.d || {}; R.d[JD[el.id]] = el.value; }
   else if (el.id === 'qIn') { S.q = el.value; save(); refreshResults(); }
   else if (el.id === 'passQIn') { S.passQ = el.value; save(); document.getElementById('passList').innerHTML = passItems().map(passRow).join(''); }
-  else if (el.id === 'swipe') { if (Number(el.value) >= 92) confirmVisit(); }
   else if (el.classList.contains('pf')) { R.partner = R.partner || {}; R.partner[el.id] = el.value; }
 });
 document.addEventListener('change', function (e) {
