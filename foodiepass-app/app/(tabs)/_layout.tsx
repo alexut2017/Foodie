@@ -14,11 +14,12 @@ export default function TabsLayout() {
         tabBarActiveTintColor: C.chili,
         tabBarInactiveTintColor: C.muted,
         tabBarStyle: { backgroundColor: C.card, borderTopColor: C.line },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '700' },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
       }}
     >
       <Tabs.Screen name="explore" options={{ title: 'Explore', tabBarIcon: ({ color, size }) => <Ionicons name="restaurant-outline" color={color} size={size} /> }} />
       <Tabs.Screen name="pass" options={{ title: 'My pass', tabBarIcon: ({ color, size }) => <Ionicons name="card-outline" color={color} size={size} /> }} />
+      <Tabs.Screen name="partners" options={{ title: 'For Restaurants', tabBarIcon: ({ color, size }) => <Ionicons name="storefront-outline" color={color} size={size} /> }} />
       <Tabs.Screen name="account" options={{ title: 'Account', tabBarIcon: ({ color, size }) => <Ionicons name="person-circle-outline" color={color} size={size} /> }} />
     </Tabs>
   );

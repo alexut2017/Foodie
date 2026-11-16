@@ -7,7 +7,6 @@ import { supabase } from '../../src/supabase';
 import { manageBilling } from '../../src/checkout';
 import { deleteAccount, errText } from '../../src/billing';
 import { CONFIG, siteLink } from '../../src/config';
-import { PartnerForm } from '../../src/PartnerForm';
 import { Body, Button, Card, Eyebrow, H1, Note, Small } from '../../src/ui';
 import { formatUS, fmtDate } from '../../src/format';
 import { C } from '../../src/theme';
@@ -115,7 +114,11 @@ export default function Account() {
             ) : null}
             {refMsg ? <Note tone={refMsg.err ? 'err' : 'ok'}>{refMsg.text}</Note> : null}
           </Card>
-          <PartnerForm />
+          <Card>
+            <Text style={s.h}>Own or manage a restaurant?</Text>
+            <Body style={{ fontSize: 16 }}>Restaurants join free. Bring in new regulars with one simple member offer.</Body>
+            <Button title="For Restaurants" kind="ghost" onPress={() => router.push('/partners')} />
+          </Card>
           {isAdmin ? <Button title="Open admin dashboard" kind="dark" onPress={() => Linking.openURL(siteLink('admin'))} /> : null}
           {msg ? <Note tone={msg.err ? 'err' : 'ok'}>{msg.text}</Note> : null}
           <View style={{ gap: 10 }}>

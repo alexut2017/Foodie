@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 import { supabase } from './supabase';
+import { FN_URL } from './config';
 import { Body, Button, Card, Note, Small } from './ui';
 import { C } from './theme';
 
@@ -8,8 +9,8 @@ import { C } from './theme';
 type Field = 'name' | 'first' | 'last' | 'phone' | 'email' | 'address1' | 'address2' | 'city' | 'state' | 'zip' | 'cuisine' | 'desc' | 'offer';
 const REQUIRED: Field[] = ['name', 'first', 'last', 'phone', 'email', 'address1', 'city', 'state', 'zip', 'cuisine', 'desc'];
 
-export function PartnerForm() {
-  const [open, setOpen] = useState(false);
+export function PartnerForm({ startOpen = false }: { startOpen?: boolean } = {}) {
+  const [open, setOpen] = useState(startOpen);
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -17,7 +18,7 @@ export function PartnerForm() {
   const set = (k: Field) => (v: string) => setF((x) => ({ ...x, [k]: v }));
   const t = (k: Field) => f[k].trim();
 
-  if (done) return <Card><Text style={s.h}>Thanks! Application received</Text><Body style={{ fontSize: 16 }}>We{'’'}ll reach out within a few business days.</Body></Card>;
+  if (done) return <Card><Text style={s.h}>Thanks! Application received</Text><Body style={{ fontSize: 16 }}>We just emailed you a confirmation. We{'’'}ll be in touch within two business days and add your restaurant to the map.</Body></Card>;
   if (!open) {
     return (
       <Card>
@@ -40,6 +41,8 @@ export function PartnerForm() {
     });
     setBusy(false);
     if (error) return setErr(/rate_limited/i.test(error.message) ? 'We’ve received several applications from you recently. Please try again later.' : 'We couldn’t send your application. Check your connection and try again.');
+    // Confirmation email (same server function as the website; sent once, only for an application made just now).
+    fetch(FN_URL + '/partner-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'received', email: t('email') }) }).catch(() => undefined);
     setDone(true);
   }
 
