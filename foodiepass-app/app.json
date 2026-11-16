@@ -3,7 +3,7 @@
     "name": "LocalScout",
     "slug": "grubscout",
     "owner": "wuemilyy",
-    "version": "0.3.0",
+    "version": "0.2.2",
     "scheme": "grubscout",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
