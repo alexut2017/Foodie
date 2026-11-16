@@ -24,24 +24,23 @@ export function Thumb({ r, size = 64 }: { r: Restaurant; size?: number }) {
   return <View style={{ width: size, height: size, borderRadius: 14, backgroundColor: C.sand, alignItems: 'center', justifyContent: 'center' }}><Logo size={size * 0.56} /></View>;
 }
 
-/** Card used on Explore; mirrors the website's restaurant finder card. */
+/** Card used on Explore: the same card as the website's Restaurants page (joinlocalscout.com/#restaurants). */
 export function RestaurantCard({ r, onPress, distance }: { r: Restaurant; onPress: () => void; distance?: string }) {
   const where = r.place || districtName(r.district);
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${r.name}, ${r.offer}`} style={({ pressed }) => [s.card, pressed && { opacity: 0.9 }]}>
-      {r.photo ? <Image source={{ uri: r.photo }} style={s.photo} accessibilityIgnoresInvertColors /> : null}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <Text style={s.name}>{r.name}</Text>
-        <Badges r={r} />
+        {r.isNew ? <Text style={[s.badge, { backgroundColor: C.errBg, color: C.err }]}>★ New</Text> : null}
+        {r.founding ? <Text style={[s.badge, { backgroundColor: '#FBEBC4', color: '#5E4205' }]}>★ Founding partner</Text> : null}
       </View>
-      <Text style={s.meta}>{[r.cuisine, where, distance].filter(Boolean).join('  ·  ')}</Text>
-      {r.desc ? <Text style={s.desc} numberOfLines={2}>{r.desc}</Text> : null}
-      <Text style={s.offer}>{r.offer}</Text>
-      <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-        {r.dineIn ? <Text style={s.svc}>Dine-in</Text> : null}
-        {r.pickup ? <Text style={s.svc}>Pickup</Text> : null}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
+        {r.cuisine ? <Text style={s.meta}>🍴 {r.cuisine}</Text> : null}
+        {where ? <Text style={s.meta}>📍 {where}</Text> : null}
+        {distance ? <Text style={s.meta}>{distance}</Text> : null}
       </View>
-      <View style={s.view}><Text style={{ color: C.linen, fontWeight: '700', fontSize: 15 }}>View restaurant</Text></View>
+      <Text style={s.offer}>✦ {r.offer}</Text>
+      <View style={s.view}><Text style={{ color: C.linen, fontWeight: '700', fontSize: 15 }}>View Restaurant</Text></View>
     </Pressable>
   );
 }

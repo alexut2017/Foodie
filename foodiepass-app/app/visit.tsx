@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, PanResponder, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, Animated, PanResponder, StyleSheet, Text, TextInput, View, type LayoutChangeEvent } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -13,12 +13,15 @@ import { C } from '../src/theme';
 
 const KNOB = 56;
 
-// The member pass for one restaurant: live clock + countdown, closed by a staff swipe.
+// The member pass for one restaurant: live clock + countdown, confirmed by staff with the restaurant's 4-digit PIN.
 export default function VisitScreen() {
   const { name, paid, status } = useSession();
   const [visit, setVisit] = useState<Visit | null>(null);
   const [now, setNow] = useState(Date.now());
   const [note, setNote] = useState<string | null>(null);
+  const [pin, setPin] = useState('');
+  const [pinMsg, setPinMsg] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => { loadVisit().then(setVisit); }, []);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
@@ -77,8 +80,19 @@ export default function VisitScreen() {
             <View><Small>Member through</Small><Text style={s.v}>{fmtDate(status?.membership.access_until) || '—'}</Text></View>
             <View style={{ alignItems: 'flex-end' }}><Small>Pass closes in</Small><Text style={s.v}>{Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')}</Text></View>
           </View>
-          <Swipe onConfirm={async () => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined); setVisit(await confirmVisit(visit)); }} />
-          <Small>For restaurant staff. Swiping confirms the member showed this pass, and closes it.</Small>
+          <View style={{ gap: 8 }}>
+            <Text style={s.pinLabel}>Staff: enter your restaurant PIN</Text>
+            <TextInput style={s.pinIn} value={pin} onChangeText={(t) => { setPin(t.replace(/\D/g, '').slice(0, 4)); setPinMsg(null); }} keyboardType="number-pad" secureTextEntry maxLength={4} placeholder="••••" placeholderTextColor="#9AA3A2" accessibilityLabel="Staff PIN" />
+            {pinMsg ? <Note tone="err">{pinMsg}</Note> : null}
+            <Button title={checking ? 'Checking…' : 'Confirm visit'} busy={checking} onPress={async () => {
+              setChecking(true);
+              const r = await confirmVisit(visit, pin);
+              setChecking(false);
+              if (r.ok) { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined); setVisit(r.visit); setPin(''); }
+              else { setPinMsg(r.message); setPin(''); }
+            }} />
+          </View>
+          <Small>For restaurant staff. Your 4-digit PIN confirms the member showed this pass and records the visit. Never share it with members.</Small>
         </View>
       )}
 
@@ -129,6 +143,8 @@ function Swipe({ onConfirm }: { onConfirm: () => void }) {
 }
 
 const s = StyleSheet.create({
+  pinLabel: { fontSize: 15, fontWeight: '700', color: C.bayou },
+  pinIn: { minHeight: 60, borderWidth: 1.5, borderColor: '#CFC7B8', borderRadius: 14, fontSize: 30, letterSpacing: 16, textAlign: 'center', backgroundColor: C.card, color: C.bayou },
   wrap: { flex: 1, padding: 20, gap: 18, backgroundColor: C.linen },
   pass: { backgroundColor: C.linen, borderRadius: 28, padding: 22, gap: 14, borderWidth: 1, borderColor: C.line, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 20, shadowOffset: { width: 0, height: 12 }, elevation: 8 },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

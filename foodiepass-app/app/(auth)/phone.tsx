@@ -9,33 +9,25 @@ import { errText } from '../../src/billing';
 import { Body, Button, H1, Note, Small } from '../../src/ui';
 import { C } from '../../src/theme';
 
-// Step 1: same registration as the website. Join collects name, email, phone and address; sign-in is email only.
+// Step 1: join asks for name, email and an optional referral code (phone and address aren't needed); sign-in is email only.
 // Either way we email a 6-digit code (next screen). No password.
-type Field = 'first' | 'last' | 'email' | 'phone' | 'address1' | 'address2' | 'city' | 'state' | 'zip' | 'ref';
+type Field = 'first' | 'last' | 'email' | 'ref';
 const emailOk = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
-const fmtPhone = (d: string) => (d.length === 10 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : d);
 
 export default function Register() {
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const join = mode !== 'signin';
-  const [f, setF] = useState<Record<Field, string>>({ first: '', last: '', email: '', phone: '', address1: '', address2: '', city: 'Houston', state: 'TX', zip: '', ref: '' });
+  const [f, setF] = useState<Record<Field, string>>({ first: '', last: '', email: '', ref: '' });
   const [marketing, setMarketing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const set = (k: Field) => (v: string) => { setF((x) => ({ ...x, [k]: v })); setErr(null); };
   const t = (k: Field) => f[k].trim();
 
-  // Same checks, in the same order, as the website's join form.
   function problem(): string {
     if (!join) return emailOk(f.email) ? '' : 'Enter a valid email address, like name@example.com.';
     if (!t('first') || !t('last')) return 'Enter your first and last name.';
     if (!emailOk(f.email)) return 'Enter a valid email address, like name@example.com.';
-    const digits = f.phone.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
-    if (!digits) return 'Enter your phone number.';
-    if (digits.length !== 10) return 'Enter a 10-digit phone number, like 555-555-5555.';
-    if (!t('address1') || !t('city') || !t('state')) return 'Enter your full address.';
-    if (!/^[A-Za-z]{2}$/.test(t('state'))) return 'Use the 2-letter state code, like TX.';
-    if (!/^\d{5}(-\d{4})?$/.test(t('zip'))) return 'Enter a 5-digit zip code.';
     if (t('ref') && !/^GS-[0-9A-F]{6}$/i.test(t('ref'))) return 'Referral codes look like GS-1A2B3C. Check it, or leave it blank.';
     return '';
   }
@@ -46,14 +38,13 @@ export default function Register() {
     if (p) return setErr(p);
     setBusy(true); setErr(null);
     const email = f.email.trim().toLowerCase();
-    const digits = f.phone.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
     if (join) {
       // Pay first (same as the website): Stripe opens straight away and the account is created after payment.
       let paid: 'paid' | 'pending';
       try {
         paid = await payToJoin(email, {
-          first_name: t('first'), last_name: t('last'), phone: fmtPhone(digits),
-          address_line1: t('address1'), address_line2: t('address2'), city: t('city'), state: t('state').toUpperCase(), zip: t('zip'),
+          first_name: t('first'), last_name: t('last'), phone: '',
+          address_line1: '', address_line2: '', city: '', state: '', zip: '',
         }, marketing, t('ref') ? t('ref').toUpperCase() : undefined);
       } catch (e) {
         setBusy(false);
@@ -91,16 +82,11 @@ export default function Register() {
         <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
           <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} hitSlop={12}><Text style={s.back}>{'←'}</Text></Pressable>
           <H1>{join ? 'Join LocalScout' : 'Sign in'}</H1>
-          <Body>{join ? 'Your name goes on your member pass. Fill in your details and pay $30, then enter the code we email you to open your pass.' : 'Enter the email on your LocalScout account and we’ll send you a 6-digit code.'}</Body>
+          <Body>{join ? 'Just your name and email. Your name goes on your member pass. Pay $30, then enter the code we email you to open your pass.' : 'Enter the email on your LocalScout account and we’ll send you a 6-digit code.'}</Body>
           {join ? <View style={s.row}>{In('first', 'First name', { textContentType: 'givenName', autoComplete: 'name-given', maxLength: 59 }, true)}{In('last', 'Last name', { textContentType: 'familyName', autoComplete: 'name-family', maxLength: 60 }, true)}</View> : null}
           {In('email', 'Email', { keyboardType: 'email-address', autoCapitalize: 'none', autoCorrect: false, textContentType: 'emailAddress', autoComplete: 'email', maxLength: 254, autoFocus: !join })}
           {join ? (
             <>
-              {In('phone', 'Phone', { keyboardType: 'phone-pad', textContentType: 'telephoneNumber', autoComplete: 'tel', placeholder: '555-555-5555', maxLength: 20 })}
-              {In('address1', 'Address line 1', { textContentType: 'streetAddressLine1', autoComplete: 'street-address', maxLength: 120 })}
-              {In('address2', 'Address line 2', { textContentType: 'streetAddressLine2', maxLength: 80 })}
-              {In('city', 'City', { textContentType: 'addressCity', maxLength: 80 })}
-              <View style={s.row}>{In('state', 'State', { autoCapitalize: 'characters', maxLength: 2, textContentType: 'addressState' }, true)}{In('zip', 'Zip', { keyboardType: 'number-pad', maxLength: 10, textContentType: 'postalCode', autoComplete: 'postal-code' }, true)}</View>
               {In('ref', 'Referral code (optional)', { autoCapitalize: 'characters', autoCorrect: false, placeholder: 'GS-1A2B3C', maxLength: 9 })}
               <Pressable style={s.opt} onPress={() => setMarketing((m) => !m)} accessibilityRole="switch" accessibilityState={{ checked: marketing }}>
                 <Text style={s.optText}>Send me new restaurants and member offers (optional)</Text>

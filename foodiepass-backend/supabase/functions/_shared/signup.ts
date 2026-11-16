@@ -19,10 +19,15 @@ export function cleanDetails(raw: Record<string, unknown> | null | undefined): S
     address_line1: clip(r.address_line1, 120), address_line2: clip(r.address_line2, 80),
     city: clip(r.city, 80), state: clip(r.state, 2).toUpperCase(), zip: clip(r.zip, 10),
   };
+  // Name is required. The apps ask for name and email only; the website also sends phone and address,
+  // and whatever is sent must be complete.
   const digits = d.phone.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
-  if (!d.first_name || !d.last_name || digits.length !== 10) return null;
-  if (!d.address_line1 || !d.city || !/^[A-Z]{2}$/.test(d.state) || !/^\d{5}(-\d{4})?$/.test(d.zip)) return null;
-  d.phone = `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  if (!d.first_name || !d.last_name) return null;
+  if (d.phone && digits.length !== 10) return null;
+  d.phone = digits.length === 10 ? `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}` : '';
+  const anyAddress = !!(d.address_line1 || d.address_line2 || d.city || d.zip);
+  if (anyAddress && (!d.address_line1 || !d.city || !/^[A-Z]{2}$/.test(d.state) || !/^\d{5}(-\d{4})?$/.test(d.zip))) return null;
+  if (!anyAddress) d.state = '';
   return d;
 }
 

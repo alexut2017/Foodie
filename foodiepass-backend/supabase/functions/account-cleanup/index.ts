@@ -14,6 +14,10 @@ const LIVE = ['active', 'trialing', 'past_due', 'unpaid', 'paused'];
 const when = (d: string | null) => (d ? Date.parse(d) : null);
 
 async function eligible(userId: string, createdAt: string, now: number): Promise<boolean> {
+  // Restaurant owners sign in to their owner page and never pay for a membership: keep them.
+  const owner = await admin.from('restaurant_owners').select('restaurant_id').eq('user_id', userId).limit(1);
+  if (owner.error) throw owner.error;
+  if ((owner.data ?? []).length) return false;
   const [adminRow, subs, attempts, gifts, entitlements, purchases, customer] = await Promise.all([
     admin.from('platform_admins').select('user_id').eq('user_id', userId).maybeSingle(),
     admin.from('subscriptions').select('provider_status, paid_through, ended_at').eq('user_id', userId),
